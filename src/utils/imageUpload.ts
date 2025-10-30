@@ -34,7 +34,9 @@ export const hostMediaGoService = async (
 
     const arrayBuffer = await file.arrayBuffer();
 
-    const response = await fetch("https://campaign.vocallabs.ai/upload", {
+    const { AUTH_CONFIG } = await import("./config");
+
+    const response = await fetch(AUTH_CONFIG.MEDIA_UPLOAD_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${authToken}`,

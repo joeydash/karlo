@@ -1068,7 +1068,7 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
 
       const uploadResult = await hostMediaGoService(
         file,
-        "karlo_card_attatchments",
+        "karlo_card_attachments",
         authStore.token
       );
 
