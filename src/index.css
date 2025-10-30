@@ -1,0 +1,1259 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS Variables for theming */
+:root {
+  /* Light theme colors */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f8fafc;
+  --color-bg-tertiary: #f1f5f9;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-tertiary: #64748b;
+  --color-border-primary: #e2e8f0;
+  --color-border-secondary: #cbd5e1;
+  --color-accent: #3b82f6;
+  --color-accent-hover: #2563eb;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-shadow: rgba(0, 0, 0, 0.1);
+  --color-shadow-hover: rgba(0, 0, 0, 0.15);
+}
+
+.dark {
+  /* Dark theme colors */
+  --color-bg-primary: #0f172a;
+  --color-bg-secondary: #1e293b;
+  --color-bg-tertiary: #334155;
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #cbd5e1;
+  --color-text-tertiary: #94a3b8;
+  --color-border-primary: #475569;
+  --color-border-secondary: #64748b;
+  --color-accent: #60a5fa;
+  --color-accent-hover: #3b82f6;
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
+  --color-error: #f87171;
+  --color-shadow: rgba(0, 0, 0, 0.3);
+  --color-shadow-hover: rgba(0, 0, 0, 0.4);
+}
+
+/* Smooth transitions for theme changes */
+* {
+  transition: background-color 0.2s ease-in-out, 
+              border-color 0.2s ease-in-out, 
+              color 0.2s ease-in-out,
+              box-shadow 0.2s ease-in-out;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* Enhanced focus styles for better accessibility */
+*:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+/* Expanded Editor.js Toolbox Positioning */
+.expanded-editor-container .ce-toolbar__plus {
+  color: #6b7280 !important;
+}
+
+.expanded-editor-container .ce-toolbar__plus:hover {
+  color: #374151 !important;
+  background: #f3f4f6 !important;
+}
+
+.dark .expanded-editor-container .ce-toolbar__plus {
+  color: #9ca3af !important;
+}
+
+.dark .expanded-editor-container .ce-toolbar__plus:hover {
+  color: #d1d5db !important;
+  background: #4b5563 !important;
+}
+
+.expanded-editor-container .ce-toolbar__settings-btn {
+  color: #6b7280 !important;
+}
+
+.expanded-editor-container .ce-toolbar__settings-btn:hover {
+  color: #374151 !important;
+  background: #f3f4f6 !important;
+}
+
+.dark .expanded-editor-container .ce-toolbar__settings-btn {
+  color: #9ca3af !important;
+}
+
+.dark .expanded-editor-container .ce-toolbar__settings-btn:hover {
+  color: #d1d5db !important;
+  background: #4b5563 !important;
+}
+
+/* Toolbox positioning for expanded editor - Allow EditorJS to position naturally */
+.expanded-editor-container .ce-popover {
+  z-index: 10001 !important;
+  position: absolute !important;
+}
+
+.expanded-editor-container .ce-inline-toolbar {
+  z-index: 10002 !important;
+  position: absolute !important;
+}
+
+/* Settings panel positioning */
+.expanded-editor-container .ce-settings {
+  z-index: 10003 !important;
+  position: absolute !important;
+}
+
+/* Normal Editor - Transparent toolbar */
+.ce-toolbar__actions {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.ce-toolbar__actions--opened {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Expanded Editor - Background and border for toolbar */
+.expanded-editor-container .ce-toolbar__actions {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  border-radius: 0.5rem !important;
+}
+
+.expanded-editor-container .ce-toolbar__actions--opened {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  border-radius: 0.5rem !important;
+}
+
+/* Dark mode for expanded editor toolbar */
+.dark .expanded-editor-container .ce-toolbar__actions {
+  background: #374151 !important;
+  border: 1px solid #4b5563 !important;
+}
+
+.dark .expanded-editor-container .ce-toolbar__actions--opened {
+  background: #374151 !important;
+  border: 1px solid #4b5563 !important;
+}
+
+/* Expanded Editor Scrolling and Overflow Fixes */
+.expanded-editor-container .codex-editor {
+  height: 100%;
+  overflow: visible;
+  position: relative;
+}
+
+.expanded-editor-container .codex-editor__redactor {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  scrollbar-width: thin;
+  scrollbar-color: #9ca3af #f3f4f6;
+}
+
+.expanded-editor-container .codex-editor__redactor::-webkit-scrollbar {
+  width: 8px;
+}
+
+.expanded-editor-container .codex-editor__redactor::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 8px;
+}
+
+.expanded-editor-container .codex-editor__redactor::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #9ca3af, #6b7280);
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.expanded-editor-container .codex-editor__redactor::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+}
+
+/* Dark mode for expanded editor scrollbar */
+.dark .expanded-editor-container .codex-editor__redactor {
+  scrollbar-color: #6b7280 #374151;
+}
+
+.dark .expanded-editor-container .codex-editor__redactor::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.dark .expanded-editor-container .codex-editor__redactor::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  border: 1px solid #4b5563;
+}
+
+.dark .expanded-editor-container .codex-editor__redactor::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #4b5563, #374151);
+}
+
+/* Ensure content wraps to prevent horizontal overflow */
+.expanded-editor-container .ce-block__content,
+.expanded-editor-container .ce-paragraph,
+.expanded-editor-container .ce-header,
+.expanded-editor-container .cdx-list__item,
+.expanded-editor-container .cdx-checklist__item,
+.expanded-editor-container .tc-table__cell,
+.expanded-editor-container .cdx-code__textarea,
+.expanded-editor-container .cdx-raw__textarea {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Normal Editor Toolbox Container - Scrollable container */
+.editor-toolbox-container {
+  position: relative;
+  max-height: 300px;
+  min-height: 100px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #9ca3af #f3f4f6;
+}
+
+/* Toolbar should scroll with content */
+.editor-toolbox-container .codex-editor {
+  position: relative;
+}
+
+.editor-toolbox-container .ce-toolbar {
+  position: absolute !important;
+}
+
+/* Redactor should be visible */
+.editor-toolbox-container .codex-editor__redactor {
+  overflow: visible;
+}
+
+/* Ensure popovers escape the container */
+.editor-toolbox-container .ce-popover-container {
+  position: fixed !important;
+  z-index: 9999 !important;
+}
+
+.editor-toolbox-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.editor-toolbox-container::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 8px;
+}
+
+.editor-toolbox-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #9ca3af, #6b7280);
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.editor-toolbox-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+}
+
+/* Dark mode scrollbar for normal editor */
+.dark .editor-toolbox-container {
+  scrollbar-color: #6b7280 #374151;
+}
+
+.dark .editor-toolbox-container::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.dark .editor-toolbox-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  border: 1px solid #4b5563;
+}
+
+.dark .editor-toolbox-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #4b5563, #374151);
+}
+
+/* Normal Editor Toolbox Overlay - Make it appear above the modal */
+.ce-popover {
+  position: fixed !important;
+  z-index: 99999 !important; /* Very high z-index to appear above everything */
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Dark mode for toolbox */
+.dark .ce-popover {
+  background: #1f2937;
+  border: 1px solid #4b5563;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+}
+
+/* Ensure the toolbox items remain styled correctly */
+.ce-popover__item {
+  color: #374151;
+}
+
+.dark .ce-popover__item {
+  color: #d1d5db;
+}
+
+.ce-popover__item:hover {
+  background: #f3f4f6;
+}
+
+.dark .ce-popover__item:hover {
+  background: #374151;
+}
+
+/* Toolbox search input styling */
+.ce-popover__search,
+.ce-popover__search input {
+  color: #111827 !important;
+}
+
+.dark .ce-popover__search,
+.dark .ce-popover__search input {
+  color: #111827 !important;
+}
+
+.ce-popover__search input::placeholder {
+  color: #6b7280 !important;
+}
+
+.dark .ce-popover__search input::placeholder {
+  color: #6b7280 !important;
+}
+
+/* Settings popover should also be fixed */
+.ce-settings {
+  position: fixed !important;
+  z-index: 99999 !important;
+}
+
+/* Inline toolbar should be fixed as well */
+.ce-inline-toolbar {
+  position: fixed !important;
+  z-index: 99998 !important;
+}
+
+/* Custom focus ring for interactive elements */
+button:focus,
+a:focus,
+input:focus,
+textarea:focus,
+select:focus,
+[role="button"]:focus,
+[role="menuitem"]:focus,
+[tabindex]:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* High contrast focus for better visibility */
+@media (prefers-contrast: high) {
+  button:focus,
+  a:focus,
+  input:focus,
+  textarea:focus,
+  select:focus,
+  [role="button"]:focus,
+  [role="menuitem"]:focus,
+  [tabindex]:focus {
+    outline: 3px solid #000;
+    outline-offset: 2px;
+  }
+}
+
+/* Skip link styles */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.focus\:not-sr-only:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: revert;
+  margin: revert;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Hide scrollbar for webkit browsers */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+  scroll-behavior: smooth;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+/* Custom scroll behavior for color picker */
+.color-scroll-container {
+  scroll-snap-type: x mandatory;
+}
+
+.color-scroll-container button {
+  scroll-snap-align: start;
+}
+
+/* Line clamp utilities for better text truncation */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.4;
+  max-height: calc(1.4em * 3);
+}
+
+/* EditorJS Styles */
+.editor-js-container {
+  @apply w-full;
+}
+
+.editor-js-holder {
+  @apply w-full;
+}
+
+/* EditorJS Core Styles */
+.codex-editor {
+  @apply w-full;
+}
+
+.codex-editor__redactor {
+  @apply p-4;
+}
+
+.ce-block__content {
+  @apply max-w-none;
+}
+
+.ce-paragraph {
+  @apply text-gray-900 dark:text-white text-sm leading-relaxed;
+}
+
+.ce-header {
+  @apply text-gray-900 dark:text-white font-bold;
+}
+
+.ce-header[data-level="2"] {
+  @apply text-lg;
+}
+
+.ce-header[data-level="3"] {
+  @apply text-base;
+}
+
+.ce-header[data-level="4"] {
+  @apply text-sm;
+}
+
+/* List Styles */
+.cdx-list {
+  @apply text-gray-900 dark:text-white text-sm;
+}
+
+.cdx-list__item {
+  @apply py-1;
+}
+
+/* Checklist Styles */
+.cdx-checklist {
+  @apply text-gray-900 dark:text-white text-sm;
+}
+
+.cdx-checklist__item {
+  @apply py-1;
+}
+
+.cdx-checklist__item-checkbox {
+  @apply mr-2;
+}
+
+/* Quote Styles */
+.cdx-quote {
+  @apply border-l-4 border-blue-500 pl-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-r-lg;
+}
+
+.cdx-quote__text {
+  @apply text-gray-900 dark:text-white text-sm italic;
+}
+
+.cdx-quote__caption {
+  @apply text-gray-600 dark:text-gray-400 text-xs mt-2;
+}
+
+/* Code Block Styles */
+.cdx-code {
+  @apply bg-gray-100 dark:bg-gray-800 rounded-lg p-3 font-mono text-sm;
+}
+
+.cdx-code__textarea {
+  @apply bg-transparent text-gray-900 dark:text-white resize-none outline-none w-full;
+}
+
+/* Table Styles */
+.tc-table {
+  @apply border-collapse w-full;
+}
+
+.tc-table__cell {
+  @apply border border-gray-300 dark:border-gray-600 p-2 text-sm text-gray-900 dark:text-white;
+}
+
+/* Warning Styles */
+.cdx-warning {
+  @apply bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4;
+}
+
+.cdx-warning__title {
+  @apply text-yellow-800 dark:text-yellow-300 font-semibold text-sm;
+}
+
+.cdx-warning__message {
+  @apply text-yellow-700 dark:text-yellow-400 text-sm mt-1;
+}
+
+/* Link Tool Styles */
+.link-tool {
+  @apply border border-gray-200 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-800;
+}
+
+.link-tool__title {
+  @apply text-gray-900 dark:text-white font-semibold text-sm;
+}
+
+.link-tool__description {
+  @apply text-gray-600 dark:text-gray-400 text-xs mt-1;
+}
+
+.link-tool__anchor {
+  @apply text-blue-600 dark:text-blue-400 text-xs;
+}
+
+/* Delimiter Styles */
+.ce-delimiter {
+  @apply text-center py-4;
+}
+
+.ce-delimiter::before {
+  content: "* * *";
+  @apply text-gray-400 dark:text-gray-500 text-lg;
+}
+
+/* Toolbar Styles */
+.ce-toolbar__content {
+  @apply max-w-none;
+}
+
+.ce-toolbar__plus {
+  @apply text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white;
+}
+
+.ce-toolbar__settings-btn {
+  @apply text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white right-0;
+}
+
+/* Toolbar Actions Background */
+.ce-toolbar__actions {
+  @apply bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-l-lg shadow-lg backdrop-blur-sm;
+}
+
+.ce-toolbar__actions--opened {
+  @apply bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-l-lg shadow-lg;
+}
+
+/* Inline Toolbar */
+.ce-inline-toolbar {
+  @apply bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg ;
+}
+
+.ce-inline-tool {
+  @apply text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700;
+}
+
+/* Popover Styles */
+.ce-popover {
+  @apply bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg;
+}
+
+.ce-popover__item {
+  @apply text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700;
+}
+
+/* Block Tunes */
+.ce-settings {
+  @apply bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg;
+}
+
+.ce-settings__button {
+  @apply text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700;
+}
+
+/* Placeholder Styles */
+.codex-editor--empty .ce-block:first-child .ce-paragraph[data-placeholder]:empty::before {
+  @apply text-gray-400 dark:text-gray-500;
+  content: attr(data-placeholder);
+  position: absolute;
+  pointer-events: none;
+}
+
+/* Focus Styles */
+.ce-block--focused {
+  @apply bg-blue-50 dark:bg-blue-900/10 rounded-lg;
+}
+
+/* Selection Styles */
+.ce-block--selected {
+  @apply bg-blue-100 dark:bg-blue-900/20 rounded-lg;
+}
+
+/* Inline formatting */
+.cdx-marker {
+  @apply bg-yellow-200 dark:bg-yellow-600 px-1 rounded;
+}
+
+.cdx-inline-code {
+  @apply bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-1 py-0.5 rounded text-xs font-mono;
+}
+
+/* Raw HTML Styles */
+.cdx-raw {
+  @apply bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-3;
+}
+
+.cdx-raw__textarea {
+  @apply bg-transparent text-gray-900 dark:text-white font-mono text-sm resize-none outline-none w-full;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .ce-toolbar__content {
+    @apply px-2;
+  }
+  
+  .ce-block__content {
+    @apply px-2;
+  }
+  
+  .codex-editor__redactor {
+    @apply p-2;
+  }
+}
+
+/* Smooth transitions */
+.ce-block,
+.ce-toolbar,
+.ce-inline-toolbar,
+.ce-popover {
+  @apply transition-all duration-200;
+}
+
+/* Custom scrollbar for editor */
+.codex-editor__redactor::-webkit-scrollbar {
+  @apply w-2;
+}
+
+.codex-editor__redactor::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-gray-800 rounded;
+}
+
+.codex-editor__redactor::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-gray-600 rounded hover:bg-gray-400 dark:hover:bg-gray-500;
+}
+
+
+/* Custom Scrollbar for Profile Modal and Bank Details */
+.profile-modal-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.profile-modal-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.profile-modal-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 8px;
+}
+
+.profile-modal-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.profile-modal-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+}
+
+/* Dark mode scrollbar */
+.dark .profile-modal-scroll {
+  scrollbar-color: #64748b #374151;
+}
+
+.dark .profile-modal-scroll::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.dark .profile-modal-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border: 1px solid #4b5563;
+}
+
+.dark .profile-modal-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+}
+
+/* Bank Details Scrollbar */
+.bank-details-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #d1fae5 #ecfdf5;
+}
+
+.bank-details-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.bank-details-scroll::-webkit-scrollbar-track {
+  background: #ecfdf5;
+  border-radius: 8px;
+}
+
+.bank-details-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-radius: 8px;
+  border: 1px solid #d1fae5;
+}
+
+.bank-details-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+}
+
+/* Dark mode bank details scrollbar */
+.dark .bank-details-scroll {
+  scrollbar-color: #065f46 #064e3b;
+}
+
+.dark .bank-details-scroll::-webkit-scrollbar-track {
+  background: #064e3b;
+}
+
+.dark .bank-details-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #34d399, #10b981);
+  border: 1px solid #065f46;
+}
+
+.dark .bank-details-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+/* Fix for 3D transform scroll issues */
+.perspective-1000 {
+  /* Ensure transforms don't interfere with scrolling */
+  will-change: transform;
+}
+
+.profile-modal-scroll {
+  /* Force GPU acceleration and proper scroll behavior */
+  will-change: scroll-position;
+  transform: translateZ(0);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure scroll behavior is maintained during transforms */
+.perspective-1000 .profile-modal-scroll {
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  /* Ensure this container gets scroll events when visible */
+  position: relative;
+  z-index: 10;
+}
+
+/* Bank details scroll container positioning */
+.perspective-1000 .bank-details-scroll {
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  /* Initially disable pointer events - will be enabled when flipped */
+  pointer-events: none;
+  position: relative;
+  z-index: 5;
+}
+
+/* When flipped, bank details should capture events */
+.rotate-y-180 .bank-details-scroll {
+  pointer-events: auto;
+  z-index: 10;
+}
+
+/* When flipped, profile should not capture events */
+.rotate-y-180 .profile-modal-scroll {
+  pointer-events: none;
+  z-index: 5;
+}
+/* 3D Card Flip Animation Styles */
+/* Card Edit Modal Scrollbar */
+.card-edit-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #9ca3af #f3f4f6;
+}
+
+.card-edit-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.card-edit-scroll::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 8px;
+}
+
+.card-edit-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #9ca3af, #6b7280);
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.card-edit-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+}
+
+/* Dark mode card edit scrollbar */
+.dark .card-edit-scroll {
+  scrollbar-color: #6b7280 #374151;
+}
+
+.dark .card-edit-scroll::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.dark .card-edit-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  border: 1px solid #4b5563;
+}
+
+.dark .card-edit-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #4b5563, #374151);
+}
+
+/* Attendance Modal Member List Scrollbar */
+.attendance-modal-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #9ca3af #f3f4f6;
+}
+
+.attendance-modal-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.attendance-modal-scroll::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 8px;
+}
+
+.attendance-modal-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #9ca3af, #6b7280);
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.attendance-modal-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+}
+
+/* Dark mode attendance modal scrollbar */
+.dark .attendance-modal-scroll {
+  scrollbar-color: #6b7280 #374151;
+}
+
+.dark .attendance-modal-scroll::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.dark .attendance-modal-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  border: 1px solid #4b5563;
+}
+
+.dark .attendance-modal-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #4b5563, #374151);
+}
+
+/* Filter Members Modal Member List Scrollbar */
+.filter-members-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #9ca3af #f3f4f6;
+}
+
+.filter-members-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.filter-members-scroll::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 8px;
+}
+
+.filter-members-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #9ca3af, #6b7280);
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.filter-members-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+}
+
+/* Dark mode filter members scrollbar */
+.dark .filter-members-scroll {
+  scrollbar-color: #6b7280 #374151;
+}
+
+.dark .filter-members-scroll::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.dark .filter-members-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  border: 1px solid #4b5563;
+}
+
+.dark .filter-members-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #4b5563, #374151);
+}
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+/* Custom Scrollbar for Dropdowns */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f8fafc;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dark mode dropdown scrollbar */
+.dark .custom-scrollbar {
+  scrollbar-color: #475569 #1e293b;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Custom Scrollbar for Cover Colors - Show on Hover */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.2s ease;
+}
+
+.scrollbar-thin:hover {
+  scrollbar-color: #d1d5db #f9fafb;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  height: 8px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 8px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.scrollbar-thin:hover::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+}
+
+.scrollbar-thin:hover::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Dark mode for cover colors scrollbar */
+.dark .scrollbar-thin:hover {
+  scrollbar-color: #4b5563 #1f2937;
+}
+
+.dark .scrollbar-thin:hover::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+.dark .scrollbar-thin:hover::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+.scrollbar-track-transparent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+}
+
+.dark .scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+/* Pinned Boards Section Scrollbar */
+.pinned-boards-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f8fafc;
+}
+
+.pinned-boards-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.pinned-boards-scroll::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 8px;
+  margin: 4px 0;
+}
+
+.pinned-boards-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  border-radius: 8px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.pinned-boards-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+}
+
+/* Dark mode pinned boards scrollbar */
+.dark .pinned-boards-scroll {
+  scrollbar-color: #475569 #1e293b;
+}
+
+.dark .pinned-boards-scroll::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.dark .pinned-boards-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+.dark .pinned-boards-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+}
+
+/* Kanban List Scrollbar */
+.kanban-list-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(203, 213, 225, 0.5) rgba(248, 250, 252, 0.3);
+}
+
+.kanban-list-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.kanban-list-scroll::-webkit-scrollbar-track {
+  background: rgba(248, 250, 252, 0.3);
+  border-radius: 8px;
+  margin: 4px 0;
+}
+
+.kanban-list-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.7), rgba(139, 92, 246, 0.7));
+  border-radius: 8px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.kanban-list-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.9), rgba(124, 58, 237, 0.9));
+}
+
+/* Dark mode kanban list scrollbar (not used since lists have their own bg colors) */
+.dark .kanban-list-scroll {
+  scrollbar-color: #475569 #1e293b;
+}
+
+.dark .kanban-list-scroll::-webkit-scrollbar-track {
+  background: rgba(30, 41, 59, 0.3);
+}
+
+.dark .kanban-list-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.7), rgba(167, 139, 250, 0.7));
+  border: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+.dark .kanban-list-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(139, 92, 246, 0.9));
+}
+
+/* Universal Search Modal Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slideDown {
+  animation: slideDown 0.3s ease-out;
+}
+
+/* Card Highlight Animation */
+@keyframes cardHighlight {
+  0%, 100% {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.4),
+                0 0 0 8px rgba(59, 130, 246, 0.2),
+                0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transform: scale(1.02);
+  }
+}
+
+.card-highlight {
+  animation: cardHighlight 1s ease-in-out 2;
+  border-color: #3b82f6 !important;
+}
+
+/* Universal Search Results Scrollbar */
+.search-results-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f8fafc;
+}
+
+.search-results-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.search-results-scroll::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 8px;
+  margin: 4px 0;
+}
+
+.search-results-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  border-radius: 8px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.search-results-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+}
+
+/* Dark mode search results scrollbar */
+.dark .search-results-scroll {
+  scrollbar-color: #475569 #1e293b;
+}
+
+.dark .search-results-scroll::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.dark .search-results-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+.dark .search-results-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+}
+
