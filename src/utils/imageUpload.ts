@@ -27,7 +27,6 @@ export const validateImageFile = (
 export const hostMediaGoService = async (
   file: File,
   folderName: string,
-  userId: string,
   authToken: string
 ): Promise<{ success: boolean; url?: string; error?: string }> => {
   try {
@@ -41,7 +40,6 @@ export const hostMediaGoService = async (
         Authorization: `Bearer ${authToken}`,
         "Content-Type": contentType,
         "folder-name": folderName,
-        "user-id": userId,
       },
       body: arrayBuffer,
     });

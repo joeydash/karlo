@@ -91,7 +91,6 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
         const result = await hostMediaGoService(
           file,
           "expenses",
-          targetUserId,
           token || ""
         );
 

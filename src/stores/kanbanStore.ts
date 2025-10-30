@@ -1,6 +1,12 @@
-import { create } from 'zustand';
-import { graphqlRequest } from '../utils/graphql';
-import { KanbanState, KanbanBoard, KanbanList, KanbanCard, BoardDataResponse } from '../types/kanban';
+import { create } from "zustand";
+import { graphqlRequest } from "../utils/graphql";
+import {
+  KanbanState,
+  KanbanBoard,
+  KanbanList,
+  KanbanCard,
+  BoardDataResponse,
+} from "../types/kanban";
 
 const QUERIES = {
   GET_BOARD_DATA: `
@@ -360,24 +366,24 @@ const QUERIES = {
         id
       }
     }
-  `
+  `,
 };
 
 // Predefined colors for lists
 const LIST_COLORS = [
-  '#3B82F6', // Blue
-  '#EF4444', // Red
-  '#10B981', // Green
-  '#F59E0B', // Yellow
-  '#8B5CF6', // Purple
-  '#EC4899', // Pink
-  '#06B6D4', // Cyan
-  '#84CC16', // Lime
-  '#F97316', // Orange
-  '#6366F1', // Indigo
+  "#3B82F6", // Blue
+  "#EF4444", // Red
+  "#10B981", // Green
+  "#F59E0B", // Yellow
+  "#8B5CF6", // Purple
+  "#EC4899", // Pink
+  "#06B6D4", // Cyan
+  "#84CC16", // Lime
+  "#F97316", // Orange
+  "#6366F1", // Indigo
 ];
 
-const DEFAULT_TEMPLATE_COLOR = '#6B7280'; // Gray for template lists
+const DEFAULT_TEMPLATE_COLOR = "#6B7280"; // Gray for template lists
 
 // Helper function to get random color
 const getRandomListColor = () => {
@@ -391,7 +397,7 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
 
   fetchBoardData: async (boardId: string) => {
     set({ isLoading: true, error: null });
-    
+
     const { data, error } = await graphqlRequest<BoardDataResponse>(
       QUERIES.GET_BOARD_DATA,
       { board_id: boardId }
@@ -407,9 +413,9 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
     const board = data?.karlo_boards?.[0] || null;
     const lists = data?.karlo_lists || [];
 
-    set({ 
+    set({
       currentBoard: board,
-      lists: lists
+      lists: lists,
     });
   },
 
@@ -421,13 +427,16 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
     // Get current user from auth store
     const authStore = (window as any).__authStore;
     if (!authStore?.user?.id) {
-      return { success: false, message: 'User not authenticated' };
+      return { success: false, message: "User not authenticated" };
     }
 
-    const { data, error } = await graphqlRequest<any>(
-      QUERIES.CREATE_LIST,
-      { board_id: boardId, name, position, color: listColor, created_by: authStore.user.id }
-    );
+    const { data, error } = await graphqlRequest<any>(QUERIES.CREATE_LIST, {
+      board_id: boardId,
+      name,
+      position,
+      color: listColor,
+      created_by: authStore.user.id,
+    });
 
     if (error) {
       set({ error });
@@ -440,10 +449,13 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
       return { success: true };
     }
 
-    return { success: false, message: 'Failed to create list' };
+    return { success: false, message: "Failed to create list" };
   },
 
-  updateList: async (listId: string, data: Partial<Pick<KanbanList, 'name' | 'color' | 'confetti' | 'is_final'>>) => {
+  updateList: async (
+    listId: string,
+    data: Partial<Pick<KanbanList, "name" | "color" | "confetti" | "is_final">>
+  ) => {
     const currentState = get();
 
     const { data: result, error } = await graphqlRequest<any>(
@@ -453,7 +465,7 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
         name: data.name,
         color: data.color,
         confetti: data.confetti ?? false,
-        is_final: data.is_final ?? false
+        is_final: data.is_final ?? false,
       }
     );
 
@@ -465,19 +477,19 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
     const updatedList = result?.update_karlo_lists_by_pk;
     if (updatedList) {
       // Update local state with the updated list
-      const updatedLists = currentState.lists.map(list =>
+      const updatedLists = currentState.lists.map((list) =>
         list.id === listId ? { ...list, ...updatedList } : list
       );
       set({ lists: updatedLists });
       return { success: true };
     }
 
-    return { success: false, message: 'Failed to update list' };
+    return { success: false, message: "Failed to update list" };
   },
 
   deleteList: async (listId: string) => {
     const currentState = get();
-    
+
     const { data: result, error } = await graphqlRequest<any>(
       QUERIES.DELETE_LIST,
       { id: listId }
@@ -490,40 +502,42 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
 
     if (result?.update_karlo_lists_by_pk) {
       // Remove list from local state
-      const updatedLists = currentState.lists.filter(list => list.id !== listId);
+      const updatedLists = currentState.lists.filter(
+        (list) => list.id !== listId
+      );
       set({ lists: updatedLists });
       return { success: true };
     }
 
-    return { success: false, message: 'Failed to delete list' };
+    return { success: false, message: "Failed to delete list" };
   },
 
   createCard: async (listId: string, data: Partial<KanbanCard>) => {
     const currentState = get();
-    
+
     // Get current user from auth store
     const authStore = (window as any).__authStore;
     if (!authStore?.user?.id) {
-      set({ error: 'User not authenticated' });
-      return { success: false, message: 'User not authenticated' };
+      set({ error: "User not authenticated" });
+      return { success: false, message: "User not authenticated" };
     }
 
     // Find the list to get current card count for position
-    const list = currentState.lists.find(l => l.id === listId);
+    const list = currentState.lists.find((l) => l.id === listId);
     if (!list) {
-      set({ error: 'List not found' });
-      return { success: false, message: 'List not found' };
+      set({ error: "List not found" });
+      return { success: false, message: "List not found" };
     }
 
     const position = list.karlo_cards.length;
-    
+
     const { data: result, error } = await graphqlRequest<any>(
       QUERIES.CREATE_CARD,
-      { 
-        list_id: listId, 
-        title: data.title || 'Untitled Card',
+      {
+        list_id: listId,
+        title: data.title || "Untitled Card",
         position,
-        created_by: authStore.user.id
+        created_by: authStore.user.id,
       }
     );
 
@@ -535,8 +549,8 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
     const newCard = result?.insert_karlo_cards_one;
     if (newCard) {
       // Update the lists state with the new card
-      const updatedLists = currentState.lists.map(list => 
-        list.id === listId 
+      const updatedLists = currentState.lists.map((list) =>
+        list.id === listId
           ? { ...list, karlo_cards: [...list.karlo_cards, newCard] }
           : list
       );
@@ -544,25 +558,30 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
       return { success: true, card: newCard };
     }
 
-    return { success: false, message: 'Failed to create card' };
+    return { success: false, message: "Failed to create card" };
   },
 
   updateCard: async (cardId: string, data: Partial<KanbanCard>) => {
     const currentState = get();
 
     // If only updating position/list, use the position update mutation
-    if (Object.keys(data).length <= 2 && ('list_id' in data || 'position' in data)) {
+    if (
+      Object.keys(data).length <= 2 &&
+      ("list_id" in data || "position" in data)
+    ) {
       // Check if moving to a final list and set is_completed accordingly
       let isCompleted: boolean | undefined = undefined;
       if (data.list_id) {
         // Find the card to check if it's already completed
         const card = currentState.lists
-          .flatMap(list => list.karlo_cards)
-          .find(c => c.id === cardId);
+          .flatMap((list) => list.karlo_cards)
+          .find((c) => c.id === cardId);
 
         // Only update is_completed if card is not already completed
         if (card && !card.is_completed) {
-          const targetList = currentState.lists.find(list => list.id === data.list_id);
+          const targetList = currentState.lists.find(
+            (list) => list.id === data.list_id
+          );
           if (targetList?.is_final) {
             isCompleted = true;
           }
@@ -570,14 +589,15 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
       }
 
       // Choose the correct mutation based on whether is_completed needs to be updated
-      const queryToUse = isCompleted !== undefined
-        ? QUERIES.UPDATE_CARD_POSITION_WITH_COMPLETED
-        : QUERIES.UPDATE_CARD_POSITION_ONLY;
+      const queryToUse =
+        isCompleted !== undefined
+          ? QUERIES.UPDATE_CARD_POSITION_WITH_COMPLETED
+          : QUERIES.UPDATE_CARD_POSITION_ONLY;
 
       const variables: any = {
         id: cardId,
         list_id: data.list_id,
-        position: data.position
+        position: data.position,
       };
 
       if (isCompleted !== undefined) {
@@ -601,26 +621,28 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
           updatedData.is_completed = isCompleted;
         }
 
-        const updatedLists = currentState.lists.map(list => ({
+        const updatedLists = currentState.lists.map((list) => ({
           ...list,
-          karlo_cards: list.karlo_cards.map(card =>
-            card.id === cardId
-              ? { ...card, ...updatedData }
-              : card
-          ).filter(card => card.list_id === list.id)
+          karlo_cards: list.karlo_cards
+            .map((card) =>
+              card.id === cardId ? { ...card, ...updatedData } : card
+            )
+            .filter((card) => card.list_id === list.id),
         }));
 
         // Add card to new list if it was moved
         if (data.list_id) {
           const cardToMove = currentState.lists
-            .flatMap(list => list.karlo_cards)
-            .find(card => card.id === cardId);
+            .flatMap((list) => list.karlo_cards)
+            .find((card) => card.id === cardId);
 
           if (cardToMove) {
             const updatedCard = { ...cardToMove, ...updatedData };
-            updatedLists.forEach(list => {
+            updatedLists.forEach((list) => {
               if (list.id === data.list_id) {
-                const cardExists = list.karlo_cards.some(card => card.id === cardId);
+                const cardExists = list.karlo_cards.some(
+                  (card) => card.id === cardId
+                );
                 if (!cardExists) {
                   list.karlo_cards.push(updatedCard);
                 }
@@ -637,12 +659,17 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
       // Only include fields that are actually defined in the update
       const variables: any = { id: cardId };
       if (data.title !== undefined) variables.title = data.title;
-      if (data.description !== undefined) variables.description = data.description;
+      if (data.description !== undefined)
+        variables.description = data.description;
       if (data.due_date !== undefined) variables.due_date = data.due_date;
-      if (data.is_completed !== undefined) variables.is_completed = data.is_completed;
-      if (data.is_archived !== undefined) variables.is_archived = data.is_archived;
-      if (data.cover_color !== undefined) variables.cover_color = data.cover_color;
-      if (data.story_points !== undefined) variables.story_points = data.story_points;
+      if (data.is_completed !== undefined)
+        variables.is_completed = data.is_completed;
+      if (data.is_archived !== undefined)
+        variables.is_archived = data.is_archived;
+      if (data.cover_color !== undefined)
+        variables.cover_color = data.cover_color;
+      if (data.story_points !== undefined)
+        variables.story_points = data.story_points;
 
       const { data: result, error } = await graphqlRequest<any>(
         QUERIES.UPDATE_CARD,
@@ -657,11 +684,11 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
       const updatedCard = result?.update_karlo_cards_by_pk;
       if (updatedCard) {
         // Update local state with the updated card
-        const updatedLists = currentState.lists.map(list => ({
+        const updatedLists = currentState.lists.map((list) => ({
           ...list,
-          karlo_cards: list.karlo_cards.map(card =>
+          karlo_cards: list.karlo_cards.map((card) =>
             card.id === cardId ? { ...card, ...updatedCard } : card
-          )
+          ),
         }));
 
         set({ lists: updatedLists });
@@ -669,16 +696,15 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
       }
     }
 
-    return { success: false, message: 'Failed to update card' };
+    return { success: false, message: "Failed to update card" };
   },
 
   deleteCard: async (cardId: string) => {
     const currentState = get();
-    
-    const { data, error } = await graphqlRequest<any>(
-      QUERIES.DELETE_CARD,
-      { id: cardId }
-    );
+
+    const { data, error } = await graphqlRequest<any>(QUERIES.DELETE_CARD, {
+      id: cardId,
+    });
 
     if (error) {
       set({ error });
@@ -687,108 +713,119 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
 
     if (data?.update_karlo_cards_by_pk) {
       // Remove card from local state since it's archived
-      const updatedLists = currentState.lists.map(list => ({
+      const updatedLists = currentState.lists.map((list) => ({
         ...list,
-        karlo_cards: list.karlo_cards.filter(card => card.id !== cardId)
+        karlo_cards: list.karlo_cards.filter((card) => card.id !== cardId),
       }));
-      
+
       set({ lists: updatedLists });
       return { success: true };
     }
 
-    return { success: false, message: 'Failed to archive card' };
+    return { success: false, message: "Failed to archive card" };
   },
 
   clearError: () => set({ error: null }),
 
   // Drag and drop helper functions
-  moveCard: async (cardId: string, sourceListId: string, targetListId: string, newPosition: number) => {
+  moveCard: async (
+    cardId: string,
+    sourceListId: string,
+    targetListId: string,
+    newPosition: number
+  ) => {
     const currentState = get();
-    
+
     // Find source list and card
-    const sourceList = currentState.lists.find(list => list.id === sourceListId);
+    const sourceList = currentState.lists.find(
+      (list) => list.id === sourceListId
+    );
     if (!sourceList) {
-      return { success: false, message: 'Source list not found' };
+      return { success: false, message: "Source list not found" };
     }
-    
-    const cardIndex = sourceList.karlo_cards.findIndex(card => card.id === cardId);
+
+    const cardIndex = sourceList.karlo_cards.findIndex(
+      (card) => card.id === cardId
+    );
     if (cardIndex === -1) {
-      return { success: false, message: 'Card not found' };
+      return { success: false, message: "Card not found" };
     }
-    
+
     const card = sourceList.karlo_cards[cardIndex];
-    
+
     if (sourceListId === targetListId) {
       // Moving within the same list
       if (cardIndex === newPosition) {
         return { success: true }; // No change needed
       }
-      
+
       // Create new array with card moved to new position
       const cards = [...sourceList.karlo_cards];
       const [movedCard] = cards.splice(cardIndex, 1);
       cards.splice(newPosition, 0, movedCard);
-      
+
       // Prepare batch updates for all cards with new positions
       const updates = cards.map((c, index) => ({
         where: { id: { _eq: c.id } },
-        _set: { position: index }
+        _set: { position: index },
       }));
-      
+
       try {
         // Execute batch update
         const { error } = await graphqlRequest<any>(
           QUERIES.BATCH_UPDATE_POSITIONS,
           { updates }
         );
-        
+
         if (error) {
           set({ error });
           return { success: false, message: error };
         }
-        
+
         // Update local state
-        const updatedLists = currentState.lists.map(list => {
+        const updatedLists = currentState.lists.map((list) => {
           if (list.id === sourceListId) {
             return {
               ...list,
               karlo_cards: cards.map((card, index) => ({
                 ...card,
-                position: index
-              }))
+                position: index,
+              })),
             };
           }
           return list;
         });
-        
+
         set({ lists: updatedLists });
         return { success: true };
-        
       } catch (error) {
-        console.error('Error updating card positions:', error);
-        return { success: false, message: 'Failed to update positions' };
+        console.error("Error updating card positions:", error);
+        return { success: false, message: "Failed to update positions" };
       }
-      
     } else {
       // Moving between different lists
-      const targetList = currentState.lists.find(list => list.id === targetListId);
+      const targetList = currentState.lists.find(
+        (list) => list.id === targetListId
+      );
       if (!targetList) {
-        return { success: false, message: 'Target list not found' };
+        return { success: false, message: "Target list not found" };
       }
 
       // Check if moving to a final list and set is_completed accordingly
       // Only update if card is not already completed
-      const isCompleted = (!card.is_completed && targetList.is_final) ? true : undefined;
+      const isCompleted =
+        !card.is_completed && targetList.is_final ? true : undefined;
 
       // Choose the correct mutation based on whether is_completed needs to be updated
-      const queryToUse = isCompleted !== undefined
-        ? QUERIES.UPDATE_CARD_POSITION_WITH_COMPLETED
-        : QUERIES.UPDATE_CARD_POSITION_ONLY;
+      const queryToUse =
+        isCompleted !== undefined
+          ? QUERIES.UPDATE_CARD_POSITION_WITH_COMPLETED
+          : QUERIES.UPDATE_CARD_POSITION_ONLY;
 
       const variables: any = {
         id: cardId,
         list_id: targetListId,
-        position: newPosition
+        position: newPosition,
       };
 
       if (isCompleted !== undefined) {
@@ -796,10 +833,7 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
       }
 
       // Update the card's list and position
-      const { error } = await graphqlRequest<any>(
-        queryToUse,
-        variables
-      );
+      const { error } = await graphqlRequest<any>(queryToUse, variables);
 
       if (error) {
         set({ error });
@@ -807,12 +841,12 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
       }
 
       // Update local state - move card between lists
-      const updatedLists = currentState.lists.map(list => {
+      const updatedLists = currentState.lists.map((list) => {
         if (list.id === sourceListId) {
           // Remove card from source list
           return {
             ...list,
-            karlo_cards: list.karlo_cards.filter(c => c.id !== cardId)
+            karlo_cards: list.karlo_cards.filter((c) => c.id !== cardId),
           };
         } else if (list.id === targetListId) {
           // Add card to target list at correct position
@@ -820,14 +854,14 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
             ...card,
             list_id: targetListId,
             position: newPosition,
-            ...(isCompleted !== undefined && { is_completed: isCompleted })
+            ...(isCompleted !== undefined && { is_completed: isCompleted }),
           };
           const newCards = [...list.karlo_cards];
           newCards.splice(newPosition, 0, updatedCard);
 
           return {
             ...list,
-            karlo_cards: newCards
+            karlo_cards: newCards,
           };
         }
         return list;
@@ -839,7 +873,7 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
       if (targetList?.confetti) {
         // Trigger confetti animation with dynamic import
         try {
-          const confetti = (await import('canvas-confetti')).default;
+          const confetti = (await import("canvas-confetti")).default;
           confetti({
             particleCount: 300,
             spread: 360,
@@ -848,10 +882,17 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
             drift: 2,
             scalar: 1.5,
             origin: { x: 0.5, y: -0.2 },
-            colors: ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899']
+            colors: [
+              "#3B82F6",
+              "#EF4444",
+              "#10B981",
+              "#F59E0B",
+              "#8B5CF6",
+              "#EC4899",
+            ],
           });
         } catch (error) {
-          console.warn('Failed to load confetti animation:', error);
+          console.warn("Failed to load confetti animation:", error);
         }
       }
 
@@ -891,10 +932,10 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
   },
 
   addCardMember: async (cardId: string, userId: string) => {
-    const { data, error } = await graphqlRequest<any>(
-      QUERIES.ADD_CARD_MEMBER,
-      { card_id: cardId, user_id: userId }
-    );
+    const { data, error } = await graphqlRequest<any>(QUERIES.ADD_CARD_MEMBER, {
+      card_id: cardId,
+      user_id: userId,
+    });
 
     if (error) {
       set({ error });
@@ -905,34 +946,36 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
       // Update local state directly instead of refreshing entire board
       const currentState = get();
       const newMember = data.insert_karlo_card_members_one;
-      
+
       // Update the specific card in local state
-      const updatedLists = currentState.lists.map(list => ({
+      const updatedLists = currentState.lists.map((list) => ({
         ...list,
-        karlo_cards: list.karlo_cards.map(card => {
+        karlo_cards: list.karlo_cards.map((card) => {
           if (card.id === cardId) {
             return {
               ...card,
               karlo_card_members: [
                 ...(card.karlo_card_members || []),
-                newMember
+                newMember,
               ],
               karlo_card_members_aggregate: {
                 aggregate: {
-                  count: (card.karlo_card_members_aggregate?.aggregate?.count || 0) + 1
-                }
-              }
+                  count:
+                    (card.karlo_card_members_aggregate?.aggregate?.count || 0) +
+                    1,
+                },
+              },
             };
           }
           return card;
-        })
+        }),
       }));
-      
+
       set({ lists: updatedLists });
       return { success: true };
     }
 
-    return { success: false, message: 'Failed to add member to card' };
+    return { success: false, message: "Failed to add member to card" };
   },
 
   removeCardMember: async (memberId: string) => {
@@ -949,145 +992,157 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
     if (data?.delete_karlo_card_members_by_pk) {
       // Update local state directly instead of refreshing entire board
       const currentState = get();
-      
+
       // Find the card that had this member removed
       let targetCardId: string | null = null;
-      
+
       for (const list of currentState.lists) {
         for (const card of list.karlo_cards) {
-          if (card.karlo_card_members?.some(member => member.id === memberId)) {
+          if (
+            card.karlo_card_members?.some((member) => member.id === memberId)
+          ) {
             targetCardId = card.id;
             break;
           }
         }
         if (targetCardId) break;
       }
-      
+
       if (targetCardId) {
         // Update the specific card in local state
-        const updatedLists = currentState.lists.map(list => ({
+        const updatedLists = currentState.lists.map((list) => ({
           ...list,
-          karlo_cards: list.karlo_cards.map(card => {
+          karlo_cards: list.karlo_cards.map((card) => {
             if (card.id === targetCardId) {
-              const updatedMembers = card.karlo_card_members?.filter(member => member.id !== memberId) || [];
+              const updatedMembers =
+                card.karlo_card_members?.filter(
+                  (member) => member.id !== memberId
+                ) || [];
               return {
                 ...card,
                 karlo_card_members: updatedMembers,
                 karlo_card_members_aggregate: {
                   aggregate: {
-                    count: updatedMembers.length
-                  }
-                }
+                    count: updatedMembers.length,
+                  },
+                },
               };
             }
             return card;
-          })
+          }),
         }));
-        
+
         set({ lists: updatedLists });
       }
-      
+
       return { success: true };
     }
 
-    return { success: false, message: 'Failed to remove member from card' };
+    return { success: false, message: "Failed to remove member from card" };
   },
 
   // File attachment functions
   uploadFile: async (file: File, cardId: string) => {
-  const currentState = get();
+    const currentState = get();
 
-  // Get current user from auth store
-  const authStore = (window as any).__authStore;
-  if (!authStore?.user?.id) {
-    set({ error: 'User not authenticated' });
-    return { success: false, message: 'User not authenticated' };
-  }
-
-  try {
-    // Sanitize file name for headers
-    const sanitizedFileName = encodeURIComponent(file.name);
-    console.log('📤 Preparing file upload:', {
-      originalName: file.name,
-      sanitizedName: sanitizedFileName,
-      type: file.type,
-      size: file.size,
-      cardId,
-    });
-
-    // Upload file using media service
-    const { hostMediaGoService } = await import('../utils/imageUpload');
-
-    const uploadResult = await hostMediaGoService(
-      file,
-      'karlo_card_attatchments',
-      authStore.user.id,
-      authStore.token
-    );
-
-    if (!uploadResult.success || !uploadResult.url) {
-      throw new Error(uploadResult.error || 'File upload failed');
+    // Get current user from auth store
+    const authStore = (window as any).__authStore;
+    if (!authStore?.user?.id) {
+      set({ error: "User not authenticated" });
+      return { success: false, message: "User not authenticated" };
     }
 
-    const fileUrl = uploadResult.url;
-    console.log('📥 Upload successful:', fileUrl);
+    try {
+      // Sanitize file name for headers
+      const sanitizedFileName = encodeURIComponent(file.name);
+      console.log("📤 Preparing file upload:", {
+        originalName: file.name,
+        sanitizedName: sanitizedFileName,
+        type: file.type,
+        size: file.size,
+        cardId,
+      });
 
-    // Save attachment info to database
-    const { data, error } = await graphqlRequest<any>(
-      QUERIES.INSERT_ATTACHMENT,
-      {
-        file_size: file.size,
-        card_id: cardId,
-        uploaded_by: authStore.user.id,
-        filename: sanitizedFileName,
-        original_filename: file.name,
-        mime_type: file.type,
-        url: fileUrl,
+      // Upload file using media service
+      const { hostMediaGoService } = await import("../utils/imageUpload");
+
+      const uploadResult = await hostMediaGoService(
+        file,
+        "karlo_card_attatchments",
+        authStore.token
+      );
+
+      if (!uploadResult.success || !uploadResult.url) {
+        throw new Error(uploadResult.error || "File upload failed");
       }
-    );
 
-    if (error) {
-      set({ error });
-      return { success: false, message: error };
-    }
+      const fileUrl = uploadResult.url;
+      console.log("📥 Upload successful:", fileUrl);
 
-    const newAttachment = data?.insert_karlo_attachments?.returning?.[0];
-    if (newAttachment) {
-      // Update local state
-      const updatedLists = currentState.lists.map(list => ({
-        ...list,
-        karlo_cards: list.karlo_cards.map(card => {
-          if (card.id === cardId) {
-            const updatedAttachments = [...(card.karlo_attachments || []), newAttachment];
-            return {
-              ...card,
-              karlo_attachments: updatedAttachments,
-              karlo_attachments_aggregate: {
-                aggregate: {
-                  count: updatedAttachments.length,
+      // Save attachment info to database
+      const { data, error } = await graphqlRequest<any>(
+        QUERIES.INSERT_ATTACHMENT,
+        {
+          file_size: file.size,
+          card_id: cardId,
+          uploaded_by: authStore.user.id,
+          filename: sanitizedFileName,
+          original_filename: file.name,
+          mime_type: file.type,
+          url: fileUrl,
+        }
+      );
+
+      if (error) {
+        set({ error });
+        return { success: false, message: error };
+      }
+
+      const newAttachment = data?.insert_karlo_attachments?.returning?.[0];
+      if (newAttachment) {
+        // Update local state
+        const updatedLists = currentState.lists.map((list) => ({
+          ...list,
+          karlo_cards: list.karlo_cards.map((card) => {
+            if (card.id === cardId) {
+              const updatedAttachments = [
+                ...(card.karlo_attachments || []),
+                newAttachment,
+              ];
+              return {
+                ...card,
+                karlo_attachments: updatedAttachments,
+                karlo_attachments_aggregate: {
+                  aggregate: {
+                    count: updatedAttachments.length,
+                  },
                 },
-              },
-            };
-          }
-          return card;
-        }),
-      }));
+              };
+            }
+            return card;
+          }),
+        }));
 
-      set({ lists: updatedLists });
-      return { success: true, attachment: newAttachment };
+        set({ lists: updatedLists });
+        return { success: true, attachment: newAttachment };
+      }
+
+      return { success: false, message: "Failed to save attachment info" };
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      set({
+        error: error instanceof Error ? error.message : "File upload failed",
+      });
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : "File upload failed",
+      };
     }
-
-    return { success: false, message: 'Failed to save attachment info' };
-  } catch (error) {
-    console.error('Error uploading file:', error);
-    set({ error: error instanceof Error ? error.message : 'File upload failed' });
-    return { success: false, message: error instanceof Error ? error.message : 'File upload failed' };
-  }
-},
+  },
 
   deleteAttachment: async (attachmentId: string) => {
     const currentState = get();
-    
+
     const { data, error } = await graphqlRequest<any>(
       QUERIES.DELETE_ATTACHMENT,
       { id: attachmentId }
@@ -1100,35 +1155,37 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
 
     if (data?.delete_karlo_attachments_by_pk) {
       // Update local state to remove attachment
-      const updatedLists = currentState.lists.map(list => ({
+      const updatedLists = currentState.lists.map((list) => ({
         ...list,
-        karlo_cards: list.karlo_cards.map(card => {
-          const updatedAttachments = card.karlo_attachments?.filter(att => att.id !== attachmentId) || [];
+        karlo_cards: list.karlo_cards.map((card) => {
+          const updatedAttachments =
+            card.karlo_attachments?.filter((att) => att.id !== attachmentId) ||
+            [];
           return {
             ...card,
             karlo_attachments: updatedAttachments,
             karlo_attachments_aggregate: {
               aggregate: {
-                count: updatedAttachments.length
-              }
-            }
+                count: updatedAttachments.length,
+              },
+            },
           };
-        })
+        }),
       }));
-      
+
       set({ lists: updatedLists });
       return { success: true };
     }
 
-    return { success: false, message: 'Failed to delete attachment' };
+    return { success: false, message: "Failed to delete attachment" };
   },
 
   // Add function to remove card from local state without database call
   removeCardFromLocalState: (cardId: string) => {
     const currentState = get();
-    const updatedLists = currentState.lists.map(list => ({
+    const updatedLists = currentState.lists.map((list) => ({
       ...list,
-      karlo_cards: list.karlo_cards.filter(card => card.id !== cardId)
+      karlo_cards: list.karlo_cards.filter((card) => card.id !== cardId),
     }));
     set({ lists: updatedLists });
   },
@@ -1136,36 +1193,38 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
   // Update comment count for a card
   addCommentToCard: (cardId: string, commentId: string) => {
     const currentState = get();
-    const updatedLists = currentState.lists.map(list => ({
+    const updatedLists = currentState.lists.map((list) => ({
       ...list,
-      karlo_cards: list.karlo_cards.map(card => {
+      karlo_cards: list.karlo_cards.map((card) => {
         if (card.id === cardId) {
           const currentComments = card.karlo_card_comments || [];
           return {
             ...card,
-            karlo_card_comments: [...currentComments, { id: commentId }]
+            karlo_card_comments: [...currentComments, { id: commentId }],
           };
         }
         return card;
-      })
+      }),
     }));
     set({ lists: updatedLists });
   },
 
   removeCommentFromCard: (cardId: string, commentId: string) => {
     const currentState = get();
-    const updatedLists = currentState.lists.map(list => ({
+    const updatedLists = currentState.lists.map((list) => ({
       ...list,
-      karlo_cards: list.karlo_cards.map(card => {
+      karlo_cards: list.karlo_cards.map((card) => {
         if (card.id === cardId) {
           const currentComments = card.karlo_card_comments || [];
           return {
             ...card,
-            karlo_card_comments: currentComments.filter(c => c.id !== commentId)
+            karlo_card_comments: currentComments.filter(
+              (c) => c.id !== commentId
+            ),
           };
         }
         return card;
-      })
+      }),
     }));
     set({ lists: updatedLists });
   },

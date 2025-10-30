@@ -98,7 +98,6 @@ const UpdateExpenseModal: React.FC<UpdateExpenseModalProps> = ({
         const result = await hostMediaGoService(
           file,
           "expenses",
-          expense?.user_id || "",
           token || ""
         );
 

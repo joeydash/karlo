@@ -1,13 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { X, Building2, Loader2, AlertCircle, Upload, Image as ImageIcon } from 'lucide-react';
-import { useOrganization } from '../hooks/useOrganization';
-import { Organization } from '../types/organization';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '../contexts/ToastContext';
-import { useAuth } from '../hooks/useAuth';
-import { validateImageFile, hostMediaGoService } from '../utils/imageUpload';
-import { AUTH_CONFIG } from '../utils/config';
-import ConfirmationModal from './ConfirmationModal';
+import React, { useState, useEffect } from "react";
+import {
+  X,
+  Building2,
+  Loader2,
+  AlertCircle,
+  Upload,
+  Image as ImageIcon,
+} from "lucide-react";
+import { useOrganization } from "../hooks/useOrganization";
+import { Organization } from "../types/organization";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "../contexts/ToastContext";
+import { useAuth } from "../hooks/useAuth";
+import { validateImageFile, hostMediaGoService } from "../utils/imageUpload";
+import { AUTH_CONFIG } from "../utils/config";
+import ConfirmationModal from "./ConfirmationModal";
 
 interface EditWorkspaceModalProps {
   isOpen: boolean;
@@ -15,19 +22,24 @@ interface EditWorkspaceModalProps {
   workspace: Organization | null;
 }
 
-const EditWorkspaceModal: React.FC<EditWorkspaceModalProps> = ({ isOpen, onClose, workspace }) => {
+const EditWorkspaceModal: React.FC<EditWorkspaceModalProps> = ({
+  isOpen,
+  onClose,
+  workspace,
+}) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: '',
-    display_name: '',
-    description: '',
-    website: '',
-    logo_url: ''
+    name: "",
+    display_name: "",
+    description: "",
+    website: "",
+    logo_url: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const { updateOrganization, deleteOrganization, isLoading } = useOrganization();
+  const { updateOrganization, deleteOrganization, isLoading } =
+    useOrganization();
   const { showSuccess, showError } = useToast();
   const { user } = useAuth();
 
@@ -37,9 +49,9 @@ const EditWorkspaceModal: React.FC<EditWorkspaceModalProps> = ({ isOpen, onClose
       setFormData({
         name: workspace.name,
         display_name: workspace.display_name,
-        description: workspace.description || '',
-        website: workspace.website || '',
-        logo_url: workspace.logo_url || ''
+        description: workspace.description || "",
+        website: workspace.website || "",
+        logo_url: workspace.logo_url || "",
       });
     }
   }, [workspace]);
@@ -50,17 +62,19 @@ const EditWorkspaceModal: React.FC<EditWorkspaceModalProps> = ({ isOpen, onClose
     const newErrors: Record<string, string> = {};
 
     if (!formData.display_name.trim()) {
-      newErrors.display_name = 'Workspace name is required';
+      newErrors.display_name = "Workspace name is required";
     }
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Workspace slug is required';
+      newErrors.name = "Workspace slug is required";
     } else if (!/^[a-z0-9_]+$/.test(formData.name)) {
-      newErrors.name = 'Slug can only contain lowercase letters, numbers, and underscores';
+      newErrors.name =
+        "Slug can only contain lowercase letters, numbers, and underscores";
     }
 
     if (formData.website && !formData.website.match(/^https?:\/\/.+/)) {
-      newErrors.website = 'Website must be a valid URL starting with http:// or https://';
+      newErrors.website =
+        "Website must be a valid URL starting with http:// or https://";
     }
 
     setErrors(newErrors);
@@ -71,45 +85,40 @@ const EditWorkspaceModal: React.FC<EditWorkspaceModalProps> = ({ isOpen, onClose
     if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
-      showError('Please select an image file');
+    if (!file.type.startsWith("image/")) {
+      showError("Please select an image file");
       return;
     }
 
     // Validate file size (max 10MB before compression)
     if (file.size > 10 * 1024 * 1024) {
-      showError('Image size must be less than 10MB');
+      showError("Image size must be less than 10MB");
       return;
     }
 
     setIsUploadingLogo(true);
 
     try {
-      const authStore = await import('../stores/authStore');
+      const authStore = await import("../stores/authStore");
       const token = authStore.default.getState().token;
 
       if (!token || !user?.id) {
-        showError('Authentication token not found');
+        showError("Authentication token not found");
         setIsUploadingLogo(false);
         return;
       }
 
-      const result = await hostMediaGoService(
-        file,
-        'organisation_logo',
-        user.id,
-        token
-      );
+      const result = await hostMediaGoService(file, "organisation_logo", token);
 
       if (result.success && result.url) {
-        setFormData(prev => ({ ...prev, logo_url: result.url }));
-        showSuccess('Logo uploaded successfully');
+        setFormData((prev) => ({ ...prev, logo_url: result.url }));
+        showSuccess("Logo uploaded successfully");
       } else {
-        showError(result.error || 'Failed to upload logo');
+        showError(result.error || "Failed to upload logo");
       }
     } catch (error) {
-      console.error('Error uploading logo:', error);
-      showError('Failed to upload logo');
+      console.error("Error uploading logo:", error);
+      showError("Failed to upload logo");
     } finally {
       setIsUploadingLogo(false);
     }
@@ -121,7 +130,7 @@ const EditWorkspaceModal: React.FC<EditWorkspaceModalProps> = ({ isOpen, onClose
     if (!validateForm()) return;
 
     if (!workspace?.id) {
-      setErrors({ display_name: 'Workspace not found' });
+      setErrors({ display_name: "Workspace not found" });
       return;
     }
 
@@ -130,16 +139,18 @@ const EditWorkspaceModal: React.FC<EditWorkspaceModalProps> = ({ isOpen, onClose
       display_name: formData.display_name,
       description: formData.description || undefined,
       website: formData.website || undefined,
-      logo_url: formData.logo_url || undefined
+      logo_url: formData.logo_url || undefined,
     });
 
     if (result.success) {
-      showSuccess('Workspace updated successfully');
+      showSuccess("Workspace updated successfully");
       setErrors({});
       handleClose();
     } else {
-      setErrors({ display_name: result.message || 'Failed to update workspace' });
-      showError(result.message || 'Failed to update workspace');
+      setErrors({
+        display_name: result.message || "Failed to update workspace",
+      });
+      showError(result.message || "Failed to update workspace");
     }
   };
 
@@ -153,13 +164,15 @@ const EditWorkspaceModal: React.FC<EditWorkspaceModalProps> = ({ isOpen, onClose
 
     const result = await deleteOrganization(workspace.id);
     if (result.success) {
-      showSuccess('Workspace deleted successfully');
+      showSuccess("Workspace deleted successfully");
       setShowDeleteConfirmation(false);
       onClose();
-      navigate('/dashboard');
+      navigate("/dashboard");
     } else {
-      showError(result.message || 'Failed to delete workspace');
-      setErrors({ display_name: result.message || 'Failed to delete workspace' });
+      showError(result.message || "Failed to delete workspace");
+      setErrors({
+        display_name: result.message || "Failed to delete workspace",
+      });
     }
   };
 
@@ -173,8 +186,12 @@ const EditWorkspaceModal: React.FC<EditWorkspaceModalProps> = ({ isOpen, onClose
               <Building2 className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Edit Workspace</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-300">Update workspace settings</p>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                Edit Workspace
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Update workspace settings
+              </p>
             </div>
           </div>
           <button
@@ -186,10 +203,16 @@ const EditWorkspaceModal: React.FC<EditWorkspaceModalProps> = ({ isOpen, onClose
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
+        <form
+          onSubmit={handleSubmit}
+          className="p-6 space-y-4 overflow-y-auto flex-1"
+        >
           {/* Workspace Name */}
           <div>
-            <label htmlFor="display_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              htmlFor="display_name"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               Workspace Name *
             </label>
             <input
@@ -197,11 +220,17 @@ const EditWorkspaceModal: React.FC<EditWorkspaceModalProps> = ({ isOpen, onClose
               type="text"
               value={formData.display_name}
               onChange={(e) => {
-                setFormData(prev => ({ ...prev, display_name: e.target.value }));
-                if (errors.display_name) setErrors(prev => ({ ...prev, display_name: '' }));
+                setFormData((prev) => ({
+                  ...prev,
+                  display_name: e.target.value,
+                }));
+                if (errors.display_name)
+                  setErrors((prev) => ({ ...prev, display_name: "" }));
               }}
               className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 ${
-                errors.display_name ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 dark:border-gray-600 focus:border-blue-500 dark:focus:ring-blue-400'
+                errors.display_name
+                  ? "border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-500"
+                  : "border-gray-200 dark:border-gray-600 focus:border-blue-500 dark:focus:ring-blue-400"
               } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
               placeholder="My Awesome Workspace"
             />
@@ -215,7 +244,10 @@ const EditWorkspaceModal: React.FC<EditWorkspaceModalProps> = ({ isOpen, onClose
 
           {/* Workspace Slug */}
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               Workspace Slug *
             </label>
             <input
@@ -223,15 +255,19 @@ const EditWorkspaceModal: React.FC<EditWorkspaceModalProps> = ({ isOpen, onClose
               type="text"
               value={formData.name}
               onChange={(e) => {
-                setFormData(prev => ({ ...prev, name: e.target.value }));
-                if (errors.name) setErrors(prev => ({ ...prev, name: '' }));
+                setFormData((prev) => ({ ...prev, name: e.target.value }));
+                if (errors.name) setErrors((prev) => ({ ...prev, name: "" }));
               }}
               className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 ${
-                errors.name ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 dark:border-gray-600 focus:border-blue-500 dark:focus:ring-blue-400'
+                errors.name
+                  ? "border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-500"
+                  : "border-gray-200 dark:border-gray-600 focus:border-blue-500 dark:focus:ring-blue-400"
               } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
               placeholder="my-awesome-workspace"
             />
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Used in URLs. Only lowercase letters, numbers, and underscores.</p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Used in URLs. Only lowercase letters, numbers, and underscores.
+            </p>
             {errors.name && (
               <div className="mt-1 flex items-center text-sm text-red-600 dark:text-red-400">
                 <AlertCircle className="h-4 w-4 mr-1" />
@@ -242,13 +278,21 @@ const EditWorkspaceModal: React.FC<EditWorkspaceModalProps> = ({ isOpen, onClose
 
           {/* Description */}
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               Description
             </label>
             <textarea
               id="description"
               value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
               rows={3}
               className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 transition-all duration-200 resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="Brief description of your workspace..."
@@ -257,7 +301,10 @@ const EditWorkspaceModal: React.FC<EditWorkspaceModalProps> = ({ isOpen, onClose
 
           {/* Website */}
           <div>
-            <label htmlFor="website" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              htmlFor="website"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               Website
             </label>
             <input
@@ -265,11 +312,14 @@ const EditWorkspaceModal: React.FC<EditWorkspaceModalProps> = ({ isOpen, onClose
               type="url"
               value={formData.website}
               onChange={(e) => {
-                setFormData(prev => ({ ...prev, website: e.target.value }));
-                if (errors.website) setErrors(prev => ({ ...prev, website: '' }));
+                setFormData((prev) => ({ ...prev, website: e.target.value }));
+                if (errors.website)
+                  setErrors((prev) => ({ ...prev, website: "" }));
               }}
               className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 ${
-                errors.website ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 dark:border-gray-600 focus:border-blue-500 dark:focus:ring-blue-400'
+                errors.website
+                  ? "border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-500"
+                  : "border-gray-200 dark:border-gray-600 focus:border-blue-500 dark:focus:ring-blue-400"
               } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
               placeholder="https://example.com"
             />
@@ -289,7 +339,11 @@ const EditWorkspaceModal: React.FC<EditWorkspaceModalProps> = ({ isOpen, onClose
             <div className="flex items-center space-x-4">
               {formData.logo_url && (
                 <div className="w-20 h-20 rounded-xl border-2 border-gray-200 dark:border-gray-600 overflow-hidden flex items-center justify-center bg-gray-50 dark:bg-gray-700">
-                  <img src={formData.logo_url} alt="Logo preview" className="w-full h-full object-cover" />
+                  <img
+                    src={formData.logo_url}
+                    alt="Logo preview"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               )}
               <label className="flex-1 cursor-pointer hover:opacity-80 transition-opacity">
@@ -326,7 +380,10 @@ const EditWorkspaceModal: React.FC<EditWorkspaceModalProps> = ({ isOpen, onClose
                 {errors.logo}
               </div>
             )}
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Recommended: Square image, maximum 10MB. Supported formats: JPEG, PNG, GIF, WebP.</p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Recommended: Square image, maximum 10MB. Supported formats: JPEG,
+              PNG, GIF, WebP.
+            </p>
           </div>
 
           {/* Actions */}
@@ -349,7 +406,7 @@ const EditWorkspaceModal: React.FC<EditWorkspaceModalProps> = ({ isOpen, onClose
                   Updating...
                 </>
               ) : (
-                'Update Workspace'
+                "Update Workspace"
               )}
             </button>
           </div>
@@ -359,9 +416,12 @@ const EditWorkspaceModal: React.FC<EditWorkspaceModalProps> = ({ isOpen, onClose
         <div className="px-6 pb-6">
           <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
             <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4">
-              <h3 className="text-sm font-semibold text-red-800 dark:text-red-300 mb-2">Danger Zone</h3>
+              <h3 className="text-sm font-semibold text-red-800 dark:text-red-300 mb-2">
+                Danger Zone
+              </h3>
               <p className="text-sm text-red-600 dark:text-red-400 mb-4">
-                Once you delete this workspace, there is no going back. Please be certain.
+                Once you delete this workspace, there is no going back. Please
+                be certain.
               </p>
               <button
                 type="button"

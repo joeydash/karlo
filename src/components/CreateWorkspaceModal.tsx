@@ -79,7 +79,6 @@ const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({ isOpen, onC
       const result = await hostMediaGoService(
         file,
         'organisation_logo',
-        user.id,
         token
       );
 
