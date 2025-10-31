@@ -1,7 +1,12 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { OrganizationState, Organization, CreateOrganizationData, OrganizationsResponse } from '../types/organization';
-import { graphqlRequest } from '../utils/graphql';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import {
+  OrganizationState,
+  Organization,
+  CreateOrganizationData,
+  OrganizationsResponse,
+} from "../types/organization";
+import { graphqlRequest } from "../utils/graphql";
 
 const QUERIES = {
   GET_ORGANIZATIONS: `
@@ -54,6 +59,19 @@ const QUERIES = {
       }
     }
   `,
+  CHECK_ORGANIZATION_ACCESS: `
+    query CheckOrganizationAccess($organization_id: uuid!, $user_id: uuid!) {
+      karlo_organizations_by_pk(id: $organization_id) {
+        id
+        name
+        created_by
+        karlo_organization_members(where: {user_id: {_eq: $user_id}}) {
+          user_id
+          role
+        }
+      }
+    }
+  `,
   UPDATE_ORGANIZATION: `
     mutation UpdateOrganization($id: uuid!, $name: String, $display_name: String, $description: String, $website: String, $logo_url: String) {
       update_karlo_organizations_by_pk(
@@ -86,7 +104,7 @@ const QUERIES = {
         is_active
       }
     }
-  `
+  `,
 };
 
 const useOrganizationStore = create<OrganizationState>()(
@@ -103,9 +121,9 @@ const useOrganizationStore = create<OrganizationState>()(
         if (currentState.isLoading) {
           return;
         }
-        
+
         set({ isLoading: true, error: null });
-        
+
         const { data, error } = await graphqlRequest<OrganizationsResponse>(
           QUERIES.GET_ORGANIZATIONS,
           { user_id: userId }
@@ -117,54 +135,59 @@ const useOrganizationStore = create<OrganizationState>()(
         }
 
         const organizations = data?.karlo_organizations || [];
-        
+
         // Add user role to each organization
-        const organizationsWithRole = organizations.map(org => ({
+        const organizationsWithRole = organizations.map((org) => ({
           ...org,
-          user_role: org.karlo_organization_members?.[0]?.role || 'member'
+          user_role: org.karlo_organization_members?.[0]?.role || "member",
         }));
 
         const currentState2 = get();
-        
+
         // Determine which organization to select
         let selectedOrganization = null;
-        
+
         // First priority: Check if current organization still exists on the server
         if (currentState2.currentOrganization) {
           selectedOrganization = organizationsWithRole.find(
-            org => org.id === currentState2.currentOrganization?.id
+            (org) => org.id === currentState2.currentOrganization?.id
           );
         }
-        
+
         // Second priority: If no current organization or it doesn't exist, try to restore from localStorage
         if (!selectedOrganization) {
           try {
-            const savedOrgId = localStorage.getItem('currentOrganizationId');
+            const savedOrgId = localStorage.getItem("currentOrganizationId");
             if (savedOrgId) {
-              selectedOrganization = organizationsWithRole.find(org => org.id === savedOrgId);
+              selectedOrganization = organizationsWithRole.find(
+                (org) => org.id === savedOrgId
+              );
             }
           } catch (error) {
-            console.error('Error reading saved organization ID:', error);
+            console.error("Error reading saved organization ID:", error);
           }
         }
-        
+
         // Final fallback: Select the first available organization
         if (!selectedOrganization && organizationsWithRole.length > 0) {
           selectedOrganization = organizationsWithRole[0];
         }
-        
-        set({ 
-          organizations: organizationsWithRole, 
+
+        set({
+          organizations: organizationsWithRole,
           isLoading: false,
-          currentOrganization: selectedOrganization
+          currentOrganization: selectedOrganization,
         });
-        
+
         // Save the selected organization ID to localStorage for persistence
         if (selectedOrganization) {
           try {
-            localStorage.setItem('currentOrganizationId', selectedOrganization.id);
+            localStorage.setItem(
+              "currentOrganizationId",
+              selectedOrganization.id
+            );
           } catch (error) {
-            console.error('Error saving organization ID:', error);
+            console.error("Error saving organization ID:", error);
           }
         }
       },
@@ -172,29 +195,32 @@ const useOrganizationStore = create<OrganizationState>()(
       setCurrentOrganization: (org: Organization) => {
         // Save to localStorage when organization is manually changed
         try {
-          localStorage.setItem('currentOrganizationId', org.id);
+          localStorage.setItem("currentOrganizationId", org.id);
         } catch (error) {
-          console.error('Error saving organization ID:', error);
+          console.error("Error saving organization ID:", error);
         }
         set({ currentOrganization: org });
       },
 
       createOrganization: async (data: CreateOrganizationData) => {
         set({ isLoading: true, error: null });
-        
+
         // We'll get the user ID from the component that calls this
         // This will be passed as a parameter
-        return { success: false, message: 'User ID required' };
+        return { success: false, message: "User ID required" };
       },
 
-      createOrganizationWithUser: async (data: CreateOrganizationData, userId: string) => {
+      createOrganizationWithUser: async (
+        data: CreateOrganizationData,
+        userId: string
+      ) => {
         set({ isLoading: true, error: null });
-        
+
         const { data: result, error } = await graphqlRequest<any>(
           QUERIES.CREATE_ORGANIZATION,
           {
             ...data,
-            created_by: userId
+            created_by: userId,
           }
         );
 
@@ -208,73 +234,153 @@ const useOrganizationStore = create<OrganizationState>()(
         const newOrg = result?.insert_karlo_organizations_one;
         if (newOrg) {
           // Add the creator as an admin member
-          const { data: memberResult, error: memberError } = await graphqlRequest<any>(
-            QUERIES.ADD_ORGANIZATION_MEMBER,
-            {
+          const { data: memberResult, error: memberError } =
+            await graphqlRequest<any>(QUERIES.ADD_ORGANIZATION_MEMBER, {
               organization_id: newOrg.id,
               user_id: userId,
-              joining_date: new Date().toISOString()
-            }
-          );
+              joining_date: new Date().toISOString(),
+            });
 
           if (memberError) {
-            console.error('Failed to add creator as admin:', memberError);
+            console.error("Failed to add creator as admin:", memberError);
             // Don't fail the organization creation if adding member fails
-          } else if (memberResult?.insert_karlo_organization_members?.affected_rows > 0) {
-            console.log('Successfully added creator as admin member');
+          } else if (
+            memberResult?.insert_karlo_organization_members?.affected_rows > 0
+          ) {
+            console.log("Successfully added creator as admin member");
           }
 
           const currentState = get();
           const updatedOrganizations = [...currentState.organizations, newOrg];
-          set({ 
+          set({
             organizations: updatedOrganizations,
-            currentOrganization: newOrg
+            currentOrganization: newOrg,
           });
           return { success: true, organization: newOrg };
         }
 
-        return { success: false, message: 'Failed to create organization' };
+        return { success: false, message: "Failed to create organization" };
       },
 
-      updateOrganization: async (organizationId: string, data: Partial<CreateOrganizationData>) => {
+      updateOrganization: async (
+        organizationId: string,
+        data: Partial<CreateOrganizationData>
+      ) => {
         set({ isLoading: true, error: null });
-        
+
+        console.log("🔄 Updating organization:", { organizationId, data });
+
+        // First, check if user has access to this organization
+        const authStore = await import("./authStore");
+        const userId = authStore.default.getState().user?.id;
+
+        if (userId) {
+          console.log("🔍 Checking organization access for user:", userId);
+          const { data: accessCheck } = await graphqlRequest<any>(
+            QUERIES.CHECK_ORGANIZATION_ACCESS,
+            {
+              organization_id: organizationId,
+              user_id: userId,
+            }
+          );
+
+          console.log("📋 Organization access check:", accessCheck);
+
+          const org = accessCheck?.karlo_organizations_by_pk;
+          if (!org) {
+            console.error("❌ Organization not found or user has no access");
+            set({ isLoading: false });
+            return {
+              success: false,
+              message:
+                "Organization not found or you do not have access to it.",
+            };
+          }
+
+          const isMember = org.karlo_organization_members?.length > 0;
+          const isCreator = org.created_by === userId;
+          const userRole = org.karlo_organization_members?.[0]?.role;
+
+          console.log("👤 User access info:", {
+            isMember,
+            isCreator,
+            userRole,
+          });
+
+          if (!isMember && !isCreator) {
+            console.error(
+              "❌ User is not a member or creator of this organization"
+            );
+            set({ isLoading: false });
+            return {
+              success: false,
+              message: "You do not have permission to edit this workspace.",
+            };
+          }
+
+          // Check if user has admin role (if they're a member)
+          if (isMember && userRole !== "admin" && !isCreator) {
+            console.error("❌ User does not have admin role");
+            set({ isLoading: false });
+            return {
+              success: false,
+              message: "Only administrators can edit workspace settings.",
+            };
+          }
+        }
+
         const { data: result, error } = await graphqlRequest<any>(
           QUERIES.UPDATE_ORGANIZATION,
           {
             id: organizationId,
-            ...data
+            ...data,
           }
         );
+
+        console.log("📥 Update organization response:", { result, error });
 
         set({ isLoading: false });
 
         if (error) {
+          console.error("❌ GraphQL error:", error);
           set({ error });
           return { success: false, message: error };
         }
 
         const updatedOrg = result?.update_karlo_organizations_by_pk;
         if (updatedOrg) {
+          console.log("✅ Organization updated successfully:", updatedOrg);
           const currentState = get();
-          const updatedOrganizations = currentState.organizations.map(org => 
+          const updatedOrganizations = currentState.organizations.map((org) =>
             org.id === organizationId ? { ...org, ...updatedOrg } : org
           );
-          set({ 
+          set({
             organizations: updatedOrganizations,
-            currentOrganization: currentState.currentOrganization?.id === organizationId 
-              ? { ...currentState.currentOrganization, ...updatedOrg }
-              : currentState.currentOrganization
+            currentOrganization:
+              currentState.currentOrganization?.id === organizationId
+                ? { ...currentState.currentOrganization, ...updatedOrg }
+                : currentState.currentOrganization,
           });
           return { success: true };
         }
 
-        return { success: false, message: 'Failed to update organization' };
+        console.error(
+          "❌ Update returned null - possible permission issue or invalid organization ID"
+        );
+        console.error(
+          "📋 Current user organizations:",
+          get().organizations.map((o) => ({ id: o.id, name: o.name }))
+        );
+        return {
+          success: false,
+          message:
+            "Failed to update organization. You may not have permission to edit this workspace or it does not exist.",
+        };
       },
 
       deleteOrganization: async (organizationId: string) => {
         set({ isLoading: true, error: null });
-        
+
         const { data: result, error } = await graphqlRequest<any>(
           QUERIES.DELETE_ORGANIZATION,
           { id: organizationId }
@@ -289,22 +395,27 @@ const useOrganizationStore = create<OrganizationState>()(
 
         if (result?.update_karlo_organizations_by_pk) {
           const currentState = get();
-          const updatedOrganizations = currentState.organizations.filter(org => org.id !== organizationId);
-          set({ 
+          const updatedOrganizations = currentState.organizations.filter(
+            (org) => org.id !== organizationId
+          );
+          set({
             organizations: updatedOrganizations,
-            currentOrganization: currentState.currentOrganization?.id === organizationId 
-              ? (updatedOrganizations.length > 0 ? updatedOrganizations[0] : null)
-              : currentState.currentOrganization
+            currentOrganization:
+              currentState.currentOrganization?.id === organizationId
+                ? updatedOrganizations.length > 0
+                  ? updatedOrganizations[0]
+                  : null
+                : currentState.currentOrganization,
           });
           return { success: true };
         }
 
-        return { success: false, message: 'Failed to delete organization' };
+        return { success: false, message: "Failed to delete organization" };
       },
       clearError: () => set({ error: null }),
     }),
     {
-      name: 'organization-storage',
+      name: "organization-storage",
       storage: {
         getItem: (name) => {
           // Use sessionStorage for role data to refresh on page load
