@@ -60,6 +60,7 @@ const QUERIES = {
           position
           list_id
           is_completed
+          priority
           karlo_card_members_aggregate {
             aggregate {
               count
@@ -129,6 +130,8 @@ const QUERIES = {
           cover_color
           cover_image_url
           due_date
+          story_points
+          priority
           is_archived
           created_at
           created_by
@@ -139,6 +142,7 @@ const QUERIES = {
           }
           position
           list_id
+          is_completed
         }
       }
     }
@@ -158,11 +162,19 @@ const QUERIES = {
         cover_color
         cover_image_url
         due_date
+        story_points
+        priority
         is_archived
         created_at
         created_by
         position
         list_id
+        is_completed
+        auth_fullname {
+          fullname
+          dp
+          id
+        }
       }
     }
   `,
@@ -238,7 +250,8 @@ const QUERIES = {
       $is_completed: Boolean,
       $is_archived: Boolean,
       $cover_color: String,
-      $story_points: Int
+      $story_points: Int,
+      $priority: String
     ) {
       update_karlo_cards_by_pk(
         pk_columns: {id: $id},
@@ -249,7 +262,8 @@ const QUERIES = {
           is_completed: $is_completed,
           is_archived: $is_archived,
           cover_color: $cover_color,
-          story_points: $story_points
+          story_points: $story_points,
+          priority: $priority
         }
       ) {
         id
@@ -265,6 +279,7 @@ const QUERIES = {
         position
         list_id
         story_points
+        priority
       }
     }
   `,
@@ -670,6 +685,7 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
         variables.cover_color = data.cover_color;
       if (data.story_points !== undefined)
         variables.story_points = data.story_points;
+      if (data.priority !== undefined) variables.priority = data.priority;
 
       const { data: result, error } = await graphqlRequest<any>(
         QUERIES.UPDATE_CARD,

@@ -11,6 +11,7 @@ import {
   MoreHorizontal,
   Trash2,
   Move,
+  Flag,
 } from "lucide-react";
 import { KanbanCard as KanbanCardType } from "../../types/kanban";
 
@@ -269,6 +270,31 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
               <div className="flex items-center space-x-0.5 sm:space-x-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
                 <Check className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                 <span>Done</span>
+              </div>
+            )}
+            {card.priority && (
+              <div
+                className={`flex items-center space-x-0.5 sm:space-x-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium ${
+                  card.priority === "urgent"
+                    ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                    : card.priority === "high"
+                    ? "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400"
+                    : card.priority === "normal"
+                    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                }`}
+              >
+                <Flag
+                  className="h-2.5 w-2.5 sm:h-3 sm:w-3"
+                  aria-hidden="true"
+                />
+                <span className="capitalize">{card.priority}</span>
+              </div>
+            )}
+            {card.story_points && (
+              <div className="flex items-center space-x-0.5 sm:space-x-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400">
+                <span className="font-semibold">{card.story_points}</span>
+                <span className="hidden sm:inline">pts</span>
               </div>
             )}
             {(card.karlo_attachments_aggregate?.aggregate?.count || 0) > 0 && (

@@ -74,7 +74,8 @@ export interface KanbanCard {
   position: number;
   list_id: string;
   is_completed?: boolean;
-  story_points: number | null
+  story_points: number | null;
+  priority?: "urgent" | "high" | "normal" | "low" | null;
   karlo_card_members_aggregate?: CardMembersAggregate;
   karlo_card_members?: CardMember[];
   karlo_attachments?: CardAttachment[];
@@ -114,27 +115,66 @@ export interface KanbanState {
   lists: KanbanList[];
   isLoading: boolean;
   error: string | null;
-  
+
   fetchBoardData: (boardId: string) => Promise<void>;
-  createList: (boardId: string, name: string) => Promise<{ success: boolean; message?: string }>;
-  updateList: (listId: string, data: Partial<Pick<KanbanList, 'name' | 'color' | 'confetti' | 'is_final'>>) => Promise<{ success: boolean; message?: string }>;
-  deleteList: (listId: string) => Promise<{ success: boolean; message?: string }>;
-  createCard: (listId: string, data: Partial<KanbanCard>) => Promise<{ success: boolean; message?: string }>;
-  updateCard: (cardId: string, data: Partial<KanbanCard>) => Promise<{ success: boolean; message?: string }>;
-  deleteCard: (cardId: string) => Promise<{ success: boolean; message?: string }>;
+  createList: (
+    boardId: string,
+    name: string
+  ) => Promise<{ success: boolean; message?: string }>;
+  updateList: (
+    listId: string,
+    data: Partial<Pick<KanbanList, "name" | "color" | "confetti" | "is_final">>
+  ) => Promise<{ success: boolean; message?: string }>;
+  deleteList: (
+    listId: string
+  ) => Promise<{ success: boolean; message?: string }>;
+  createCard: (
+    listId: string,
+    data: Partial<KanbanCard>
+  ) => Promise<{ success: boolean; message?: string }>;
+  updateCard: (
+    cardId: string,
+    data: Partial<KanbanCard>
+  ) => Promise<{ success: boolean; message?: string }>;
+  deleteCard: (
+    cardId: string
+  ) => Promise<{ success: boolean; message?: string }>;
   clearError: () => void;
-  moveCard: (cardId: string, sourceListId: string, targetListId: string, newPosition: number) => Promise<{ success: boolean; message?: string }>;
-  
+  moveCard: (
+    cardId: string,
+    sourceListId: string,
+    targetListId: string,
+    newPosition: number
+  ) => Promise<{ success: boolean; message?: string }>;
+
   // Card member management
-  getCardMembers: (cardId: string) => Promise<{ success: boolean; members?: any[]; message?: string }>;
-  getOrganizationMembers: (organizationId: string) => Promise<{ success: boolean; members?: any[]; message?: string }>;
-  addCardMember: (cardId: string, userId: string) => Promise<{ success: boolean; message?: string }>;
-  removeCardMember: (memberId: string) => Promise<{ success: boolean; message?: string }>;
-  
+  getCardMembers: (
+    cardId: string
+  ) => Promise<{ success: boolean; members?: any[]; message?: string }>;
+  getOrganizationMembers: (
+    organizationId: string
+  ) => Promise<{ success: boolean; members?: any[]; message?: string }>;
+  addCardMember: (
+    cardId: string,
+    userId: string
+  ) => Promise<{ success: boolean; message?: string }>;
+  removeCardMember: (
+    memberId: string
+  ) => Promise<{ success: boolean; message?: string }>;
+
   // File attachment management
-  uploadFile: (file: File, cardId: string) => Promise<{ success: boolean; attachment?: CardAttachment; message?: string }>;
-  deleteAttachment: (attachmentId: string) => Promise<{ success: boolean; message?: string }>;
-  
+  uploadFile: (
+    file: File,
+    cardId: string
+  ) => Promise<{
+    success: boolean;
+    attachment?: CardAttachment;
+    message?: string;
+  }>;
+  deleteAttachment: (
+    attachmentId: string
+  ) => Promise<{ success: boolean; message?: string }>;
+
   // Local state management
   removeCardFromLocalState: (cardId: string) => void;
 
