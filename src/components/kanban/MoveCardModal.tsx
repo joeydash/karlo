@@ -302,7 +302,7 @@ const MoveCardModal: React.FC<MoveCardModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50"
       onClick={handleClose}
       role="dialog"
       aria-modal="true"
@@ -310,37 +310,37 @@ const MoveCardModal: React.FC<MoveCardModalProps> = ({
     >
       <div
         ref={modalRef}
-        className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-4xl w-full max-h-[85vh] flex flex-col"
+        className="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[85vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
         tabIndex={-1}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
-          <div className="flex items-center space-x-4 flex-1 min-w-0">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-              <Move className="h-6 w-6 text-white" />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border-b border-gray-100 dark:border-gray-700 gap-2 sm:gap-0">
+          <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+              <Move className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
             <div className="flex-1 min-w-0">
               <h2
-                className="text-2xl font-bold text-gray-900 dark:text-white"
+                className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white"
                 id="move-modal-title"
               >
                 Move Card
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 truncate">
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-0.5 sm:mt-1 truncate">
                 Moving: "{cardTitle}"
               </p>
             </div>
           </div>
           {/* Move Details */}
-          <div className="flex gap-4 items-center justify-center">
+          <div className="flex gap-2 sm:gap-4 items-center justify-between w-full sm:w-auto">
             {currentList && selectedBoard && selectedList && (
-              <div className="flex items-center gap-2 text-xs mr-4">
-                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-md text-gray-700 dark:text-gray-300 font-medium truncate max-w-[150px]">
+              <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs flex-1 sm:flex-initial sm:mr-4">
+                <span className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-gray-100 dark:bg-gray-700 rounded-md text-gray-700 dark:text-gray-300 font-medium truncate max-w-[100px] sm:max-w-[150px]">
                   {currentBoard?.name} / {currentList.name}
                 </span>
-                <ArrowRight className="h-3 w-3 text-blue-500 flex-shrink-0" />
-                <span className="px-2 py-1 bg-blue-50 dark:bg-blue-900/30 rounded-md text-blue-700 dark:text-blue-400 font-medium truncate max-w-[150px]">
+                <ArrowRight className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-blue-500 flex-shrink-0" />
+                <span className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-blue-50 dark:bg-blue-900/30 rounded-md text-blue-700 dark:text-blue-400 font-medium truncate max-w-[100px] sm:max-w-[150px]">
                   {selectedBoard.name} / {selectedList.name}
                 </span>
               </div>
@@ -348,64 +348,64 @@ const MoveCardModal: React.FC<MoveCardModalProps> = ({
             <button
               onClick={handleClose}
               disabled={isMoving}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 flex-shrink-0"
+              className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 flex-shrink-0"
               aria-label="Close modal"
             >
-              <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+              <X className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 dark:text-gray-400" />
             </button>
           </div>
         </div>
 
         {/* Content - Horizontal Layout */}
-        <div className="flex-1 overflow-hidden flex">
+        <div className="flex-1 overflow-y-auto sm:overflow-hidden flex flex-col sm:flex-row">
           {/* Board Selection */}
-          <div className="flex-1 p-4 border-r border-gray-100 dark:border-gray-700">
-            <div className="h-full flex flex-col">
-              <div className="mb-3">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+          <div className="flex-1 p-3 sm:p-4 border-b sm:border-b-0 sm:border-r border-gray-100 dark:border-gray-700 sm:overflow-hidden flex flex-col">
+            <div className="sm:h-full flex flex-col">
+              <div className="mb-2 sm:mb-3 flex-shrink-0">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-1">
                   Select Board
                 </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                   Choose where to move this card
                 </p>
               </div>
 
-              <div className="flex-1 overflow-y-auto space-y-3 p-2 pinned-boards-scroll">
+              <div className="flex-1 sm:overflow-y-auto space-y-2 sm:space-y-3 p-1 sm:p-2 pinned-boards-scroll">
                 {/* Current Board */}
                 {currentBoard && (
                   <button
                     onClick={() => handleBoardSelect(currentBoard.id)}
-                    className={`w-full flex items-center justify-between p-4 rounded-xl transition-all duration-200 border ${
+                    className={`w-full flex items-center justify-between p-2.5 sm:p-4 rounded-xl transition-all duration-200 border ${
                       selectedBoardId === currentBoard.id
                         ? "bg-blue-50 dark:bg-blue-900/20 border-blue-500 shadow-md scale-[1.02]"
                         : "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border-gray-200 dark:border-gray-600 hover:shadow-sm"
                     }`}
                   >
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2 sm:space-x-4">
                       <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm"
+                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0"
                         style={{
                           backgroundColor:
                             currentBoard.background_color || "#3B82F6",
                         }}
                       >
-                        <Layout className="h-5 w-5 text-white" />
+                        <Layout className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                       </div>
-                      <div className="text-left">
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                      <div className="text-left min-w-0">
+                        <p className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white truncate">
                           {currentBoard.name}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
                           Current board
                         </p>
                       </div>
                     </div>
                     {selectedBoardId === currentBoard.id && (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xs text-blue-600 font-medium">
+                      <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+                        <span className="text-[10px] sm:text-xs text-blue-600 font-medium hidden sm:inline">
                           Selected
                         </span>
-                        <Check className="h-5 w-5 text-blue-600" />
+                        <Check className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                       </div>
                     )}
                   </button>
@@ -416,38 +416,38 @@ const MoveCardModal: React.FC<MoveCardModalProps> = ({
                   <button
                     key={board.id}
                     onClick={() => handleBoardSelect(board.id)}
-                    className={`w-full flex items-center justify-between p-4 rounded-xl transition-all duration-200 border ${
+                    className={`w-full flex items-center justify-between p-2.5 sm:p-4 rounded-xl transition-all duration-200 border ${
                       selectedBoardId === board.id
                         ? "bg-blue-50 dark:bg-blue-900/20 border-blue-500 shadow-md scale-[1.02]"
                         : "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border-gray-200 dark:border-gray-600 hover:shadow-sm"
                     }`}
                   >
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
                       <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm"
+                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0"
                         style={{
                           backgroundColor: board.background_color || "#3B82F6",
                         }}
                       >
-                        <Layout className="h-5 w-5 text-white" />
+                        <Layout className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                       </div>
-                      <div className="text-left">
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                      <div className="text-left min-w-0">
+                        <p className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white truncate">
                           {board.name}
                         </p>
                         {board.description && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 max-w-48">
+                          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 line-clamp-1 sm:line-clamp-2 max-w-32 sm:max-w-48">
                             {board.description}
                           </p>
                         )}
                       </div>
                     </div>
                     {selectedBoardId === board.id && (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xs text-blue-600 font-medium">
+                      <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+                        <span className="text-[10px] sm:text-xs text-blue-600 font-medium hidden sm:inline">
                           Selected
                         </span>
-                        <Check className="h-5 w-5 text-blue-600" />
+                        <Check className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                       </div>
                     )}
                   </button>
@@ -457,64 +457,64 @@ const MoveCardModal: React.FC<MoveCardModalProps> = ({
           </div>
 
           {/* List Selection */}
-          <div className="flex-1 p-4">
-            <div className="h-full flex flex-col">
-              <div className="mb-3">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+          <div className="flex-1 p-3 sm:p-4 sm:overflow-hidden flex flex-col">
+            <div className="sm:h-full flex flex-col">
+              <div className="mb-2 sm:mb-3 flex-shrink-0">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-1">
                   Select List
                 </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                   Choose the destination list
                 </p>
               </div>
 
               {!selectedBoardId ? (
-                <div className="flex-1 flex flex-col items-center justify-center text-center py-12">
-                  <List className="h-16 w-16 text-gray-300 dark:text-gray-600 mb-4" />
-                  <p className="text-gray-500 dark:text-gray-400 font-medium">
+                <div className="flex-1 flex flex-col items-center justify-center text-center py-8 sm:py-12">
+                  <List className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 dark:text-gray-600 mb-3 sm:mb-4" />
+                  <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 font-medium">
                     Select a board first
                   </p>
-                  <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+                  <p className="text-xs sm:text-sm text-gray-400 dark:text-gray-500 mt-1">
                     Choose a board to view available lists
                   </p>
                 </div>
               ) : isLoadingLists ? (
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3 flex-shrink-0">
                   {Array.from({ length: 4 }).map((_, index) => (
                     <div key={index} className="animate-pulse">
-                      <div className="h-16 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 bg-[length:200%_100%] animate-[shimmer_1.5s_ease-in-out_infinite] rounded-xl border border-gray-200 dark:border-gray-600"></div>
+                      <div className="h-12 sm:h-16 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 bg-[length:200%_100%] animate-[shimmer_1.5s_ease-in-out_infinite] rounded-xl border border-gray-200 dark:border-gray-600"></div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="flex-1 overflow-y-auto space-y-3 p-2 pinned-boards-scroll">
+                <div className="flex-1 sm:overflow-y-auto space-y-2 sm:space-y-3 p-1 sm:p-2 pinned-boards-scroll">
                   {boardLists.map((list) => (
                     <button
                       key={list.id}
                       onClick={() => handleListSelect(list.id)}
-                      className={`w-full flex items-center justify-between p-4 rounded-xl transition-all duration-200 border ${
+                      className={`w-full flex items-center justify-between p-2.5 sm:p-4 rounded-xl transition-all duration-200 border ${
                         selectedListId === list.id
                           ? "bg-blue-50 dark:bg-blue-900/20 border-blue-500 shadow-md scale-[1.02]"
                           : "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border-gray-200 dark:border-gray-600 hover:shadow-sm"
                       }`}
                     >
-                      <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
                         <div
-                          className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm"
+                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0"
                           style={{ backgroundColor: list.color || "#6B7280" }}
                         >
-                          <List className="h-5 w-5 text-white" />
+                          <List className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                         </div>
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                        <p className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white truncate">
                           {list.name}
                         </p>
                       </div>
                       {selectedListId === list.id && (
-                        <div className="flex items-center space-x-2">
-                          <span className="text-xs text-blue-600 font-medium">
+                        <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+                          <span className="text-[10px] sm:text-xs text-blue-600 font-medium hidden sm:inline">
                             Selected
                           </span>
-                          <Check className="h-5 w-5 text-blue-600" />
+                          <Check className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                         </div>
                       )}
                     </button>
@@ -525,12 +525,12 @@ const MoveCardModal: React.FC<MoveCardModalProps> = ({
               {!isLoadingLists &&
                 boardLists.length === 0 &&
                 selectedBoardId && (
-                  <div className="flex-1 flex flex-col items-center justify-center text-center py-12">
-                    <List className="h-16 w-16 text-gray-300 dark:text-gray-600 mb-4" />
-                    <p className="text-gray-500 dark:text-gray-400 font-medium">
+                  <div className="flex-1 flex flex-col items-center justify-center text-center py-8 sm:py-12">
+                    <List className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 dark:text-gray-600 mb-3 sm:mb-4" />
+                    <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 font-medium">
                       No lists available
                     </p>
-                    <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+                    <p className="text-xs sm:text-sm text-gray-400 dark:text-gray-500 mt-1">
                       This board doesn't have any lists yet
                     </p>
                   </div>
@@ -540,13 +540,13 @@ const MoveCardModal: React.FC<MoveCardModalProps> = ({
         </div>
 
         {/* Fixed Footer with Actions */}
-        <div className="border-t border-gray-200 dark:border-gray-600 p-4 bg-white dark:bg-gray-800 rounded-b-3xl">
-          <div className="flex space-x-4">
+        <div className="border-t border-gray-200 dark:border-gray-600 p-3 sm:p-4 bg-white dark:bg-gray-800 rounded-b-2xl sm:rounded-b-3xl">
+          <div className="flex gap-2 sm:gap-4">
             <button
               type="button"
               onClick={handleClose}
               disabled={isMoving}
-              className="flex-1 px-6 py-4 text-base font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-all duration-200 disabled:opacity-50 border border-gray-200 dark:border-gray-600"
+              className="flex-1 px-3 sm:px-6 py-2.5 sm:py-4 text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-all duration-200 disabled:opacity-50 border border-gray-200 dark:border-gray-600"
             >
               Cancel
             </button>
@@ -558,17 +558,21 @@ const MoveCardModal: React.FC<MoveCardModalProps> = ({
                 isMoving ||
                 isLoadingLists
               }
-              className="flex-1 flex items-center justify-center px-6 py-4 text-base font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+              className="flex-1 flex items-center justify-center px-3 sm:px-6 py-2.5 sm:py-4 text-sm sm:text-base font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
             >
               {isMoving ? (
                 <>
-                  <Loader2 className="h-5 w-5 animate-spin mr-3" />
-                  Moving Card...
+                  <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin mr-2 sm:mr-3" />
+                  <span className="hidden sm:inline">Moving Card...</span>
+                  <span className="sm:hidden">Moving...</span>
                 </>
               ) : (
                 <>
-                  <ArrowRight className="h-5 w-5 mr-3" />
-                  Move Card to Selected List
+                  <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
+                  <span className="hidden sm:inline">
+                    Move Card to Selected List
+                  </span>
+                  <span className="sm:hidden">Move</span>
                 </>
               )}
             </button>

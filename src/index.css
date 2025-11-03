@@ -43,10 +43,8 @@
 
 /* Smooth transitions for theme changes */
 * {
-  transition: background-color 0.2s ease-in-out, 
-              border-color 0.2s ease-in-out, 
-              color 0.2s ease-in-out,
-              box-shadow 0.2s ease-in-out;
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out,
+    color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
 /* Reduce motion for users who prefer it */
@@ -134,14 +132,16 @@
 .expanded-editor-container .ce-toolbar__actions {
   background: #ffffff !important;
   border: 1px solid #e5e7eb !important;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
   border-radius: 0.5rem !important;
 }
 
 .expanded-editor-container .ce-toolbar__actions--opened {
   background: #ffffff !important;
   border: 1px solid #e5e7eb !important;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
   border-radius: 0.5rem !important;
 }
 
@@ -188,7 +188,8 @@
   border: 1px solid #e5e7eb;
 }
 
-.expanded-editor-container .codex-editor__redactor::-webkit-scrollbar-thumb:hover {
+.expanded-editor-container
+  .codex-editor__redactor::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #6b7280, #4b5563);
 }
 
@@ -197,16 +198,22 @@
   scrollbar-color: #6b7280 #374151;
 }
 
-.dark .expanded-editor-container .codex-editor__redactor::-webkit-scrollbar-track {
+.dark
+  .expanded-editor-container
+  .codex-editor__redactor::-webkit-scrollbar-track {
   background: #374151;
 }
 
-.dark .expanded-editor-container .codex-editor__redactor::-webkit-scrollbar-thumb {
+.dark
+  .expanded-editor-container
+  .codex-editor__redactor::-webkit-scrollbar-thumb {
   background: linear-gradient(135deg, #6b7280, #4b5563);
   border: 1px solid #4b5563;
 }
 
-.dark .expanded-editor-container .codex-editor__redactor::-webkit-scrollbar-thumb:hover {
+.dark
+  .expanded-editor-container
+  .codex-editor__redactor::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #4b5563, #374151);
 }
 
@@ -298,14 +305,16 @@
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 /* Dark mode for toolbox */
 .dark .ce-popover {
   background: #1f2937;
   border: 1px solid #4b5563;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3),
+    0 4px 6px -2px rgba(0, 0, 0, 0.2);
 }
 
 /* Ensure the toolbox items remain styled correctly */
@@ -419,13 +428,13 @@ select:focus,
 
 /* Hide scrollbar for webkit browsers */
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
   scroll-behavior: smooth;
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;  /* Chrome, Safari and Opera */
+  display: none; /* Chrome, Safari and Opera */
 }
 
 /* Custom scroll behavior for color picker */
@@ -606,7 +615,7 @@ select:focus,
 
 /* Inline Toolbar */
 .ce-inline-toolbar {
-  @apply bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg ;
+  @apply bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg;
 }
 
 .ce-inline-tool {
@@ -632,7 +641,9 @@ select:focus,
 }
 
 /* Placeholder Styles */
-.codex-editor--empty .ce-block:first-child .ce-paragraph[data-placeholder]:empty::before {
+.codex-editor--empty
+  .ce-block:first-child
+  .ce-paragraph[data-placeholder]:empty::before {
   @apply text-gray-400 dark:text-gray-500;
   content: attr(data-placeholder);
   position: absolute;
@@ -672,11 +683,11 @@ select:focus,
   .ce-toolbar__content {
     @apply px-2;
   }
-  
+
   .ce-block__content {
     @apply px-2;
   }
-  
+
   .codex-editor__redactor {
     @apply p-2;
   }
@@ -702,7 +713,6 @@ select:focus,
 .codex-editor__redactor::-webkit-scrollbar-thumb {
   @apply bg-gray-300 dark:bg-gray-600 rounded hover:bg-gray-400 dark:hover:bg-gray-500;
 }
-
 
 /* Custom Scrollbar for Profile Modal and Bank Details */
 .profile-modal-scroll {
@@ -1085,7 +1095,7 @@ select:focus,
 }
 
 .pinned-boards-scroll::-webkit-scrollbar {
-  width: 6px;
+  width: 8px; /* Increased from 6px for better mobile visibility */
 }
 
 .pinned-boards-scroll::-webkit-scrollbar-track {
@@ -1122,6 +1132,24 @@ select:focus,
   background: linear-gradient(135deg, #3b82f6, #8b5cf6);
 }
 
+/* Mobile-specific scrollbar enhancements */
+@media (max-width: 640px) {
+  .pinned-boards-scroll::-webkit-scrollbar {
+    width: 10px; /* Even wider on mobile for touch-friendly scrolling */
+  }
+
+  .pinned-boards-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    border-radius: 10px;
+    border: 2px solid rgba(59, 130, 246, 0.3);
+  }
+
+  .dark .pinned-boards-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #60a5fa, #a78bfa);
+    border: 2px solid rgba(96, 165, 250, 0.3);
+  }
+}
+
 /* Kanban List Scrollbar */
 .kanban-list-scroll {
   scrollbar-width: thin;
@@ -1139,13 +1167,21 @@ select:focus,
 }
 
 .kanban-list-scroll::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.7), rgba(139, 92, 246, 0.7));
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.7),
+    rgba(139, 92, 246, 0.7)
+  );
   border-radius: 8px;
   border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 .kanban-list-scroll::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.9), rgba(124, 58, 237, 0.9));
+  background: linear-gradient(
+    135deg,
+    rgba(37, 99, 235, 0.9),
+    rgba(124, 58, 237, 0.9)
+  );
 }
 
 /* Dark mode kanban list scrollbar (not used since lists have their own bg colors) */
@@ -1158,12 +1194,20 @@ select:focus,
 }
 
 .dark .kanban-list-scroll::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, rgba(96, 165, 250, 0.7), rgba(167, 139, 250, 0.7));
+  background: linear-gradient(
+    135deg,
+    rgba(96, 165, 250, 0.7),
+    rgba(167, 139, 250, 0.7)
+  );
   border: 1px solid rgba(96, 165, 250, 0.2);
 }
 
 .dark .kanban-list-scroll::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(139, 92, 246, 0.9));
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.9),
+    rgba(139, 92, 246, 0.9)
+  );
 }
 
 /* Universal Search Modal Animations */
@@ -1197,13 +1241,13 @@ select:focus,
 
 /* Card Highlight Animation */
 @keyframes cardHighlight {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   }
   50% {
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.4),
-                0 0 0 8px rgba(59, 130, 246, 0.2),
-                0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      0 0 0 8px rgba(59, 130, 246, 0.2), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     transform: scale(1.02);
   }
 }
@@ -1256,4 +1300,3 @@ select:focus,
 .dark .search-results-scroll::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #3b82f6, #8b5cf6);
 }
-

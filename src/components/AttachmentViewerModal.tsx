@@ -298,23 +298,23 @@ const AttachmentViewerModal: React.FC<AttachmentViewerModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
-              <ExternalLink className="h-6 w-6 text-white" />
+        <div className="flex items-center justify-between p-3 sm:p-6 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
+          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0">
+              <ExternalLink className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+            <div className="min-w-0">
+              <h2 className="text-base sm:text-xl font-bold text-gray-900 dark:text-white truncate">
                 Attachments - {expenseName}
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
                 {attachments.length}{" "}
                 {attachments.length === 1 ? "file" : "files"}
               </p>
@@ -323,24 +323,24 @@ const AttachmentViewerModal: React.FC<AttachmentViewerModalProps> = ({
           <button
             onClick={onClose}
             aria-label="Close"
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors duration-200"
+            className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors duration-200 flex-shrink-0"
           >
-            <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+            <X className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 dark:text-gray-400" />
           </button>
         </div>
         {/* Content - focused viewer with prev/next controls */}
-        <div className="flex-1 overflow-hidden p-4 flex flex-col items-center justify-center">
+        <div className="flex-1 overflow-hidden p-2 sm:p-4 flex flex-col items-center justify-center">
           <div className="w-full h-full flex items-center justify-center relative">
             {/* Prev button */}
             <button
               onClick={() => prev()}
               aria-label="Previous"
               title="Previous"
-              className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white bg-opacity-90 hover:bg-opacity-100 shadow-md z-20"
+              className="absolute left-1 sm:left-3 top-1/2 -translate-y-1/2 p-1.5 sm:p-2 rounded-full bg-white bg-opacity-90 hover:bg-opacity-100 shadow-md z-20"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 text-gray-700"
+                className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -360,11 +360,11 @@ const AttachmentViewerModal: React.FC<AttachmentViewerModalProps> = ({
               onClick={() => next()}
               aria-label="Next"
               title="Next"
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white bg-opacity-90 hover:bg-opacity-100 shadow-md z-20"
+              className="absolute right-1 sm:right-3 top-1/2 -translate-y-1/2 p-1.5 sm:p-2 rounded-full bg-white bg-opacity-90 hover:bg-opacity-100 shadow-md z-20"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 text-gray-700"
+                className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -379,7 +379,7 @@ const AttachmentViewerModal: React.FC<AttachmentViewerModalProps> = ({
               <span className="sr-only">Next</span>
             </button>
 
-            <div className="max-w-full max-h-[70vh] w-full flex items-center justify-center">
+            <div className="max-w-full max-h-[60vh] sm:max-h-[70vh] w-full flex items-center justify-center">
               {renderAttachment(attachments[currentIndex])}
             </div>
           </div>
@@ -389,18 +389,18 @@ const AttachmentViewerModal: React.FC<AttachmentViewerModalProps> = ({
 
         {/* Footer: caption above thumbnails, thumbnails, and action buttons */}
         <div className="w-full border-t border-gray-100 dark:border-gray-700 flex-shrink-0">
-          <div className="px-6 py-2 flex items-start justify-between">
-            <p className="text-sm font-medium text-gray-900 dark:text-white">
+          <div className="px-3 sm:px-6 py-2 flex items-start justify-between">
+            <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white truncate">
               {getFileName(attachments[currentIndex])}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-2">
               {currentIndex + 1} of {attachments.length}
             </p>
           </div>
 
           {/* Thumbnails carousel */}
-          <div className="w-full flex overflow-x-auto justify-between py-3 px-6 mb-2">
-            <div className="flex items-center gap-3">
+          <div className="w-full flex overflow-x-auto justify-between py-2 sm:py-3 px-3 sm:px-6 mb-2 gap-2">
+            <div className="flex items-center gap-2 sm:gap-3">
               {attachments.map((url, idx) => {
                 const ext =
                   url.split(".").pop()?.split("?")[0]?.toLowerCase() || "";
@@ -411,7 +411,7 @@ const AttachmentViewerModal: React.FC<AttachmentViewerModalProps> = ({
                     ref={(el) => (thumbnailRefs.current[idx] = el)}
                     onClick={() => setCurrentIndex(idx)}
                     aria-label={`Open attachment ${idx + 1}`}
-                    className={`h-16 w-24 flex-shrink-0 rounded-md overflow-hidden border transition-shadow duration-150 focus:outline-none ${
+                    className={`h-12 w-16 sm:h-16 sm:w-24 flex-shrink-0 rounded-md overflow-hidden border transition-shadow duration-150 focus:outline-none ${
                       idx === currentIndex
                         ? "ring-2 ring-blue-500 border-transparent"
                         : "border-gray-200 bg-white dark:bg-gray-800"
@@ -428,7 +428,7 @@ const AttachmentViewerModal: React.FC<AttachmentViewerModalProps> = ({
                         }}
                       />
                     ) : (
-                      <div className="h-full w-full flex items-center justify-center bg-gray-50 dark:bg-gray-700 text-xs text-gray-700 dark:text-gray-200">
+                      <div className="h-full w-full flex items-center justify-center bg-gray-50 dark:bg-gray-700 text-[10px] sm:text-xs text-gray-700 dark:text-gray-200">
                         <span className="uppercase">{ext || "FILE"}</span>
                       </div>
                     )}
@@ -436,10 +436,10 @@ const AttachmentViewerModal: React.FC<AttachmentViewerModalProps> = ({
                 );
               })}
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
               <button
                 onClick={() => window.open(attachments[currentIndex], "_blank")}
-                className="px-3 py-2 rounded-lg bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
+                className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 whitespace-nowrap"
               >
                 Open
               </button>
@@ -450,10 +450,11 @@ const AttachmentViewerModal: React.FC<AttachmentViewerModalProps> = ({
                     getFileName(attachments[currentIndex])
                   )
                 }
-                className="px-3 py-2 rounded-lg bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 inline-flex items-center space-x-2"
+                className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 inline-flex items-center space-x-1 sm:space-x-2 whitespace-nowrap"
               >
-                <Download className="h-4 w-4" />
-                <span>Download</span>
+                <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Download</span>
+                <span className="sm:hidden">DL</span>
               </button>
             </div>
           </div>

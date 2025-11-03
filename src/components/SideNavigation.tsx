@@ -217,7 +217,7 @@ const CustomOrganizationSwitcher: React.FC = () => {
             aria-labelledby="workspace-menu"
           >
             {/* Header */}
-            <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
+            <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
                   <Building2 className="h-4 w-4 text-white" />
@@ -679,7 +679,7 @@ const SideNavigation: React.FC = () => {
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                    Navigation
+                    Quick Access Menu
                   </h2>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     One Platform
