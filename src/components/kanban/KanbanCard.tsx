@@ -1,6 +1,18 @@
-import React from 'react';
-import { Calendar, Paperclip, MessageSquare, User, Check, Plus, FileText, MoreHorizontal, Trash2, Move } from 'lucide-react';
-import { KanbanCard as KanbanCardType } from '../../types/kanban';
+import React from "react";
+import { createPortal } from "react-dom";
+import {
+  Calendar,
+  Paperclip,
+  MessageSquare,
+  User,
+  Check,
+  Plus,
+  FileText,
+  MoreHorizontal,
+  Trash2,
+  Move,
+} from "lucide-react";
+import { KanbanCard as KanbanCardType } from "../../types/kanban";
 
 interface KanbanCardProps {
   card: KanbanCardType;
@@ -12,13 +24,26 @@ interface KanbanCardProps {
   onDragEnd?: () => void;
 }
 
-const KanbanCard: React.FC<KanbanCardProps> = ({ card, onClick, onMembersClick, onArchiveCard, onMoveCard, onDragStart, onDragEnd }) => {
+const KanbanCard: React.FC<KanbanCardProps> = ({
+  card,
+  onClick,
+  onMembersClick,
+  onArchiveCard,
+  onMoveCard,
+  onDragStart,
+  onDragEnd,
+}) => {
   const [showMenu, setShowMenu] = React.useState(false);
+  const menuButtonRef = React.useRef<HTMLButtonElement>(null);
+  const [menuPosition, setMenuPosition] = React.useState<{
+    top: number;
+    left: number;
+  } | null>(null);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -28,24 +53,28 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ card, onClick, onMembersClick, 
   // Helper function to check if description has actual content
   const hasDescriptionContent = (description?: string) => {
     if (!description || !description.trim()) return false;
-    
+
     try {
       const parsed = JSON.parse(description);
       // Check if EditorJS data has any non-empty blocks
       if (parsed.blocks && Array.isArray(parsed.blocks)) {
         return parsed.blocks.some((block: any) => {
           // Check if block has actual content
-          if (block.type === 'paragraph' && block.data?.text) {
+          if (block.type === "paragraph" && block.data?.text) {
             return block.data.text.trim().length > 0;
           }
-          if (block.type === 'header' && block.data?.text) {
+          if (block.type === "header" && block.data?.text) {
             return block.data.text.trim().length > 0;
           }
-          if (block.type === 'list' && block.data?.items) {
-            return block.data.items.some((item: string) => item.trim().length > 0);
+          if (block.type === "list" && block.data?.items) {
+            return block.data.items.some(
+              (item: string) => item.trim().length > 0
+            );
           }
-          if (block.type === 'checklist' && block.data?.items) {
-            return block.data.items.some((item: any) => item.text && item.text.trim().length > 0);
+          if (block.type === "checklist" && block.data?.items) {
+            return block.data.items.some(
+              (item: any) => item.text && item.text.trim().length > 0
+            );
           }
           // For other block types, assume they have content if they exist
           return block.data && Object.keys(block.data).length > 0;
@@ -64,6 +93,15 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ card, onClick, onMembersClick, 
 
   const handleMenuClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+
+    if (!showMenu && menuButtonRef.current) {
+      const rect = menuButtonRef.current.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.bottom + window.scrollY + 4,
+        left: rect.right + window.scrollX - 120, // Align right edge
+      });
+    }
+
     setShowMenu(!showMenu);
   };
 
@@ -71,22 +109,24 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ card, onClick, onMembersClick, 
     e.stopPropagation();
     onArchiveCard?.(card.id);
     setShowMenu(false);
+    setMenuPosition(null);
   };
 
   const handleMoveClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onMoveCard?.(card.id, card.title);
     setShowMenu(false);
+    setMenuPosition(null);
   };
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
+    if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       onClick?.();
     }
   };
 
   const handleMembersKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
+    if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       e.stopPropagation();
       onMembersClick?.();
@@ -94,15 +134,16 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ card, onClick, onMembersClick, 
   };
 
   const renderMemberAvatars = () => {
-    const totalMembers = card.karlo_card_members_aggregate?.aggregate?.count || 0;
+    const totalMembers =
+      card.karlo_card_members_aggregate?.aggregate?.count || 0;
     const visibleMembers = card.karlo_card_members || [];
     const remainingCount = totalMembers - visibleMembers.length;
 
     const getInitials = (fullname: string) => {
       return fullname
-        .split(' ')
-        .map(name => name.charAt(0))
-        .join('')
+        .split(" ")
+        .map((name) => name.charAt(0))
+        .join("")
         .toUpperCase()
         .slice(0, 2);
     };
@@ -152,7 +193,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ card, onClick, onMembersClick, 
             </div>
           </div>
         ))}
-        
+
         {remainingCount > 0 && (
           <div
             className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-500 dark:bg-gray-600 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800"
@@ -168,7 +209,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ card, onClick, onMembersClick, 
   };
 
   return (
-    <div 
+    <div
       role="button"
       tabIndex={0}
       onClick={onClick}
@@ -177,9 +218,15 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ card, onClick, onMembersClick, 
       onDragStart={handleDragStart}
       onDragEnd={onDragEnd}
       className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md focus:shadow-md transition-all duration-200 cursor-pointer group border border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-        isCompleted ? 'opacity-75' : ''
+        isCompleted ? "opacity-75" : ""
       }`}
-      aria-label={`Card: ${card.title}${card.description ? `. ${card.description.slice(0, 100)}${card.description.length > 100 ? '...' : ''}` : ''}`}
+      aria-label={`Card: ${card.title}${
+        card.description
+          ? `. ${card.description.slice(0, 100)}${
+              card.description.length > 100 ? "..." : ""
+            }`
+          : ""
+      }`}
     >
       {/* Cover Image or Color */}
       {(card.cover_image_url || card.cover_color) && (
@@ -187,47 +234,34 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ card, onClick, onMembersClick, 
           className="h-4 rounded-t-lg bg-cover bg-center"
           style={{
             backgroundColor: card.cover_color || undefined,
-            backgroundImage: card.cover_image_url ? `url(${card.cover_image_url})` : undefined
+            backgroundImage: card.cover_image_url
+              ? `url(${card.cover_image_url})`
+              : undefined,
           }}
         />
       )}
-      
+
       {/* Card Content */}
       <div className="p-2 sm:p-2.5">
         <div className="flex items-start justify-between mb-1.5 sm:mb-2">
-          <h4 className="text-xs sm:text-sm font-medium line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200 flex-1 text-gray-900 dark:text-white" id={`card-title-${card.id}`}>
+          <h4
+            className="text-xs sm:text-sm font-medium line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200 flex-1 text-gray-900 dark:text-white"
+            id={`card-title-${card.id}`}
+          >
             {card.title}
           </h4>
           <div className="relative ml-1.5 sm:ml-2">
             <button
+              ref={menuButtonRef}
               onClick={handleMenuClick}
               className="opacity-100 group-hover:opacity-100 p-0.5 sm:p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-all duration-200"
               aria-label="Card options"
             >
               <MoreHorizontal className="h-3 w-3 text-gray-400 dark:text-gray-500" />
             </button>
-            
-            {showMenu && (
-              <div className="absolute top-6 right-0 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-20 min-w-[100px] sm:min-w-[120px]">
-                <button
-                  onClick={handleMoveClick}
-                  className="w-full flex items-center space-x-1.5 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200"
-                >
-                  <Move className="h-3 w-3" />
-                  <span>Move</span>
-                </button>
-                <button
-                  onClick={handleDeleteClick}
-                  className="w-full flex items-center space-x-1.5 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
-                >
-                  <Trash2 className="h-3 w-3" />
-                  <span>Archive</span>
-                </button>
-              </div>
-            )}
           </div>
         </div>
-        
+
         {/* Card Footer */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-1 sm:space-x-2 flex-wrap gap-1">
@@ -239,45 +273,95 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ card, onClick, onMembersClick, 
             )}
             {(card.karlo_attachments_aggregate?.aggregate?.count || 0) > 0 && (
               <div className="flex items-center space-x-0.5 sm:space-x-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-                <Paperclip className="h-2.5 w-2.5 sm:h-3 sm:w-3" aria-hidden="true" />
+                <Paperclip
+                  className="h-2.5 w-2.5 sm:h-3 sm:w-3"
+                  aria-hidden="true"
+                />
                 <span>{card.karlo_attachments_aggregate.aggregate.count}</span>
               </div>
             )}
             {hasDescriptionContent(card.description) && (
               <div className="flex items-center space-x-0.5 sm:space-x-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-                <FileText className="h-2.5 w-2.5 sm:h-3 sm:w-3" aria-hidden="true" />
+                <FileText
+                  className="h-2.5 w-2.5 sm:h-3 sm:w-3"
+                  aria-hidden="true"
+                />
               </div>
             )}
             {(card.karlo_card_comments?.length || 0) > 0 && (
               <div className="flex items-center space-x-0.5 sm:space-x-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
-                <MessageSquare className="h-2.5 w-2.5 sm:h-3 sm:w-3" aria-hidden="true" />
+                <MessageSquare
+                  className="h-2.5 w-2.5 sm:h-3 sm:w-3"
+                  aria-hidden="true"
+                />
                 <span>{card.karlo_card_comments.length}</span>
               </div>
             )}
             {card.due_date && (
-              <div className={`flex items-center space-x-0.5 sm:space-x-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium ${
-                isOverdue
-                  ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-                  : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
-              }`}>
-                <Calendar className="h-2.5 w-2.5 sm:h-3 sm:w-3" aria-hidden="true" />
-                <span className="hidden sm:inline">{formatDate(card.due_date)}</span>
-                <span className="sm:hidden">{new Date(card.due_date).getDate()}</span>
+              <div
+                className={`flex items-center space-x-0.5 sm:space-x-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium ${
+                  isOverdue
+                    ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                    : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400"
+                }`}
+              >
+                <Calendar
+                  className="h-2.5 w-2.5 sm:h-3 sm:w-3"
+                  aria-hidden="true"
+                />
+                <span className="hidden sm:inline">
+                  {formatDate(card.due_date)}
+                </span>
+                <span className="sm:hidden">
+                  {new Date(card.due_date).getDate()}
+                </span>
               </div>
             )}
           </div>
-          
+
           {renderMemberAvatars()}
         </div>
       </div>
-      
-      {/* Click outside to close menu */}
-      {showMenu && (
-        <div
-          className="fixed inset-0 z-10"
-          onClick={() => setShowMenu(false)}
-        />
-      )}
+
+      {/* Portal-rendered dropdown menu */}
+      {showMenu &&
+        menuPosition &&
+        createPortal(
+          <>
+            <div
+              className="fixed inset-0 z-[9998]"
+              onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+                e.stopPropagation();
+                setShowMenu(false);
+                setMenuPosition(null);
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                top: `${menuPosition.top}px`,
+                left: `${menuPosition.left}px`,
+              }}
+              className="bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-[9999] min-w-[120px]"
+            >
+              <button
+                onClick={handleMoveClick}
+                className="w-full flex items-center space-x-1.5 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200"
+              >
+                <Move className="h-3 w-3" />
+                <span>Move</span>
+              </button>
+              <button
+                onClick={handleDeleteClick}
+                className="w-full flex items-center space-x-1.5 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
+              >
+                <Trash2 className="h-3 w-3" />
+                <span>Archive</span>
+              </button>
+            </div>
+          </>,
+          document.body
+        )}
     </div>
   );
 };
