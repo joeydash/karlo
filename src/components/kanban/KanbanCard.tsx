@@ -272,15 +272,13 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
                 <span>Done</span>
               </div>
             )}
-            {card.priority && (
+            {card.priority && card.priority !== "normal" && (
               <div
                 className={`flex items-center space-x-0.5 sm:space-x-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium ${
                   card.priority === "urgent"
                     ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
                     : card.priority === "high"
                     ? "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400"
-                    : card.priority === "normal"
-                    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
                     : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
                 }`}
               >

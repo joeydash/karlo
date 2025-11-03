@@ -1257,7 +1257,7 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
                     key={option.value}
                     type="button"
                     onClick={() => handleFormChange("priority", option.value)}
-                    className={`flex-shrink-0 px-4 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 ${
+                    className={`flex-shrink-0 px-3 py-2 rounded-full text-xs font-semibold transition-all duration-200 ${
                       formData.priority === option.value
                         ? option.value === "urgent"
                           ? "bg-red-500 text-white shadow-md scale-105 ring-2 ring-red-300 dark:ring-red-700"
