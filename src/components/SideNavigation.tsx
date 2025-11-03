@@ -4,7 +4,6 @@ import {
   UserPlus,
   Calendar,
   ChevronRight,
-  X,
   Home,
   Layout,
   Sun,
@@ -30,8 +29,22 @@ const CustomOrganizationSwitcher: React.FC = () => {
     isLoading,
   } = useOrganization();
   const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const selectedOrgRef = React.useRef<HTMLButtonElement>(null);
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
   useKeyboardNavigation(dropdownRef, () => setIsOpen(false));
+
+  // Auto-scroll to selected organization when dropdown opens
+  React.useEffect(() => {
+    if (isOpen && selectedOrgRef.current && scrollContainerRef.current) {
+      setTimeout(() => {
+        selectedOrgRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }, 100);
+    }
+  }, [isOpen]);
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -198,13 +211,13 @@ const CustomOrganizationSwitcher: React.FC = () => {
         {/* Dropdown Menu */}
         {isOpen && (
           <div
-            className="absolute left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 py-2 z-50 max-h-80 overflow-hidden flex flex-col"
+            className="absolute left-0 right-0 bottom-full mb-2 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 py-2 z-50 max-h-80 overflow-hidden flex flex-col"
             role="menu"
             aria-orientation="vertical"
             aria-labelledby="workspace-menu"
           >
             {/* Header */}
-            <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
+            <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
                   <Building2 className="h-4 w-4 text-white" />
@@ -224,10 +237,16 @@ const CustomOrganizationSwitcher: React.FC = () => {
             </div>
 
             {/* Organizations List */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 pinned-boards-scroll">
+            <div
+              ref={scrollContainerRef}
+              className="flex-1 overflow-y-auto overflow-x-hidden p-2 pinned-boards-scroll"
+            >
               {organizations.map((org) => (
                 <button
                   key={org.id}
+                  ref={
+                    currentOrganization?.id === org.id ? selectedOrgRef : null
+                  }
                   onClick={() => handleOrganizationSelect(org)}
                   onKeyDown={(e) =>
                     handleOptionKeyDown(e, () => handleOrganizationSelect(org))
@@ -268,9 +287,9 @@ const CustomOrganizationSwitcher: React.FC = () => {
                   </div>
                   {currentOrganization?.id === org.id && (
                     <div className="flex items-center space-x-1 flex-shrink-0">
-                      <span className="text-xs text-blue-600 font-medium">
+                      {/* <span className="text-xs text-blue-600 font-medium">
                         Active
-                      </span>
+                      </span> */}
                       <Check
                         className="h-4 w-4 text-blue-600"
                         aria-hidden="true"
@@ -282,11 +301,11 @@ const CustomOrganizationSwitcher: React.FC = () => {
             </div>
 
             {/* Create New Workspace Button */}
-            <div className="border-t border-gray-100 dark:border-gray-700 pt-2">
+            <div className="border-t border-gray-100 dark:border-gray-700">
               <button
                 onClick={handleCreateNew}
                 onKeyDown={(e) => handleOptionKeyDown(e, handleCreateNew)}
-                className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 focus:bg-gray-50 dark:focus:bg-gray-700 transition-all duration-200 focus:outline-none group"
+                className="w-full flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 focus:bg-gray-50 dark:focus:bg-gray-700 transition-all duration-200 focus:outline-none group"
                 role="menuitem"
                 tabIndex={-1}
                 aria-label="Create a new workspace"
@@ -663,13 +682,10 @@ const SideNavigation: React.FC = () => {
                     Navigation
                   </h2>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Quick access menu
+                    One Platform
                   </p>
                 </div>
               </div>
-
-              {/* Custom Organization Switcher */}
-              <CustomOrganizationSwitcher />
             </div>
           </div>
 
@@ -799,6 +815,11 @@ const SideNavigation: React.FC = () => {
 
           {/* Fixed Bottom Sections */}
           <div className="flex-shrink-0">
+            {/* Organization Switcher */}
+            <div className="px-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+              <CustomOrganizationSwitcher />
+            </div>
+
             {/* Theme Toggle Section */}
             <div className="px-4 py-2 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
               <div className="flex items-center justify-between gap-1.5">
@@ -858,25 +879,6 @@ const SideNavigation: React.FC = () => {
                     }`}
                   />
                 </button>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span>Quick access menu</span>
-                </div>
-                {isManuallyOpened && (
-                  <button
-                    onClick={toggleNavigation}
-                    className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    aria-label="Close navigation"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
               </div>
             </div>
           </div>

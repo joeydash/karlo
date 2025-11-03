@@ -294,6 +294,11 @@ const MoveCardModal: React.FC<MoveCardModalProps> = ({
 
   const availableBoards = boards.filter((board) => board.id !== currentBoardId);
   const currentBoard = boards.find((board) => board.id === currentBoardId);
+  const selectedBoard = boards.find((board) => board.id === selectedBoardId);
+  const currentList = lists.find((list) =>
+    list.karlo_cards?.some((card) => card.id === cardId)
+  );
+  const selectedList = boardLists.find((list) => list.id === selectedListId);
 
   return (
     <div
@@ -310,40 +315,54 @@ const MoveCardModal: React.FC<MoveCardModalProps> = ({
         tabIndex={-1}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-8 border-b border-gray-100 dark:border-gray-700">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
+          <div className="flex items-center space-x-4 flex-1 min-w-0">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
               <Move className="h-6 w-6 text-white" />
             </div>
-            <div>
+            <div className="flex-1 min-w-0">
               <h2
                 className="text-2xl font-bold text-gray-900 dark:text-white"
                 id="move-modal-title"
               >
                 Move Card
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 max-w-96 truncate">
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 truncate">
                 Moving: "{cardTitle}"
               </p>
             </div>
           </div>
-          <button
-            onClick={handleClose}
-            disabled={isMoving}
-            className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-            aria-label="Close modal"
-          >
-            <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-          </button>
+          {/* Move Details */}
+          <div className="flex gap-4 items-center justify-center">
+            {currentList && selectedBoard && selectedList && (
+              <div className="flex items-center gap-2 text-xs mr-4">
+                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-md text-gray-700 dark:text-gray-300 font-medium truncate max-w-[150px]">
+                  {currentBoard?.name} / {currentList.name}
+                </span>
+                <ArrowRight className="h-3 w-3 text-blue-500 flex-shrink-0" />
+                <span className="px-2 py-1 bg-blue-50 dark:bg-blue-900/30 rounded-md text-blue-700 dark:text-blue-400 font-medium truncate max-w-[150px]">
+                  {selectedBoard.name} / {selectedList.name}
+                </span>
+              </div>
+            )}
+            <button
+              onClick={handleClose}
+              disabled={isMoving}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 flex-shrink-0"
+              aria-label="Close modal"
+            >
+              <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+            </button>
+          </div>
         </div>
 
         {/* Content - Horizontal Layout */}
         <div className="flex-1 overflow-hidden flex">
           {/* Board Selection */}
-          <div className="flex-1 p-8 border-r border-gray-100 dark:border-gray-700">
+          <div className="flex-1 p-4 border-r border-gray-100 dark:border-gray-700">
             <div className="h-full flex flex-col">
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              <div className="mb-3">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
                   Select Board
                 </h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -351,7 +370,7 @@ const MoveCardModal: React.FC<MoveCardModalProps> = ({
                 </p>
               </div>
 
-              <div className="flex-1 overflow-y-auto space-y-3 pr-4">
+              <div className="flex-1 overflow-y-auto space-y-3 p-2 pinned-boards-scroll">
                 {/* Current Board */}
                 {currentBoard && (
                   <button
@@ -438,10 +457,10 @@ const MoveCardModal: React.FC<MoveCardModalProps> = ({
           </div>
 
           {/* List Selection */}
-          <div className="flex-1 p-8">
+          <div className="flex-1 p-4">
             <div className="h-full flex flex-col">
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              <div className="mb-3">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
                   Select List
                 </h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -468,7 +487,7 @@ const MoveCardModal: React.FC<MoveCardModalProps> = ({
                   ))}
                 </div>
               ) : (
-                <div className="flex-1 overflow-y-auto space-y-3 pr-4">
+                <div className="flex-1 overflow-y-auto space-y-3 p-2 pinned-boards-scroll">
                   {boardLists.map((list) => (
                     <button
                       key={list.id}
@@ -521,7 +540,7 @@ const MoveCardModal: React.FC<MoveCardModalProps> = ({
         </div>
 
         {/* Fixed Footer with Actions */}
-        <div className="border-t border-gray-200 dark:border-gray-600 p-8 bg-white dark:bg-gray-800 rounded-b-3xl">
+        <div className="border-t border-gray-200 dark:border-gray-600 p-4 bg-white dark:bg-gray-800 rounded-b-3xl">
           <div className="flex space-x-4">
             <button
               type="button"

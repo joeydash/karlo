@@ -14,8 +14,22 @@ const OrganizationSwitcher: React.FC = () => {
     isLoading,
   } = useOrganization();
   const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const selectedOrgRef = React.useRef<HTMLButtonElement>(null);
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
   useKeyboardNavigation(dropdownRef, () => setIsOpen(false));
+
+  // Auto-scroll to selected organization when dropdown opens
+  React.useEffect(() => {
+    if (isOpen && selectedOrgRef.current && scrollContainerRef.current) {
+      setTimeout(() => {
+        selectedOrgRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }, 100);
+    }
+  }, [isOpen]);
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -173,10 +187,16 @@ const OrganizationSwitcher: React.FC = () => {
               </h3>
             </div>
 
-            <div className="max-h-60 overflow-y-auto overflow-x-hidden p-2 pinned-boards-scroll">
+            <div
+              ref={scrollContainerRef}
+              className="max-h-60 overflow-y-auto overflow-x-hidden p-2 pinned-boards-scroll"
+            >
               {organizations.map((org) => (
                 <button
                   key={org.id}
+                  ref={
+                    currentOrganization?.id === org.id ? selectedOrgRef : null
+                  }
                   onClick={() => handleOrganizationSelect(org)}
                   onKeyDown={(e) =>
                     handleOptionKeyDown(e, () => handleOrganizationSelect(org))
