@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import {
   UserPlus,
   Calendar,
-  Award,
   ChevronRight,
   X,
   Home,
@@ -16,6 +15,306 @@ import {
 import { useBoard } from "../hooks/useBoard";
 import { useTheme } from "../contexts/ThemeContext";
 import { useOrganization } from "../hooks/useOrganization";
+
+import { Building2, Plus, ChevronDown, Check, Users } from "lucide-react";
+import CreateWorkspaceModal from "./CreateWorkspaceModal";
+import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation";
+
+const CustomOrganizationSwitcher: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const {
+    organizations,
+    currentOrganization,
+    setCurrentOrganization,
+    isLoading,
+  } = useOrganization();
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  useKeyboardNavigation(dropdownRef, () => setIsOpen(false));
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const handleOrganizationSelect = (org: any) => {
+    console.log("🏢 Switching to organization:", org.display_name);
+    setCurrentOrganization(org);
+    setIsOpen(false);
+  };
+
+  const handleCreateNew = () => {
+    setIsOpen(false);
+    setShowCreateModal(true);
+  };
+
+  const handleToggleKeyDown = (e: React.KeyboardEvent) => {
+    switch (e.key) {
+      case "Enter":
+      case " ":
+        e.preventDefault();
+        setIsOpen(!isOpen);
+        break;
+      case "ArrowDown":
+        e.preventDefault();
+        setIsOpen(true);
+        setTimeout(() => {
+          const firstOption = dropdownRef.current?.querySelector(
+            '[role="menuitem"]'
+          ) as HTMLElement;
+          firstOption?.focus();
+        }, 50);
+        break;
+      case "Escape":
+        setIsOpen(false);
+        break;
+    }
+  };
+
+  const handleOptionKeyDown = (
+    e: React.KeyboardEvent,
+    callback: () => void
+  ) => {
+    const options = Array.from(
+      dropdownRef.current?.querySelectorAll('[role="menuitem"]') || []
+    );
+    const currentIndex = options.indexOf(e.currentTarget);
+
+    switch (e.key) {
+      case "Enter":
+      case " ":
+        e.preventDefault();
+        callback();
+        break;
+      case "ArrowDown":
+        e.preventDefault();
+        const nextIndex = (currentIndex + 1) % options.length;
+        (options[nextIndex] as HTMLElement)?.focus();
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        const prevIndex = (currentIndex - 1 + options.length) % options.length;
+        (options[prevIndex] as HTMLElement)?.focus();
+        break;
+      case "Escape":
+        e.preventDefault();
+        setIsOpen(false);
+        const trigger = document.querySelector(
+          '[aria-expanded="true"]'
+        ) as HTMLElement;
+        trigger?.focus();
+        break;
+    }
+  };
+
+  // If no organizations exist, show create workspace button
+  if (organizations.length === 0 && !isLoading) {
+    return (
+      <>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="w-full flex items-center space-x-3 p-3 text-left rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 focus:bg-gray-50 dark:focus:bg-gray-700 transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        >
+          <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+            <Plus className="h-5 w-5 text-white" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors duration-200">
+              Create Workspace
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Get started with a new workspace
+            </p>
+          </div>
+        </button>
+        <CreateWorkspaceModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+        />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className="relative" ref={dropdownRef}>
+        {/* Current Organization Display */}
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          onKeyDown={handleToggleKeyDown}
+          className="w-full flex items-center space-x-3 p-1 text-left rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 focus:bg-gray-50 dark:focus:bg-gray-700 transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          aria-expanded={isOpen}
+          aria-haspopup="menu"
+          aria-label={`Current workspace: ${
+            currentOrganization?.display_name || "Select Workspace"
+          }. Click to switch workspace.`}
+        >
+          {currentOrganization?.logo_url ? (
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200 overflow-hidden">
+              <img
+                src={currentOrganization.logo_url}
+                alt={currentOrganization.display_name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : (
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+              <Building2 className="h-5 w-5 text-white" />
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200 truncate">
+              {currentOrganization?.display_name || "Select Workspace"}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {currentOrganization?.description || "Workspace"}
+            </p>
+          </div>
+          <div className="flex items-center space-x-1">
+            <Users className="h-3 w-3 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200" />
+            <ChevronDown
+              className={`h-4 w-4 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-all duration-200 ${
+                isOpen ? "rotate-180" : ""
+              }`}
+            />
+          </div>
+        </button>
+
+        {/* Dropdown Menu */}
+        {isOpen && (
+          <div
+            className="absolute left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 py-2 z-50 max-h-80 overflow-hidden flex flex-col"
+            role="menu"
+            aria-orientation="vertical"
+            aria-labelledby="workspace-menu"
+          >
+            {/* Header */}
+            <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                  <Building2 className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <h3
+                    className="text-sm font-semibold text-gray-900 dark:text-white"
+                    id="workspace-menu"
+                  >
+                    Your Workspaces
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Switch between workspaces
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Organizations List */}
+            <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 pinned-boards-scroll">
+              {organizations.map((org) => (
+                <button
+                  key={org.id}
+                  onClick={() => handleOrganizationSelect(org)}
+                  onKeyDown={(e) =>
+                    handleOptionKeyDown(e, () => handleOrganizationSelect(org))
+                  }
+                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 focus:bg-gray-50 dark:focus:bg-gray-700 transition-all duration-200 focus:outline-none group"
+                  role="menuitem"
+                  tabIndex={-1}
+                  aria-label={`Switch to ${org.display_name}${
+                    currentOrganization?.id === org.id
+                      ? " (currently selected)"
+                      : ""
+                  }`}
+                >
+                  <div className="flex items-center space-x-3 min-w-0">
+                    {org.logo_url ? (
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
+                        <img
+                          src={org.logo_url}
+                          alt={org.display_name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <Building2 className="h-5 w-5 text-white" />
+                      </div>
+                    )}
+                    <div className="text-left min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200 truncate">
+                        {org.display_name}
+                      </p>
+                      {org.description && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                          {org.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  {currentOrganization?.id === org.id && (
+                    <div className="flex items-center space-x-1 flex-shrink-0">
+                      <span className="text-xs text-blue-600 font-medium">
+                        Active
+                      </span>
+                      <Check
+                        className="h-4 w-4 text-blue-600"
+                        aria-hidden="true"
+                      />
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Create New Workspace Button */}
+            <div className="border-t border-gray-100 dark:border-gray-700 pt-2">
+              <button
+                onClick={handleCreateNew}
+                onKeyDown={(e) => handleOptionKeyDown(e, handleCreateNew)}
+                className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 focus:bg-gray-50 dark:focus:bg-gray-700 transition-all duration-200 focus:outline-none group"
+                role="menuitem"
+                tabIndex={-1}
+                aria-label="Create a new workspace"
+              >
+                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                  <Plus className="h-5 w-5 text-white" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors duration-200">
+                    Create New Workspace
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Start a new workspace
+                  </p>
+                </div>
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <CreateWorkspaceModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+      />
+    </>
+  );
+};
 
 const SideNavigation: React.FC = () => {
   const navigate = useNavigate();
@@ -348,23 +647,29 @@ const SideNavigation: React.FC = () => {
         {/* Main container with flex column */}
         <div className="flex flex-col h-full">
           {/* Header - Fixed height */}
-          <div className="flex-shrink-0 p-6 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 shadow-lg">
-                <img
-                  src="/icons/web-app-manifest-192x192.png"
-                  alt="One Platform Logo"
-                  className="w-full h-full rounded-xl object-cover"
-                />
+          <div className="flex-shrink-0 p-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="space-y-2">
+              {/* Logo and Title */}
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 shadow-lg">
+                  <img
+                    src="/icons/web-app-manifest-192x192.png"
+                    alt="One Platform Logo"
+                    className="w-full h-full rounded-xl object-cover"
+                  />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                    Navigation
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Quick access menu
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                  Navigation
-                </h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Quick access menu
-                </p>
-              </div>
+
+              {/* Custom Organization Switcher */}
+              <CustomOrganizationSwitcher />
             </div>
           </div>
 

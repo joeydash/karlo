@@ -1,35 +1,43 @@
-import React, { useState } from 'react';
-import { Building2, Plus, ChevronDown, Check } from 'lucide-react';
-import { useOrganization } from '../hooks/useOrganization';
-import CreateWorkspaceModal from './CreateWorkspaceModal';
-import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
+import React, { useState } from "react";
+import { Building2, Plus, ChevronDown, Check } from "lucide-react";
+import { useOrganization } from "../hooks/useOrganization";
+import CreateWorkspaceModal from "./CreateWorkspaceModal";
+import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation";
 
 const OrganizationSwitcher: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const { organizations, currentOrganization, setCurrentOrganization, isLoading } = useOrganization();
+  const {
+    organizations,
+    currentOrganization,
+    setCurrentOrganization,
+    isLoading,
+  } = useOrganization();
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   useKeyboardNavigation(dropdownRef, () => setIsOpen(false));
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen]);
 
   const handleOrganizationSelect = (org: any) => {
-    console.log('🏢 Switching to organization:', org.display_name);
+    console.log("🏢 Switching to organization:", org.display_name);
     setCurrentOrganization(org);
     setIsOpen(false);
     // Clear any selected board when switching organizations
@@ -43,51 +51,60 @@ const OrganizationSwitcher: React.FC = () => {
 
   const handleToggleKeyDown = (e: React.KeyboardEvent) => {
     switch (e.key) {
-      case 'Enter':
-      case ' ':
+      case "Enter":
+      case " ":
         e.preventDefault();
         setIsOpen(!isOpen);
         break;
-      case 'ArrowDown':
+      case "ArrowDown":
         e.preventDefault();
         setIsOpen(true);
         // Focus first option after opening
         setTimeout(() => {
-          const firstOption = dropdownRef.current?.querySelector('[role="menuitem"]') as HTMLElement;
+          const firstOption = dropdownRef.current?.querySelector(
+            '[role="menuitem"]'
+          ) as HTMLElement;
           firstOption?.focus();
         }, 50);
         break;
-      case 'Escape':
+      case "Escape":
         setIsOpen(false);
         break;
     }
   };
 
-  const handleOptionKeyDown = (e: React.KeyboardEvent, callback: () => void) => {
-    const options = Array.from(dropdownRef.current?.querySelectorAll('[role="menuitem"]') || []);
+  const handleOptionKeyDown = (
+    e: React.KeyboardEvent,
+    callback: () => void
+  ) => {
+    const options = Array.from(
+      dropdownRef.current?.querySelectorAll('[role="menuitem"]') || []
+    );
     const currentIndex = options.indexOf(e.currentTarget);
 
     switch (e.key) {
-      case 'Enter':
-      case ' ':
+      case "Enter":
+      case " ":
         e.preventDefault();
         callback();
         break;
-      case 'ArrowDown':
+      case "ArrowDown":
         e.preventDefault();
         const nextIndex = (currentIndex + 1) % options.length;
         (options[nextIndex] as HTMLElement)?.focus();
         break;
-      case 'ArrowUp':
+      case "ArrowUp":
         e.preventDefault();
         const prevIndex = (currentIndex - 1 + options.length) % options.length;
         (options[prevIndex] as HTMLElement)?.focus();
         break;
-      case 'Escape':
+      case "Escape":
         e.preventDefault();
         setIsOpen(false);
         // Return focus to trigger button
-        const trigger = document.querySelector('[aria-expanded="true"]') as HTMLElement;
+        const trigger = document.querySelector(
+          '[aria-expanded="true"]'
+        ) as HTMLElement;
         trigger?.focus();
         break;
     }
@@ -104,9 +121,9 @@ const OrganizationSwitcher: React.FC = () => {
           <Plus className="h-4 w-4" />
           <span>Create Workspace</span>
         </button>
-        <CreateWorkspaceModal 
-          isOpen={showCreateModal} 
-          onClose={() => setShowCreateModal(false)} 
+        <CreateWorkspaceModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
         />
       </>
     );
@@ -121,7 +138,9 @@ const OrganizationSwitcher: React.FC = () => {
           className="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 px-3 py-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           aria-expanded={isOpen}
           aria-haspopup="menu"
-          aria-label={`Current workspace: ${currentOrganization?.display_name || 'Select Workspace'}. Click to switch workspace.`}
+          aria-label={`Current workspace: ${
+            currentOrganization?.display_name || "Select Workspace"
+          }. Click to switch workspace.`}
         >
           {currentOrganization?.logo_url ? (
             <img
@@ -133,7 +152,7 @@ const OrganizationSwitcher: React.FC = () => {
             <Building2 className="h-4 w-4" />
           )}
           <span className="max-w-32 truncate">
-            {currentOrganization?.display_name || 'Select Workspace'}
+            {currentOrganization?.display_name || "Select Workspace"}
           </span>
           <ChevronDown className="h-3 w-3" />
         </button>
@@ -146,19 +165,30 @@ const OrganizationSwitcher: React.FC = () => {
             aria-labelledby="workspace-menu"
           >
             <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white" id="workspace-menu">Switch Workspace</h3>
+              <h3
+                className="text-sm font-semibold text-gray-900 dark:text-white"
+                id="workspace-menu"
+              >
+                Switch Workspace
+              </h3>
             </div>
-            
-            <div className="max-h-60 overflow-y-auto">
+
+            <div className="max-h-60 overflow-y-auto overflow-x-hidden p-2 pinned-boards-scroll">
               {organizations.map((org) => (
                 <button
                   key={org.id}
                   onClick={() => handleOrganizationSelect(org)}
-                  onKeyDown={(e) => handleOptionKeyDown(e, () => handleOrganizationSelect(org))}
+                  onKeyDown={(e) =>
+                    handleOptionKeyDown(e, () => handleOrganizationSelect(org))
+                  }
                   className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 focus:bg-gray-50 dark:focus:bg-gray-700 transition-colors duration-200 focus:outline-none"
                   role="menuitem"
                   tabIndex={-1}
-                  aria-label={`Switch to ${org.display_name}${currentOrganization?.id === org.id ? ' (currently selected)' : ''}`}
+                  aria-label={`Switch to ${org.display_name}${
+                    currentOrganization?.id === org.id
+                      ? " (currently selected)"
+                      : ""
+                  }`}
                 >
                   <div className="flex items-center space-x-3">
                     {org.logo_url ? (
@@ -173,14 +203,21 @@ const OrganizationSwitcher: React.FC = () => {
                       </div>
                     )}
                     <div className="text-left">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">{org.display_name}</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        {org.display_name}
+                      </p>
                       {org.description && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-40">{org.description}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-40">
+                          {org.description}
+                        </p>
                       )}
                     </div>
                   </div>
                   {currentOrganization?.id === org.id && (
-                    <Check className="h-4 w-4 text-blue-600" aria-hidden="true" />
+                    <Check
+                      className="h-4 w-4 text-blue-600"
+                      aria-hidden="true"
+                    />
                   )}
                 </button>
               ))}
@@ -198,16 +235,18 @@ const OrganizationSwitcher: React.FC = () => {
                 <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
                   <Plus className="h-4 w-4 text-gray-600 dark:text-gray-300" />
                 </div>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Create New Workspace</span>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Create New Workspace
+                </span>
               </button>
             </div>
           </div>
         )}
       </div>
 
-      <CreateWorkspaceModal 
-        isOpen={showCreateModal} 
-        onClose={() => setShowCreateModal(false)} 
+      <CreateWorkspaceModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
       />
     </>
   );
