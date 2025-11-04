@@ -24,13 +24,16 @@ import {
   Plus,
   Hash,
   Flag,
+  Tag,
 } from "lucide-react";
 import { KanbanCard } from "../../types/kanban";
 import { useKanban } from "../../hooks/useKanban";
 import { useToast } from "../../contexts/ToastContext";
+import { useTag } from "../../hooks/useTag";
 import ConfirmationModal from "../ConfirmationModal";
 import AttachmentViewerModal from "../AttachmentViewerModal";
 import CardMemberModal from "./CardMemberModal";
+import CardTagModal from "./CardTagModal";
 import CommentSection from "../CommentSection";
 import EditorJS from "@editorjs/editorjs";
 import Header from "@editorjs/header";
@@ -60,9 +63,16 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
   onClose,
   cardId,
 }) => {
-  const { lists, updateCard, uploadFile, deleteAttachment, removeCardMember } =
-    useKanban();
+  const {
+    lists,
+    updateCard,
+    uploadFile,
+    deleteAttachment,
+    removeCardMember,
+    syncCardTags,
+  } = useKanban();
   const { showSuccess, showError } = useToast();
+  const { tags } = useTag();
 
   // Get current user from auth store to check role
   const authStore = (window as any).__authStore;
@@ -105,7 +115,10 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [showExpandedEditor, setShowExpandedEditor] = useState(false);
   const [showMemberModal, setShowMemberModal] = useState(false);
+  const [showTagModal, setShowTagModal] = useState(false);
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [originalTagIds, setOriginalTagIds] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<EditorJS | null>(null);
   const expandedEditorRef = useRef<EditorJS | null>(null);
@@ -204,6 +217,11 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
   useEffect(() => {
     if (card && isOpen) {
       isInitializedRef.current = false;
+
+      // Initialize selected tags from card
+      const cardTagIds = card.karlo_card_tags?.map((ct) => ct.tag_id) || [];
+      setSelectedTagIds(cardTagIds);
+      setOriginalTagIds(cardTagIds);
 
       // Step 1: Set form data
       const initialData = {
@@ -560,9 +578,41 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
+  // Handle tag selection (without saving)
+  const handleToggleTag = (tagId: string) => {
+    const newSelectedTagIds = selectedTagIds.includes(tagId)
+      ? selectedTagIds.filter((id) => id !== tagId)
+      : [...selectedTagIds, tagId];
+
+    setSelectedTagIds(newSelectedTagIds);
+  };
+
   // Check for changes
   const hasUnsavedChanges =
     JSON.stringify(formData) !== JSON.stringify(originalData);
+
+  const hasTagChanges =
+    JSON.stringify(selectedTagIds.sort()) !==
+    JSON.stringify(originalTagIds.sort());
+
+  // Save tags if they have changed
+  const saveTags = async () => {
+    if (!hasTagChanges || !card) {
+      return true;
+    }
+
+    console.log("💾 Saving tags...");
+    const result = await syncCardTags(card.id, selectedTagIds);
+
+    if (result.success) {
+      setOriginalTagIds(selectedTagIds);
+      showSuccess("Tags saved", "Card tags have been updated successfully");
+      return true;
+    } else {
+      showError("Save failed", result.message || "Failed to save tags");
+      return false;
+    }
+  };
 
   // Auto-save function
   const autoSave = async () => {
@@ -625,10 +675,11 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
   const handleOutsideClick = async (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       console.log("🖱️ Outside click detected");
-      if (hasUnsavedChanges) {
+      if (hasUnsavedChanges || hasTagChanges) {
         console.log("💾 Auto-saving before close...");
         const saved = await autoSave();
-        if (saved) {
+        const tagsSaved = await saveTags();
+        if (saved && tagsSaved) {
           console.log("✅ Auto-save successful, closing modal");
           onClose();
         } else {
@@ -643,9 +694,10 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
 
   // Handle mobile save and close
   const handleMobileSaveAndClose = async () => {
-    if (hasUnsavedChanges) {
+    if (hasUnsavedChanges || hasTagChanges) {
       const saved = await autoSave();
-      if (saved) {
+      const tagsSaved = await saveTags();
+      if (saved && tagsSaved) {
         onClose();
       }
     } else {
@@ -717,9 +769,10 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
   };
   const handleClose = async () => {
     console.log("🚪 Close button clicked");
-    if (hasUnsavedChanges) {
+    if (hasUnsavedChanges || hasTagChanges) {
       console.log("💾 Auto-saving before close...");
       await autoSave();
+      await saveTags();
     }
     setErrors({});
     onClose();
@@ -940,6 +993,54 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
 
   const handleToggleComplete = () => {
     handleFormChange("is_completed", !formData.is_completed);
+  };
+
+  const renderTagBadges = () => {
+    const selectedTags = tags.filter((tag) => selectedTagIds.includes(tag.id));
+
+    if (selectedTags.length === 0) {
+      // Show + icon when no tags assigned
+      return (
+        <button
+          onClick={() => setShowTagModal(true)}
+          className="w-8 h-8 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 focus:bg-gray-300 dark:focus:bg-gray-500 rounded-full flex items-center justify-center transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+          aria-label="Add tags to this card"
+          title="Add tags to this card"
+        >
+          <Plus className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+        </button>
+      );
+    }
+
+    return (
+      <div className="flex items-center flex-wrap gap-2">
+        {selectedTags.map((tag) => (
+          <div
+            key={tag.id}
+            className="group inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-sm font-medium border border-blue-200 dark:border-blue-800 relative"
+          >
+            <span>{tag.name}</span>
+            <button
+              type="button"
+              onClick={() => handleToggleTag(tag.id)}
+              className="hover:bg-blue-200 dark:hover:bg-blue-800/50 rounded-full p-0.5 transition-colors"
+              title={`Remove ${tag.name}`}
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        ))}
+
+        <button
+          onClick={() => setShowTagModal(true)}
+          className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 focus:bg-blue-200 dark:focus:bg-blue-900/50 rounded-full flex items-center justify-center transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+          aria-label="Manage card tags"
+          title="Manage card tags"
+        >
+          <Plus className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+        </button>
+      </div>
+    );
   };
 
   const renderMemberAvatars = () => {
@@ -1171,6 +1272,20 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
                   )}
               </label>
               {renderMemberAvatars()}
+            </div>
+
+            {/* Tags Section */}
+            <div className="flex items-center justify-start gap-5">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <Tag className="h-4 w-4 inline mr-1" />
+                Tags{" "}
+                {selectedTagIds.length > 0 && (
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    ({selectedTagIds.length})
+                  </span>
+                )}
+              </label>
+              {renderTagBadges()}
             </div>
 
             <div className="flex flex-col sm:flex-row sm:gap-7 sm:items-center">
@@ -1638,7 +1753,7 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
               </div>
             </div>
 
-            {(hasUnsavedChanges || isSaving) && (
+            {(hasUnsavedChanges || hasTagChanges || isSaving) && (
               <div className="flex items-center justify-center text-sm text-gray-500 dark:text-gray-400 bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg border border-yellow-200 dark:border-yellow-800">
                 <div className="flex items-center space-x-2">
                   <div
@@ -1649,7 +1764,7 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
                   <span>
                     {isSaving
                       ? "Saving changes..."
-                      : "Changes will be saved automatically"}
+                      : "Changes will be saved when you close the modal"}
                   </span>
                 </div>
               </div>
@@ -1748,6 +1863,14 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
         onClose={() => setShowMemberModal(false)}
         cardId={cardId}
         cardTitle={card?.title || ""}
+      />
+
+      <CardTagModal
+        isOpen={showTagModal}
+        onClose={() => setShowTagModal(false)}
+        cardTitle={card?.title || ""}
+        selectedTagIds={selectedTagIds}
+        onToggleTag={handleToggleTag}
       />
     </div>
   );

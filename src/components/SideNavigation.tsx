@@ -256,7 +256,7 @@ const CustomOrganizationSwitcher: React.FC = () => {
                   onKeyDown={(e) =>
                     handleOptionKeyDown(e, () => handleOrganizationSelect(org))
                   }
-                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 focus:bg-gray-50 dark:focus:bg-gray-700 transition-all duration-200 focus:outline-none group"
+                  className="w-full flex items-center justify-between px-4 py-1.5 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 focus:bg-gray-50 dark:focus:bg-gray-700 transition-all duration-200 focus:outline-none group"
                   role="menuitem"
                   tabIndex={-1}
                   aria-label={`Switch to ${org.display_name}${

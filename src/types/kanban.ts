@@ -87,6 +87,23 @@ export interface KanbanCard {
   karlo_card_comments?: Array<{
     id: string;
   }>;
+  karlo_card_tags?: CardTag[];
+  karlo_card_tags_aggregate?: {
+    aggregate: {
+      count: number;
+    };
+  };
+}
+
+interface CardTag {
+  id: string;
+  card_id: string;
+  tag_id: string;
+  karlo_tag?: {
+    id: string;
+    name: string;
+    description?: string;
+  };
 }
 
 interface CardAttachment {
@@ -160,6 +177,12 @@ export interface KanbanState {
   ) => Promise<{ success: boolean; message?: string }>;
   removeCardMember: (
     memberId: string
+  ) => Promise<{ success: boolean; message?: string }>;
+
+  // Card tag management
+  syncCardTags: (
+    cardId: string,
+    tagIds: string[]
   ) => Promise<{ success: boolean; message?: string }>;
 
   // File attachment management

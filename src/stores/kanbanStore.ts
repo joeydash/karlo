@@ -93,6 +93,15 @@ const QUERIES = {
           karlo_card_comments {
             id
           }
+          karlo_card_tags {
+            id
+            tag_id
+            karlo_tag {
+              id
+              name
+              description
+            }
+          }
         }
       }
     }
@@ -354,6 +363,49 @@ const QUERIES = {
     mutation RemoveCardMember($id: uuid!) {
       delete_karlo_card_members_by_pk(id: $id) {
         id
+      }
+    }
+  `,
+  ADD_CARD_TAG: `
+    mutation AddCardTag($card_id: uuid!, $tag_id: uuid!) {
+      insert_karlo_card_tags_one(object: {
+        card_id: $card_id,
+        tag_id: $tag_id
+      }) {
+        id
+        card_id
+        tag_id
+        karlo_tag {
+          id
+          name
+          description
+        }
+      }
+    }
+  `,
+  REMOVE_CARD_TAG: `
+    mutation RemoveCardTag($id: uuid!) {
+      delete_karlo_card_tags_by_pk(id: $id) {
+        id
+      }
+    }
+  `,
+  SYNC_CARD_TAGS: `
+    mutation SyncCardTags($card_id: uuid!, $tag_ids: [uuid!]!) {
+      delete_karlo_card_tags(where: {card_id: {_eq: $card_id}}) {
+        affected_rows
+      }
+      insert_karlo_card_tags(objects: $tag_ids) {
+        returning {
+          id
+          card_id
+          tag_id
+          karlo_tag {
+            id
+            name
+            description
+          }
+        }
       }
     }
   `,
@@ -1055,6 +1107,71 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
     }
 
     return { success: false, message: "Failed to remove member from card" };
+  },
+
+  // Card tag management
+  syncCardTags: async (cardId: string, tagIds: string[]) => {
+    const currentState = get();
+
+    // Prepare tag objects for insertion
+    const tagObjects = tagIds.map((tagId) => ({
+      card_id: cardId,
+      tag_id: tagId,
+    }));
+
+    // Delete existing tags and insert new ones
+    const { data, error } = await graphqlRequest<any>(
+      `mutation SyncCardTags($card_id: uuid!, $objects: [karlo_card_tags_insert_input!]!) {
+        delete_karlo_card_tags(where: {card_id: {_eq: $card_id}}) {
+          affected_rows
+        }
+        insert_karlo_card_tags(objects: $objects) {
+          returning {
+            id
+            card_id
+            tag_id
+            karlo_tag {
+              id
+              name
+              description
+            }
+          }
+        }
+      }`,
+      {
+        card_id: cardId,
+        objects: tagObjects,
+      }
+    );
+
+    if (error) {
+      set({ error });
+      return { success: false, message: error };
+    }
+
+    const newTags = data?.insert_karlo_card_tags?.returning || [];
+
+    // Update local state
+    const updatedLists = currentState.lists.map((list) => ({
+      ...list,
+      karlo_cards: list.karlo_cards.map((card) => {
+        if (card.id === cardId) {
+          return {
+            ...card,
+            karlo_card_tags: newTags,
+            karlo_card_tags_aggregate: {
+              aggregate: {
+                count: newTags.length,
+              },
+            },
+          };
+        }
+        return card;
+      }),
+    }));
+
+    set({ lists: updatedLists });
+    return { success: true };
   },
 
   // File attachment functions
