@@ -10,6 +10,7 @@ import {
   UserCheck,
   Menu,
   Tag as TagIcon,
+  Filter,
 } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useKanban } from "../../hooks/useKanban";
@@ -22,6 +23,7 @@ import EditBoardModal from "../EditBoardModal";
 import CardEditModal from "./CardEditModal";
 import CardMemberModal from "./CardMemberModal";
 import FilterMembersModal from "./FilterMembersModal";
+import FilterCardsModal from "./FilterCardsModal";
 import TemplateModal from "./TemplateModal";
 import MoveCardModal from "./MoveCardModal";
 import ListOrderModal from "./ListOrderModal";
@@ -87,6 +89,7 @@ const KanbanBoard: React.FC = () => {
   const [tagToDelete, setTagToDelete] = useState<Tag | null>(null);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isUniversalSearchOpen, setIsUniversalSearchOpen] = useState(false);
+  const [showCardsFilterModal, setShowCardsFilterModal] = useState(false);
   const { showSuccess, showError } = useToast();
   const [searchTerm, setSearchTerm] = useState(() => {
     // Load search term from localStorage
@@ -103,6 +106,52 @@ const KanbanBoard: React.FC = () => {
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
+    }
+  });
+
+  // Card filter states
+  const [selectedPriorities, setSelectedPriorities] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(`kanban-priority-filter-${boardId}`);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(`kanban-tag-filter-${boardId}`);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [selectedStoryPoints, setSelectedStoryPoints] = useState<number[]>(
+    () => {
+      try {
+        const saved = localStorage.getItem(`kanban-points-filter-${boardId}`);
+        return saved ? JSON.parse(saved) : [];
+      } catch {
+        return [];
+      }
+    }
+  );
+
+  const [dueDateFilter, setDueDateFilter] = useState<string>(() => {
+    try {
+      return localStorage.getItem(`kanban-duedate-filter-${boardId}`) || "";
+    } catch {
+      return "";
+    }
+  });
+
+  const [prioritySort, setPrioritySort] = useState<string>(() => {
+    try {
+      return localStorage.getItem(`kanban-priority-sort-${boardId}`) || "";
+    } catch {
+      return "";
     }
   });
 
@@ -138,6 +187,92 @@ const KanbanBoard: React.FC = () => {
       }
     }
   }, [selectedMemberIds, boardId]);
+
+  // Save card filters to localStorage
+  React.useEffect(() => {
+    if (boardId) {
+      try {
+        if (selectedPriorities.length > 0) {
+          localStorage.setItem(
+            `kanban-priority-filter-${boardId}`,
+            JSON.stringify(selectedPriorities)
+          );
+        } else {
+          localStorage.removeItem(`kanban-priority-filter-${boardId}`);
+        }
+      } catch (error) {
+        console.error("Failed to save priority filter to localStorage:", error);
+      }
+    }
+  }, [selectedPriorities, boardId]);
+
+  React.useEffect(() => {
+    if (boardId) {
+      try {
+        if (selectedTagIds.length > 0) {
+          localStorage.setItem(
+            `kanban-tag-filter-${boardId}`,
+            JSON.stringify(selectedTagIds)
+          );
+        } else {
+          localStorage.removeItem(`kanban-tag-filter-${boardId}`);
+        }
+      } catch (error) {
+        console.error("Failed to save tag filter to localStorage:", error);
+      }
+    }
+  }, [selectedTagIds, boardId]);
+
+  React.useEffect(() => {
+    if (boardId) {
+      try {
+        if (selectedStoryPoints.length > 0) {
+          localStorage.setItem(
+            `kanban-points-filter-${boardId}`,
+            JSON.stringify(selectedStoryPoints)
+          );
+        } else {
+          localStorage.removeItem(`kanban-points-filter-${boardId}`);
+        }
+      } catch (error) {
+        console.error(
+          "Failed to save story points filter to localStorage:",
+          error
+        );
+      }
+    }
+  }, [selectedStoryPoints, boardId]);
+
+  React.useEffect(() => {
+    if (boardId) {
+      try {
+        if (dueDateFilter) {
+          localStorage.setItem(
+            `kanban-duedate-filter-${boardId}`,
+            dueDateFilter
+          );
+        } else {
+          localStorage.removeItem(`kanban-duedate-filter-${boardId}`);
+        }
+      } catch (error) {
+        console.error("Failed to save due date filter to localStorage:", error);
+      }
+    }
+  }, [dueDateFilter, boardId]);
+
+  React.useEffect(() => {
+    if (boardId) {
+      try {
+        if (prioritySort) {
+          localStorage.setItem(`kanban-priority-sort-${boardId}`, prioritySort);
+        } else {
+          localStorage.removeItem(`kanban-priority-sort-${boardId}`);
+        }
+      } catch (error) {
+        console.error("Failed to save priority sort to localStorage:", error);
+      }
+    }
+  }, [prioritySort, boardId]);
 
   // Global keyboard shortcut for universal search (Ctrl/Cmd + K)
   React.useEffect(() => {
@@ -286,41 +421,157 @@ const KanbanBoard: React.FC = () => {
   // Find the current board from the boards list for editing
   const editableBoard = boards.find((board) => board.id === boardId) || null;
 
-  // Filter lists based on search term and selected members
-  const filteredLists = lists.map((list) => ({
-    ...list,
-    karlo_cards: list.karlo_cards.filter((card) => {
+  // Filter lists based on search term and selected members and card filters
+  const filteredLists = lists.map((list) => {
+    // First filter the cards
+    const filteredCards = list.karlo_cards.filter((card) => {
       // Search term filter
       const matchesSearch = card.title
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
 
       // Member filter
-      if (selectedMemberIds.length === 0) {
-        return matchesSearch; // No filter selected, show all matching search
+      let matchesMemberFilter = true;
+      if (selectedMemberIds.length > 0) {
+        const cardMemberIds =
+          card.karlo_card_members?.map(
+            (member) => member.authFullnameByUserId?.id || member.user_id
+          ) || [];
+        const isUnassigned = cardMemberIds.length === 0;
+
+        matchesMemberFilter = selectedMemberIds.some((memberId) => {
+          if (memberId === "unassigned") {
+            return isUnassigned;
+          }
+          return cardMemberIds.includes(memberId);
+        });
       }
 
-      // Check if card matches member filter
-      const cardMemberIds =
-        card.karlo_card_members?.map(
-          (member) => member.authFullnameByUserId?.id || member.user_id
-        ) || [];
-      const isUnassigned = cardMemberIds.length === 0;
+      // Priority filter
+      let matchesPriority = true;
+      if (selectedPriorities.length > 0) {
+        matchesPriority = card.priority
+          ? selectedPriorities.includes(card.priority)
+          : false;
+      }
 
-      const matchesMemberFilter = selectedMemberIds.some((memberId) => {
-        if (memberId === "unassigned") {
-          return isUnassigned;
+      // Tag filter
+      let matchesTag = true;
+      if (selectedTagIds.length > 0) {
+        const cardTagIds = card.karlo_card_tags?.map((ct) => ct.tag_id) || [];
+        matchesTag = selectedTagIds.some((tagId) => cardTagIds.includes(tagId));
+      }
+
+      // Story points filter
+      let matchesStoryPoints = true;
+      if (selectedStoryPoints.length > 0) {
+        matchesStoryPoints = card.story_points
+          ? selectedStoryPoints.includes(card.story_points)
+          : false;
+      }
+
+      // Due date filter
+      let matchesDueDate = true;
+      if (dueDateFilter) {
+        const now = new Date();
+        const today = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate()
+        );
+        const cardDueDate = card.due_date ? new Date(card.due_date) : null;
+
+        switch (dueDateFilter) {
+          case "overdue":
+            matchesDueDate = cardDueDate ? cardDueDate < today : false;
+            break;
+          case "today":
+            matchesDueDate = cardDueDate
+              ? cardDueDate.toDateString() === today.toDateString()
+              : false;
+            break;
+          case "week":
+            if (cardDueDate) {
+              const weekFromNow = new Date(today);
+              weekFromNow.setDate(weekFromNow.getDate() + 7);
+              matchesDueDate =
+                cardDueDate >= today && cardDueDate <= weekFromNow;
+            } else {
+              matchesDueDate = false;
+            }
+            break;
+          case "month":
+            if (cardDueDate) {
+              const monthFromNow = new Date(today);
+              monthFromNow.setMonth(monthFromNow.getMonth() + 1);
+              matchesDueDate =
+                cardDueDate >= today && cardDueDate <= monthFromNow;
+            } else {
+              matchesDueDate = false;
+            }
+            break;
+          case "no-date":
+            matchesDueDate = !cardDueDate;
+            break;
         }
-        return cardMemberIds.includes(memberId);
-      });
+      }
 
-      return matchesSearch && matchesMemberFilter;
-    }),
-  }));
+      return (
+        matchesSearch &&
+        matchesMemberFilter &&
+        matchesPriority &&
+        matchesTag &&
+        matchesStoryPoints &&
+        matchesDueDate
+      );
+    });
+
+    // Then sort the cards if priority sort is enabled
+    const sortedCards = prioritySort
+      ? (() => {
+          const priorityOrder = { low: 1, normal: 2, high: 3, urgent: 4 };
+          return [...filteredCards].sort((a, b) => {
+            const aPriority = a.priority
+              ? priorityOrder[a.priority as keyof typeof priorityOrder] || 0
+              : 0;
+            const bPriority = b.priority
+              ? priorityOrder[b.priority as keyof typeof priorityOrder] || 0
+              : 0;
+
+            if (prioritySort === "low-to-urgent") {
+              return aPriority - bPriority;
+            } else if (prioritySort === "urgent-to-low") {
+              return bPriority - aPriority;
+            }
+            return 0;
+          });
+        })()
+      : filteredCards;
+
+    return {
+      ...list,
+      karlo_cards: sortedCards,
+    };
+  });
 
   const handleMemberFilterChange = (memberIds: string[]) => {
     console.log("🔍 Member filter changed:", memberIds);
     setSelectedMemberIds(memberIds);
+  };
+
+  const handleCardFiltersChange = (filters: {
+    priorities: string[];
+    tagIds: string[];
+    storyPoints: number[];
+    dueDate: string;
+    prioritySort: string;
+  }) => {
+    console.log("🔍 Card filters changed:", filters);
+    setSelectedPriorities(filters.priorities);
+    setSelectedTagIds(filters.tagIds);
+    setSelectedStoryPoints(filters.storyPoints);
+    setDueDateFilter(filters.dueDate);
+    setPrioritySort(filters.prioritySort);
   };
 
   const handleCardClick = (cardId: string) => {
@@ -598,6 +849,28 @@ const KanbanBoard: React.FC = () => {
                 <kbd className="hidden xl:inline-block px-1.5 py-0.5 text-xs bg-white bg-opacity-20 rounded border border-white border-opacity-30">
                   ⌘K
                 </kbd>
+              </button>
+
+              {/* Filter Cards Button */}
+              <button
+                onClick={() => setShowCardsFilterModal(true)}
+                className="flex items-center space-x-2 px-3 py-2 bg-white bg-opacity-20 backdrop-blur-sm border border-white border-opacity-30 rounded-lg text-white hover:bg-opacity-30 focus:bg-opacity-30 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all duration-200"
+                aria-label="Filter cards"
+              >
+                <Filter className="h-4 w-4" />
+                {(selectedPriorities.length > 0 ||
+                  selectedTagIds.length > 0 ||
+                  selectedStoryPoints.length > 0 ||
+                  dueDateFilter ||
+                  prioritySort) && (
+                  <span className="text-xs bg-white bg-opacity-30 px-1.5 py-0.5 rounded-full">
+                    {selectedPriorities.length +
+                      selectedTagIds.length +
+                      selectedStoryPoints.length +
+                      (dueDateFilter ? 1 : 0) +
+                      (prioritySort ? 1 : 0)}
+                  </span>
+                )}
               </button>
 
               {/* Tags Button */}
@@ -966,6 +1239,17 @@ const KanbanBoard: React.FC = () => {
         selectedMemberIds={selectedMemberIds}
         onMembersChange={handleMemberFilterChange}
         boardId={boardId || ""}
+      />
+
+      <FilterCardsModal
+        isOpen={showCardsFilterModal}
+        onClose={() => setShowCardsFilterModal(false)}
+        selectedPriorities={selectedPriorities}
+        selectedTagIds={selectedTagIds}
+        selectedStoryPoints={selectedStoryPoints}
+        dueDateFilter={dueDateFilter}
+        prioritySort={prioritySort}
+        onFiltersChange={handleCardFiltersChange}
       />
 
       <TemplateModal
