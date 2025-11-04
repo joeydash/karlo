@@ -1,7 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { X, Layout, GripVertical, Loader2, ArrowUp, ArrowDown } from 'lucide-react';
-import { KanbanList } from '../../types/kanban';
-import { useKanban } from '../../hooks/useKanban';
+import React, { useState, useEffect } from "react";
+import {
+  X,
+  Layout,
+  GripVertical,
+  Loader2,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
+import { KanbanList } from "../../types/kanban";
+import { useKanban } from "../../hooks/useKanban";
 
 interface ListOrderModalProps {
   isOpen: boolean;
@@ -10,7 +17,12 @@ interface ListOrderModalProps {
   lists: KanbanList[];
 }
 
-const ListOrderModal: React.FC<ListOrderModalProps> = ({ isOpen, onClose, boardId, lists }) => {
+const ListOrderModal: React.FC<ListOrderModalProps> = ({
+  isOpen,
+  onClose,
+  boardId,
+  lists,
+}) => {
   const [orderedLists, setOrderedLists] = useState<KanbanList[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -48,13 +60,13 @@ const ListOrderModal: React.FC<ListOrderModalProps> = ({ isOpen, onClose, boardI
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', index.toString());
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/html", index.toString());
   };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+    e.dataTransfer.dropEffect = "move";
   };
 
   const handleDrop = (e: React.DragEvent, dropIndex: number) => {
@@ -71,19 +83,24 @@ const ListOrderModal: React.FC<ListOrderModalProps> = ({ isOpen, onClose, boardI
 
   const saveOrder = async () => {
     setIsUpdating(true);
-    
+
     try {
       // Update positions using GraphQL
       const updates = orderedLists.map((list, index) => ({
         where: { id: { _eq: list.id } },
-        _set: { position: index }
+        _set: { position: index },
       }));
 
-      const response = await fetch('https://db.subspace.money/v1/graphql', {
-        method: 'POST',
+      const response = await fetch("https://db.subspace.money/v1/graphql", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth-storage') ? JSON.parse(localStorage.getItem('auth-storage') || '{}').state?.token : ''}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${
+            localStorage.getItem("auth-storage")
+              ? JSON.parse(localStorage.getItem("auth-storage") || "{}").state
+                  ?.token
+              : ""
+          }`,
         },
         body: JSON.stringify({
           query: `
@@ -93,22 +110,22 @@ const ListOrderModal: React.FC<ListOrderModalProps> = ({ isOpen, onClose, boardI
               }
             }
           `,
-          variables: { updates }
-        })
+          variables: { updates },
+        }),
       });
 
       const result = await response.json();
-      
+
       if (result.data?.update_karlo_lists_many) {
         // Refresh board data to get updated positions
         await fetchBoardData(boardId);
         onClose();
       } else {
-        throw new Error('Failed to update list positions');
+        throw new Error("Failed to update list positions");
       }
     } catch (error) {
-      console.error('Error updating list order:', error);
-      alert('Failed to save list order. Please try again.');
+      console.error("Error updating list order:", error);
+      alert("Failed to save list order. Please try again.");
     } finally {
       setIsUpdating(false);
     }
@@ -116,7 +133,10 @@ const ListOrderModal: React.FC<ListOrderModalProps> = ({ isOpen, onClose, boardI
 
   const hasChanges = () => {
     const originalOrder = [...lists].sort((a, b) => a.position - b.position);
-    return JSON.stringify(originalOrder.map(l => l.id)) !== JSON.stringify(orderedLists.map(l => l.id));
+    return (
+      JSON.stringify(originalOrder.map((l) => l.id)) !==
+      JSON.stringify(orderedLists.map((l) => l.id))
+    );
   };
 
   return (
@@ -129,8 +149,12 @@ const ListOrderModal: React.FC<ListOrderModalProps> = ({ isOpen, onClose, boardI
               <Layout className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Reorder Lists</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-300">Drag to reorder or use arrow buttons</p>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                Reorder Lists
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Drag to reorder or use arrow buttons
+              </p>
             </div>
           </div>
           <button
@@ -143,7 +167,7 @@ const ListOrderModal: React.FC<ListOrderModalProps> = ({ isOpen, onClose, boardI
         </div>
 
         {/* Lists */}
-        <div className="flex-1 overflow-y-auto p-6 min-h-0">
+        <div className="flex-1 overflow-y-auto p-6 min-h-0 custom-scrollbar">
           <div className="space-y-2">
             {orderedLists.map((list, index) => (
               <div
@@ -154,9 +178,9 @@ const ListOrderModal: React.FC<ListOrderModalProps> = ({ isOpen, onClose, boardI
                 onDrop={(e) => handleDrop(e, index)}
                 onDragEnd={handleDragEnd}
                 className={`flex items-center space-x-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-xl border-2 transition-all duration-200 cursor-move ${
-                  draggedIndex === index 
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 opacity-50' 
-                    : 'border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+                  draggedIndex === index
+                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 opacity-50"
+                    : "border-transparent hover:border-gray-300 dark:hover:border-gray-600"
                 }`}
               >
                 {/* Drag Handle */}
@@ -166,16 +190,19 @@ const ListOrderModal: React.FC<ListOrderModalProps> = ({ isOpen, onClose, boardI
 
                 {/* List Info */}
                 <div className="flex items-center space-x-3 flex-1">
-                  <div 
+                  <div
                     className="w-8 h-8 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: list.color || '#6B7280' }}
+                    style={{ backgroundColor: list.color || "#6B7280" }}
                   >
                     <Layout className="h-4 w-4 text-white" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">{list.name}</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      {list.name}
+                    </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {list.karlo_cards.length} card{list.karlo_cards.length !== 1 ? 's' : ''}
+                      {list.karlo_cards.length} card
+                      {list.karlo_cards.length !== 1 ? "s" : ""}
                     </p>
                   </div>
                 </div>
@@ -206,7 +233,9 @@ const ListOrderModal: React.FC<ListOrderModalProps> = ({ isOpen, onClose, boardI
           {orderedLists.length === 0 && (
             <div className="text-center py-8">
               <Layout className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 dark:text-gray-400">No lists to reorder</p>
+              <p className="text-gray-500 dark:text-gray-400">
+                No lists to reorder
+              </p>
             </div>
           )}
         </div>

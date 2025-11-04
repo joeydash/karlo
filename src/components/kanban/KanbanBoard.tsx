@@ -1,35 +1,62 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Plus, Edit, LayoutGrid as Layout, Search, X, Users, UserCheck, Menu } from 'lucide-react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useKanban } from '../../hooks/useKanban';
-import { useBoard } from '../../hooks/useBoard';
-import { useToast } from '../../contexts/ToastContext';
-import KanbanList from './KanbanList';
-import EditBoardModal from '../EditBoardModal';
-import CardEditModal from './CardEditModal';
-import CardMemberModal from './CardMemberModal';
-import FilterMembersModal from './FilterMembersModal';
-import TemplateModal from './TemplateModal';
-import MoveCardModal from './MoveCardModal';
-import ListOrderModal from './ListOrderModal';
-import AttendanceModal from './AttendanceModal';
-import ConfirmationModal from '../ConfirmationModal';
-import SkipLink from '../SkipLink';
-import AccessibleButton from '../AccessibleButton';
-import UniversalSearchModal from '../UniversalSearchModal';
-import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
-import { KanbanCard } from '../../types/kanban';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  ArrowLeft,
+  Plus,
+  Edit,
+  LayoutGrid as Layout,
+  Search,
+  X,
+  Users,
+  UserCheck,
+  Menu,
+  Tag as TagIcon,
+} from "lucide-react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useKanban } from "../../hooks/useKanban";
+import { useBoard } from "../../hooks/useBoard";
+import { useOrganization } from "../../hooks/useOrganization";
+import { useToast } from "../../contexts/ToastContext";
+import { useTag } from "../../hooks/useTag";
+import KanbanList from "./KanbanList";
+import EditBoardModal from "../EditBoardModal";
+import CardEditModal from "./CardEditModal";
+import CardMemberModal from "./CardMemberModal";
+import FilterMembersModal from "./FilterMembersModal";
+import TemplateModal from "./TemplateModal";
+import MoveCardModal from "./MoveCardModal";
+import ListOrderModal from "./ListOrderModal";
+import AttendanceModal from "./AttendanceModal";
+import ConfirmationModal from "../ConfirmationModal";
+import SkipLink from "../SkipLink";
+import AccessibleButton from "../AccessibleButton";
+import UniversalSearchModal from "../UniversalSearchModal";
+import TagsModal from "../TagsModal";
+import CreateTagModal from "../CreateTagModal";
+import UpdateTagModal from "../UpdateTagModal";
+import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation";
+import { KanbanCard } from "../../types/kanban";
+import { Tag } from "../../types/tag";
 
 const KanbanBoard: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { boardId } = useParams<{ boardId: string }>();
   const boardContainerRef = useRef<HTMLDivElement>(null);
-  const { currentBoard, lists, isLoading, createList, fetchBoardData, removeCardFromLocalState } = useKanban(boardId);
+  const {
+    currentBoard,
+    lists,
+    isLoading,
+    createList,
+    fetchBoardData,
+    removeCardFromLocalState,
+  } = useKanban(boardId);
   const { deleteCard } = useKanban(boardId);
   const { boards } = useBoard();
+  const { currentOrganization } = useOrganization();
+  const { deleteTag } = useTag();
+  const previousOrgIdRef = useRef<string | null>(null);
   const [isAddingList, setIsAddingList] = useState(false);
-  const [newListName, setNewListName] = useState('');
+  const [newListName, setNewListName] = useState("");
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedCard, setSelectedCard] = useState<KanbanCard | null>(null);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
@@ -37,22 +64,36 @@ const KanbanBoard: React.FC = () => {
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [showMemberModal, setShowMemberModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
-  const [selectedCardForMembers, setSelectedCardForMembers] = useState<{ id: string; title: string } | null>(null);
+  const [selectedCardForMembers, setSelectedCardForMembers] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
   const [showMoveModal, setShowMoveModal] = useState(false);
-  const [selectedCardForMove, setSelectedCardForMove] = useState<{ id: string; title: string } | null>(null);
+  const [selectedCardForMove, setSelectedCardForMove] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
   const [showListOrderModal, setShowListOrderModal] = useState(false);
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const [cardToDelete, setCardToDelete] = useState<{ id: string; title: string } | null>(null);
+  const [cardToDelete, setCardToDelete] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+  const [showTagsModal, setShowTagsModal] = useState(false);
+  const [showCreateTagModal, setShowCreateTagModal] = useState(false);
+  const [showUpdateTagModal, setShowUpdateTagModal] = useState(false);
+  const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
+  const [tagToDelete, setTagToDelete] = useState<Tag | null>(null);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isUniversalSearchOpen, setIsUniversalSearchOpen] = useState(false);
   const { showSuccess, showError } = useToast();
   const [searchTerm, setSearchTerm] = useState(() => {
     // Load search term from localStorage
     try {
-      return localStorage.getItem(`kanban-search-${boardId}`) || '';
+      return localStorage.getItem(`kanban-search-${boardId}`) || "";
     } catch {
-      return '';
+      return "";
     }
   });
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>(() => {
@@ -64,7 +105,7 @@ const KanbanBoard: React.FC = () => {
       return [];
     }
   });
-  
+
   // Save search term to localStorage whenever it changes
   React.useEffect(() => {
     if (boardId) {
@@ -75,7 +116,7 @@ const KanbanBoard: React.FC = () => {
           localStorage.removeItem(`kanban-search-${boardId}`);
         }
       } catch (error) {
-        console.error('Failed to save search term to localStorage:', error);
+        console.error("Failed to save search term to localStorage:", error);
       }
     }
   }, [searchTerm, boardId]);
@@ -85,12 +126,15 @@ const KanbanBoard: React.FC = () => {
     if (boardId) {
       try {
         if (selectedMemberIds.length > 0) {
-          localStorage.setItem(`kanban-member-filter-${boardId}`, JSON.stringify(selectedMemberIds));
+          localStorage.setItem(
+            `kanban-member-filter-${boardId}`,
+            JSON.stringify(selectedMemberIds)
+          );
         } else {
           localStorage.removeItem(`kanban-member-filter-${boardId}`);
         }
       } catch (error) {
-        console.error('Failed to save member filter to localStorage:', error);
+        console.error("Failed to save member filter to localStorage:", error);
       }
     }
   }, [selectedMemberIds, boardId]);
@@ -98,14 +142,14 @@ const KanbanBoard: React.FC = () => {
   // Global keyboard shortcut for universal search (Ctrl/Cmd + K)
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setIsUniversalSearchOpen(true);
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   // Listen for card moved events to refresh board data
@@ -119,25 +163,45 @@ const KanbanBoard: React.FC = () => {
       }
     };
 
-    window.addEventListener('cardMoved', handleCardMoved as EventListener);
+    window.addEventListener("cardMoved", handleCardMoved as EventListener);
     return () => {
-      window.removeEventListener('cardMoved', handleCardMoved as EventListener);
+      window.removeEventListener("cardMoved", handleCardMoved as EventListener);
     };
   }, [boardId, removeCardFromLocalState]);
+
+  // Navigate to dashboard immediately when organization changes
+  React.useEffect(() => {
+    // Only check if we have current organization set
+    if (!currentOrganization?.id) return;
+
+    // Detect organization change
+    const orgChanged =
+      previousOrgIdRef.current !== null &&
+      previousOrgIdRef.current !== currentOrganization.id;
+
+    // Update the previous org ref
+    previousOrgIdRef.current = currentOrganization.id;
+
+    if (orgChanged) {
+      // Organization changed while viewing a board, navigate to dashboard
+      console.log("Organization changed, navigating to dashboard");
+      navigate("/dashboard", { replace: true });
+    }
+  }, [currentOrganization?.id, navigate]);
 
   // Scroll to card when navigating from universal search
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    const cardId = searchParams.get('cardId');
-    const listId = searchParams.get('listId');
+    const cardId = searchParams.get("cardId");
+    const listId = searchParams.get("listId");
 
     if (cardId && listId && lists.length > 0 && boardContainerRef.current) {
       // Check if filters need to be cleared
-      const hasFilters = searchTerm !== '' || selectedMemberIds.length > 0;
+      const hasFilters = searchTerm !== "" || selectedMemberIds.length > 0;
 
       if (hasFilters) {
         // Clear filters and let React re-render
-        setSearchTerm('');
+        setSearchTerm("");
         setSelectedMemberIds([]);
         return; // Exit and wait for re-render with cleared filters
       }
@@ -145,9 +209,13 @@ const KanbanBoard: React.FC = () => {
       // Wait for DOM to be ready with cleared filters
       const timer = setTimeout(() => {
         // Find the list element
-        const listElement = document.querySelector(`[data-list-id="${listId}"]`);
+        const listElement = document.querySelector(
+          `[data-list-id="${listId}"]`
+        );
         // Find the card element
-        const cardElement = document.querySelector(`[data-card-id="${cardId}"]`);
+        const cardElement = document.querySelector(
+          `[data-card-id="${cardId}"]`
+        );
 
         if (listElement && cardElement && boardContainerRef.current) {
           // First scroll the board horizontally to the list
@@ -156,30 +224,37 @@ const KanbanBoard: React.FC = () => {
           const boardRect = boardContainer.getBoundingClientRect();
 
           // Calculate scroll position to center the list horizontally
-          const scrollLeft = listElement.offsetLeft - (boardRect.width / 2) + (listRect.width / 2);
+          const scrollLeft =
+            listElement.offsetLeft - boardRect.width / 2 + listRect.width / 2;
           boardContainer.scrollTo({
             left: Math.max(0, scrollLeft),
-            behavior: 'smooth'
+            behavior: "smooth",
           });
 
           // Wait for horizontal scroll to complete, then scroll vertically
           setTimeout(() => {
-            const listContentElement = listElement.querySelector('[data-list-content]');
+            const listContentElement = listElement.querySelector(
+              "[data-list-content]"
+            );
             if (listContentElement) {
               const cardRect = cardElement.getBoundingClientRect();
-              const listContentRect = listContentElement.getBoundingClientRect();
+              const listContentRect =
+                listContentElement.getBoundingClientRect();
 
               // Calculate scroll position to center the card vertically within the list
-              const scrollTop = cardElement.offsetTop - (listContentRect.height / 2) + (cardRect.height / 2);
+              const scrollTop =
+                cardElement.offsetTop -
+                listContentRect.height / 2 +
+                cardRect.height / 2;
               listContentElement.scrollTo({
                 top: Math.max(0, scrollTop),
-                behavior: 'smooth'
+                behavior: "smooth",
               });
 
               // Add highlight animation to the card
-              cardElement.classList.add('card-highlight');
+              cardElement.classList.add("card-highlight");
               setTimeout(() => {
-                cardElement.classList.remove('card-highlight');
+                cardElement.classList.remove("card-highlight");
               }, 2000);
             }
           }, 500);
@@ -191,54 +266,68 @@ const KanbanBoard: React.FC = () => {
 
       return () => clearTimeout(timer);
     }
-  }, [location.search, lists, boardId, navigate, searchTerm, selectedMemberIds]);
+  }, [
+    location.search,
+    lists,
+    boardId,
+    navigate,
+    searchTerm,
+    selectedMemberIds,
+  ]);
 
   // Keyboard navigation for search
   const handleSearchKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      setSearchTerm('');
+    if (e.key === "Escape") {
+      setSearchTerm("");
       (e.target as HTMLInputElement).blur();
     }
   };
 
   // Find the current board from the boards list for editing
-  const editableBoard = boards.find(board => board.id === boardId) || null;
+  const editableBoard = boards.find((board) => board.id === boardId) || null;
 
   // Filter lists based on search term and selected members
-  const filteredLists = lists.map(list => ({
+  const filteredLists = lists.map((list) => ({
     ...list,
-    karlo_cards: list.karlo_cards.filter(card => {
+    karlo_cards: list.karlo_cards.filter((card) => {
       // Search term filter
-      const matchesSearch = card.title.toLowerCase().includes(searchTerm.toLowerCase());
-      
+      const matchesSearch = card.title
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
       // Member filter
       if (selectedMemberIds.length === 0) {
         return matchesSearch; // No filter selected, show all matching search
       }
-      
+
       // Check if card matches member filter
-      const cardMemberIds = card.karlo_card_members?.map(member => member.authFullnameByUserId?.id || member.user_id) || [];
+      const cardMemberIds =
+        card.karlo_card_members?.map(
+          (member) => member.authFullnameByUserId?.id || member.user_id
+        ) || [];
       const isUnassigned = cardMemberIds.length === 0;
-      
-      const matchesMemberFilter = selectedMemberIds.some(memberId => {
-        if (memberId === 'unassigned') {
+
+      const matchesMemberFilter = selectedMemberIds.some((memberId) => {
+        if (memberId === "unassigned") {
           return isUnassigned;
         }
         return cardMemberIds.includes(memberId);
       });
-      
+
       return matchesSearch && matchesMemberFilter;
-    })
+    }),
   }));
 
   const handleMemberFilterChange = (memberIds: string[]) => {
-    console.log('🔍 Member filter changed:', memberIds);
+    console.log("🔍 Member filter changed:", memberIds);
     setSelectedMemberIds(memberIds);
   };
 
   const handleCardClick = (cardId: string) => {
     // Find the card in all lists
-    const card = lists.flatMap(list => list.karlo_cards).find(c => c.id === cardId);
+    const card = lists
+      .flatMap((list) => list.karlo_cards)
+      .find((c) => c.id === cardId);
     if (card) {
       setSelectedCard(card);
       setSelectedCardId(cardId);
@@ -265,9 +354,9 @@ const KanbanBoard: React.FC = () => {
 
     const result = await deleteCard(cardToDelete.id);
     if (result.success) {
-      showSuccess('Card archived successfully');
+      showSuccess("Card archived successfully");
     } else {
-      showError(result.message || 'Failed to archive card');
+      showError(result.message || "Failed to archive card");
     }
     setShowDeleteConfirmation(false);
     setCardToDelete(null);
@@ -277,22 +366,53 @@ const KanbanBoard: React.FC = () => {
     if (newListName.trim() && boardId) {
       const result = await createList(boardId, newListName.trim());
       if (result.success) {
-        showSuccess('List created successfully');
-        setNewListName('');
+        showSuccess("List created successfully");
+        setNewListName("");
         setIsAddingList(false);
       } else {
-        showError(result.message || 'Failed to create list');
+        showError(result.message || "Failed to create list");
       }
     }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleAddList();
-    } else if (e.key === 'Escape') {
+    } else if (e.key === "Escape") {
       setIsAddingList(false);
-      setNewListName('');
+      setNewListName("");
     }
+  };
+
+  // Tag handlers
+  const handleCreateTagClick = () => {
+    setShowCreateTagModal(true);
+  };
+
+  const handleEditTagClick = (tag: Tag) => {
+    setSelectedTag(tag);
+    setShowUpdateTagModal(true);
+  };
+
+  const handleDeleteTagClick = (tag: Tag) => {
+    setTagToDelete(tag);
+    // Open confirmation modal
+    setShowDeleteConfirmation(true);
+  };
+
+  const confirmDeleteTag = async () => {
+    if (!tagToDelete) return;
+
+    const result = await deleteTag(tagToDelete.id);
+
+    if (result.success) {
+      showSuccess("Tag deleted successfully");
+    } else {
+      showError(result.message || "Failed to delete tag");
+    }
+
+    setShowDeleteConfirmation(false);
+    setTagToDelete(null);
   };
 
   const ShimmerList = () => (
@@ -305,61 +425,82 @@ const KanbanBoard: React.FC = () => {
         </div>
         <div className="h-4 w-4 bg-white bg-opacity-30 rounded"></div>
       </div>
-      
+
       {/* Cards Shimmer */}
       <div className="space-y-3 mb-4">
-        {Array.from({ length: Math.floor(Math.random() * 4) + 1 }).map((_, index) => (
-          <div key={index} className="bg-white bg-opacity-40 rounded-xl p-3 shadow-sm">
-            {/* Card Cover Shimmer (random) */}
-            {Math.random() > 0.6 && (
-              <div className="h-20 bg-white bg-opacity-30 rounded-lg mb-3"></div>
-            )}
-            
-            {/* Card Title */}
-            <div className="h-4 bg-white bg-opacity-30 rounded mb-2" style={{ width: `${60 + Math.random() * 30}%` }}></div>
-            
-            {/* Card Description (random) */}
-            {Math.random() > 0.5 && (
-              <div className="space-y-1 mb-3">
-                <div className="h-3 bg-white bg-opacity-20 rounded" style={{ width: `${70 + Math.random() * 25}%` }}></div>
-                <div className="h-3 bg-white bg-opacity-20 rounded" style={{ width: `${40 + Math.random() * 30}%` }}></div>
-              </div>
-            )}
-            
-            {/* Card Footer */}
-            <div className="flex items-center justify-between pt-2">
-              <div className="flex items-center space-x-2">
-                {/* Due Date Badge (random) */}
-                {Math.random() > 0.7 && (
-                  <div className="h-5 w-16 bg-white bg-opacity-30 rounded-md"></div>
-                )}
-              </div>
-              
-              {/* Member Avatars */}
-              <div className="flex items-center -space-x-1">
-                {Array.from({ length: Math.floor(Math.random() * 3) + 1 }).map((_, i) => (
-                  <div key={i} className="w-6 h-6 bg-white bg-opacity-30 rounded-full border-2 border-white"></div>
-                ))}
+        {Array.from({ length: Math.floor(Math.random() * 4) + 1 }).map(
+          (_, index) => (
+            <div
+              key={index}
+              className="bg-white bg-opacity-40 rounded-xl p-3 shadow-sm"
+            >
+              {/* Card Cover Shimmer (random) */}
+              {Math.random() > 0.6 && (
+                <div className="h-20 bg-white bg-opacity-30 rounded-lg mb-3"></div>
+              )}
+
+              {/* Card Title */}
+              <div
+                className="h-4 bg-white bg-opacity-30 rounded mb-2"
+                style={{ width: `${60 + Math.random() * 30}%` }}
+              ></div>
+
+              {/* Card Description (random) */}
+              {Math.random() > 0.5 && (
+                <div className="space-y-1 mb-3">
+                  <div
+                    className="h-3 bg-white bg-opacity-20 rounded"
+                    style={{ width: `${70 + Math.random() * 25}%` }}
+                  ></div>
+                  <div
+                    className="h-3 bg-white bg-opacity-20 rounded"
+                    style={{ width: `${40 + Math.random() * 30}%` }}
+                  ></div>
+                </div>
+              )}
+
+              {/* Card Footer */}
+              <div className="flex items-center justify-between pt-2">
+                <div className="flex items-center space-x-2">
+                  {/* Due Date Badge (random) */}
+                  {Math.random() > 0.7 && (
+                    <div className="h-5 w-16 bg-white bg-opacity-30 rounded-md"></div>
+                  )}
+                </div>
+
+                {/* Member Avatars */}
+                <div className="flex items-center -space-x-1">
+                  {Array.from({
+                    length: Math.floor(Math.random() * 3) + 1,
+                  }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-6 h-6 bg-white bg-opacity-30 rounded-full border-2 border-white"
+                    ></div>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          )
+        )}
       </div>
-      
+
       {/* Add Card Button Shimmer */}
       <div className="h-10 bg-white bg-opacity-20 rounded-xl"></div>
     </div>
   );
 
-  if (isLoading) {
+  if (isLoading || !currentBoard) {
     return (
-      <div 
+      <div
         className="min-h-screen"
         style={{
-          backgroundColor: editableBoard?.background_color || '#0079BF',
-          backgroundImage: editableBoard?.background_image_url ? `url(${editableBoard.background_image_url})` : undefined,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
+          backgroundColor: editableBoard?.background_color || "#0079BF",
+          backgroundImage: editableBoard?.background_image_url
+            ? `url(${editableBoard.background_image_url})`
+            : undefined,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
         }}
       >
         {/* Header Shimmer */}
@@ -384,7 +525,7 @@ const KanbanBoard: React.FC = () => {
             {Array.from({ length: 4 }).map((_, index) => (
               <ShimmerList key={index} />
             ))}
-            
+
             {/* Add List Button Shimmer */}
             <div className="bg-white bg-opacity-20 rounded-2xl p-4 w-80 flex-shrink-0 self-start animate-pulse">
               <div className="flex items-center space-x-3">
@@ -398,36 +539,22 @@ const KanbanBoard: React.FC = () => {
     );
   }
 
-  if (!currentBoard) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <p className="text-gray-600">Board not found</p>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-          >
-            Back to Dashboard
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div 
+    <div
       className="h-screen flex flex-col"
       role="main"
       id="main-content"
       style={{
-        backgroundColor: currentBoard.background_color || '#0079BF',
-        backgroundImage: currentBoard.background_image_url ? `url(${currentBoard.background_image_url})` : undefined,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center'
+        backgroundColor: currentBoard.background_color || "#0079BF",
+        backgroundImage: currentBoard.background_image_url
+          ? `url(${currentBoard.background_image_url})`
+          : undefined,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
       }}
     >
       <SkipLink />
-      
+
       {/* Header */}
       <div className="bg-black bg-opacity-20 backdrop-blur-sm flex-shrink-0">
         <div className="px-3 sm:px-4 lg:px-8">
@@ -441,7 +568,12 @@ const KanbanBoard: React.FC = () => {
                 <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
               </button> */}
               <div className="flex items-center space-x-1.5 sm:space-x-3 flex-1 min-w-0">
-                <h1 className="text-base sm:text-xl font-bold text-white truncate" id="board-title">{currentBoard.name}</h1>
+                <h1
+                  className="text-base sm:text-xl font-bold text-white truncate"
+                  id="board-title"
+                >
+                  {currentBoard.name}
+                </h1>
                 <button
                   onClick={() => setShowEditModal(true)}
                   className="p-1 text-white hover:bg-white hover:bg-opacity-20 focus:bg-white focus:bg-opacity-20 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 flex-shrink-0"
@@ -468,6 +600,15 @@ const KanbanBoard: React.FC = () => {
                 </kbd>
               </button>
 
+              {/* Tags Button */}
+              <button
+                onClick={() => setShowTagsModal(true)}
+                className="flex items-center space-x-2 px-3 py-2 bg-white bg-opacity-20 backdrop-blur-sm border border-white border-opacity-30 rounded-lg text-white hover:bg-opacity-30 focus:bg-opacity-30 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all duration-200"
+                aria-label="Manage tags"
+              >
+                <TagIcon className="h-4 w-4" />
+              </button>
+
               {/* List Order Button */}
               <button
                 onClick={() => setShowListOrderModal(true)}
@@ -491,7 +632,11 @@ const KanbanBoard: React.FC = () => {
                 onClick={() => setShowFilterModal(true)}
                 className={`flex items-center space-x-2 px-3 py-2 bg-white bg-opacity-20 backdrop-blur-sm border border-white border-opacity-30 rounded-lg text-white hover:bg-opacity-30 focus:bg-opacity-30 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all duration-200 '
                 }`}
-                aria-label={`Filter by assignee${selectedMemberIds.length > 0 ? ` (${selectedMemberIds.length} selected)` : ''}`}
+                aria-label={`Filter by assignee${
+                  selectedMemberIds.length > 0
+                    ? ` (${selectedMemberIds.length} selected)`
+                    : ""
+                }`}
               >
                 <Users className="h-4 w-4" />
                 <span className="text-sm">Assignee</span>
@@ -507,7 +652,10 @@ const KanbanBoard: React.FC = () => {
                 <label htmlFor="search-cards" className="sr-only">
                   Search cards
                 </label>
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" aria-hidden="true">
+                <div
+                  className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                  aria-hidden="true"
+                >
                   <Search className="h-4 w-4 text-white text-opacity-60" />
                 </div>
                 <input
@@ -522,7 +670,7 @@ const KanbanBoard: React.FC = () => {
                 />
                 {searchTerm && (
                   <button
-                    onClick={() => setSearchTerm('')}
+                    onClick={() => setSearchTerm("")}
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-white text-opacity-60 hover:text-opacity-100 focus:text-opacity-100 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 rounded"
                     aria-label="Clear search"
                   >
@@ -563,7 +711,10 @@ const KanbanBoard: React.FC = () => {
                 <label htmlFor="search-cards-mobile" className="sr-only">
                   Search cards
                 </label>
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" aria-hidden="true">
+                <div
+                  className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                  aria-hidden="true"
+                >
                   <Search className="h-4 w-4 text-white text-opacity-60" />
                 </div>
                 <input
@@ -578,7 +729,7 @@ const KanbanBoard: React.FC = () => {
                 />
                 {searchTerm && (
                   <button
-                    onClick={() => setSearchTerm('')}
+                    onClick={() => setSearchTerm("")}
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-white text-opacity-60 hover:text-opacity-100 focus:text-opacity-100 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 rounded"
                     aria-label="Clear search"
                   >
@@ -589,6 +740,18 @@ const KanbanBoard: React.FC = () => {
 
               {/* Mobile Action Buttons */}
               <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    setShowTagsModal(true);
+                    setShowMobileMenu(false);
+                  }}
+                  className="flex items-center justify-center space-x-2 px-3 py-2 bg-white bg-opacity-20 backdrop-blur-sm border border-white border-opacity-30 rounded-lg text-white hover:bg-opacity-30 focus:bg-opacity-30 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all duration-200"
+                  aria-label="Manage tags"
+                >
+                  <TagIcon className="h-4 w-4" />
+                  <span className="text-sm">Tags</span>
+                </button>
+
                 <button
                   onClick={() => {
                     setShowListOrderModal(true);
@@ -619,9 +782,15 @@ const KanbanBoard: React.FC = () => {
                     setShowMobileMenu(false);
                   }}
                   className={`col-span-2 flex items-center justify-center space-x-2 px-3 py-2 bg-white bg-opacity-20 backdrop-blur-sm border border-white border-opacity-30 rounded-lg text-white hover:bg-opacity-30 focus:bg-opacity-30 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all duration-200 ${
-                    selectedMemberIds.length > 0 ? 'bg-blue-500 bg-opacity-80' : ''
+                    selectedMemberIds.length > 0
+                      ? "bg-blue-500 bg-opacity-80"
+                      : ""
                   }`}
-                  aria-label={`Filter by assignee${selectedMemberIds.length > 0 ? ` (${selectedMemberIds.length} selected)` : ''}`}
+                  aria-label={`Filter by assignee${
+                    selectedMemberIds.length > 0
+                      ? ` (${selectedMemberIds.length} selected)`
+                      : ""
+                  }`}
                 >
                   <Users className="h-4 w-4" />
                   <span className="text-sm">Assignee</span>
@@ -641,17 +810,28 @@ const KanbanBoard: React.FC = () => {
       <div className="flex-1 p-3 sm:p-4 md:p-6 overflow-hidden">
         {searchTerm && (
           <div className="sr-only" id="search-results" aria-live="polite">
-            {filteredLists.reduce((total, list) => total + list.karlo_cards.length, 0)} cards found
-            {selectedMemberIds.length > 0 && ` (filtered by ${selectedMemberIds.length} assignee${selectedMemberIds.length !== 1 ? 's' : ''})`}
+            {filteredLists.reduce(
+              (total, list) => total + list.karlo_cards.length,
+              0
+            )}{" "}
+            cards found
+            {selectedMemberIds.length > 0 &&
+              ` (filtered by ${selectedMemberIds.length} assignee${
+                selectedMemberIds.length !== 1 ? "s" : ""
+              })`}
           </div>
         )}
-        
+
         {lists.length === 0 && !isAddingList ? (
           /* Empty Board - Show Template Options */
           <div className="h-full flex flex-col items-center justify-center px-4">
             <Layout className="h-12 w-12 sm:h-16 sm:w-16 text-white text-opacity-60 mx-auto mb-3 sm:mb-4" />
-            <h3 className="text-base sm:text-lg font-medium text-white mb-2 text-center">No lists yet</h3>
-            <p className="text-sm sm:text-base text-white text-opacity-80 mb-4 sm:mb-6 text-center max-w-md">Get started quickly with a template or create your own lists</p>
+            <h3 className="text-base sm:text-lg font-medium text-white mb-2 text-center">
+              No lists yet
+            </h3>
+            <p className="text-sm sm:text-base text-white text-opacity-80 mb-4 sm:mb-6 text-center max-w-md">
+              Get started quickly with a template or create your own lists
+            </p>
             <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
               <AccessibleButton
                 variant="ghost"
@@ -689,8 +869,8 @@ const KanbanBoard: React.FC = () => {
                 onCardClick={handleCardClick}
                 onCardMembersClick={handleCardMembersClick}
                 onArchiveCard={(cardId) => {
-                  const card = list.karlo_cards.find(c => c.id === cardId);
-                  handleArchiveCard(cardId, card?.title || 'this card');
+                  const card = list.karlo_cards.find((c) => c.id === cardId);
+                  handleArchiveCard(cardId, card?.title || "this card");
                 }}
                 onMoveCard={handleMoveCard}
               />
@@ -729,89 +909,93 @@ const KanbanBoard: React.FC = () => {
                     size="sm"
                     onClick={() => {
                       setIsAddingList(false);
-                      setNewListName('');
+                      setNewListName("");
                     }}
                   >
                     Cancel
                   </AccessibleButton>
                 </div>
               </div>
-            ) : lists.length > 0 && (
-              <button
-                onClick={() => setIsAddingList(true)}
-                className="bg-white bg-opacity-20 hover:bg-opacity-30 focus:bg-opacity-30 rounded-2xl p-3 sm:p-4 w-64 sm:w-72 md:w-80 flex-shrink-0 self-start flex items-center space-x-2 sm:space-x-3 text-white transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
-                aria-label="Add another list to the board"
-              >
-                <Plus className="h-4 w-4 sm:h-5 sm:w-5 group-hover:scale-110 transition-transform duration-200" />
-                <span className="text-sm sm:text-base font-medium">Add another list</span>
-              </button>
+            ) : (
+              lists.length > 0 && (
+                <button
+                  onClick={() => setIsAddingList(true)}
+                  className="bg-white bg-opacity-20 hover:bg-opacity-30 focus:bg-opacity-30 rounded-2xl p-3 sm:p-4 w-64 sm:w-72 md:w-80 flex-shrink-0 self-start flex items-center space-x-2 sm:space-x-3 text-white transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                  aria-label="Add another list to the board"
+                >
+                  <Plus className="h-4 w-4 sm:h-5 sm:w-5 group-hover:scale-110 transition-transform duration-200" />
+                  <span className="text-sm sm:text-base font-medium">
+                    Add another list
+                  </span>
+                </button>
+              )
             )}
           </div>
         )}
       </div>
-      
-      <EditBoardModal 
-        isOpen={showEditModal} 
+
+      <EditBoardModal
+        isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         board={editableBoard}
       />
-      
-      <CardEditModal 
-        isOpen={showCardModal} 
+
+      <CardEditModal
+        isOpen={showCardModal}
         onClose={() => {
           setShowCardModal(false);
           setSelectedCard(null);
         }}
-        cardId={selectedCardId || ''}
+        cardId={selectedCardId || ""}
         card={selectedCard}
       />
-      
-      <CardMemberModal 
-        isOpen={showMemberModal} 
+
+      <CardMemberModal
+        isOpen={showMemberModal}
         onClose={() => {
           setShowMemberModal(false);
           setSelectedCardForMembers(null);
         }}
-        cardId={selectedCardForMembers?.id || ''}
-        cardTitle={selectedCardForMembers?.title || ''}
+        cardId={selectedCardForMembers?.id || ""}
+        cardTitle={selectedCardForMembers?.title || ""}
       />
-      
-      <FilterMembersModal 
-        isOpen={showFilterModal} 
+
+      <FilterMembersModal
+        isOpen={showFilterModal}
         onClose={() => setShowFilterModal(false)}
         selectedMemberIds={selectedMemberIds}
         onMembersChange={handleMemberFilterChange}
-        boardId={boardId || ''}
+        boardId={boardId || ""}
       />
-      
-      <TemplateModal 
-        isOpen={showTemplateModal} 
+
+      <TemplateModal
+        isOpen={showTemplateModal}
         onClose={() => setShowTemplateModal(false)}
-        boardId={boardId || ''}
+        boardId={boardId || ""}
       />
-      
-      <MoveCardModal 
-        isOpen={showMoveModal} 
+
+      <MoveCardModal
+        isOpen={showMoveModal}
         onClose={() => {
           setShowMoveModal(false);
           setSelectedCardForMove(null);
         }}
-        cardId={selectedCardForMove?.id || ''}
-        cardTitle={selectedCardForMove?.title || ''}
-        currentBoardId={boardId || ''}
+        cardId={selectedCardForMove?.id || ""}
+        cardTitle={selectedCardForMove?.title || ""}
+        currentBoardId={boardId || ""}
       />
-      
-      <ListOrderModal 
-        isOpen={showListOrderModal} 
+
+      <ListOrderModal
+        isOpen={showListOrderModal}
         onClose={() => setShowListOrderModal(false)}
-        boardId={boardId || ''}
+        boardId={boardId || ""}
         lists={lists}
       />
-      
+
       <AttendanceModal
         isOpen={showAttendanceModal}
         onClose={() => setShowAttendanceModal(false)}
-        boardId={boardId || ''}
+        boardId={boardId || ""}
       />
 
       <ConfirmationModal
@@ -819,17 +1003,43 @@ const KanbanBoard: React.FC = () => {
         onClose={() => {
           setShowDeleteConfirmation(false);
           setCardToDelete(null);
+          setTagToDelete(null);
         }}
-        onConfirm={confirmArchiveCard}
-        title="Archive Card"
-        message={`Are you sure you want to archive "${cardToDelete?.title}"? You can restore it later from the archive.`}
-        confirmText="Archive Card"
-        confirmButtonClass="bg-red-600 hover:bg-red-700 text-white"
+        onConfirm={tagToDelete ? confirmDeleteTag : confirmArchiveCard}
+        title={tagToDelete ? "Delete Tag" : "Archive Card"}
+        message={
+          tagToDelete
+            ? `Are you sure you want to delete the tag "${tagToDelete.name}"? This action cannot be undone.`
+            : `Are you sure you want to archive "${cardToDelete?.title}"? You can restore it later from the archive.`
+        }
+        confirmText={tagToDelete ? "Delete Tag" : "Archive Card"}
       />
 
       <UniversalSearchModal
         isOpen={isUniversalSearchOpen}
         onClose={() => setIsUniversalSearchOpen(false)}
+      />
+
+      <TagsModal
+        isOpen={showTagsModal}
+        onClose={() => setShowTagsModal(false)}
+        onCreateClick={handleCreateTagClick}
+        onEditClick={handleEditTagClick}
+        onDeleteClick={handleDeleteTagClick}
+      />
+
+      <CreateTagModal
+        isOpen={showCreateTagModal}
+        onClose={() => setShowCreateTagModal(false)}
+      />
+
+      <UpdateTagModal
+        isOpen={showUpdateTagModal}
+        onClose={() => {
+          setShowUpdateTagModal(false);
+          setSelectedTag(null);
+        }}
+        tag={selectedTag}
       />
     </div>
   );

@@ -14,6 +14,7 @@ import {
 import { useBoard } from "../hooks/useBoard";
 import { useTheme } from "../contexts/ThemeContext";
 import { useOrganization } from "../hooks/useOrganization";
+import { useToast } from "../contexts/ToastContext";
 
 import { Building2, Plus, ChevronDown, Check, Users } from "lucide-react";
 import CreateWorkspaceModal from "./CreateWorkspaceModal";
@@ -28,6 +29,7 @@ const CustomOrganizationSwitcher: React.FC = () => {
     setCurrentOrganization,
     isLoading,
   } = useOrganization();
+  const { showSuccess } = useToast();
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const selectedOrgRef = React.useRef<HTMLButtonElement>(null);
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
@@ -69,6 +71,9 @@ const CustomOrganizationSwitcher: React.FC = () => {
     console.log("🏢 Switching to organization:", org.display_name);
     setCurrentOrganization(org);
     setIsOpen(false);
+
+    // Show success toast with organization name
+    showSuccess("Workspace Switched", `Switched to ${org.display_name}`);
   };
 
   const handleCreateNew = () => {
@@ -217,7 +222,7 @@ const CustomOrganizationSwitcher: React.FC = () => {
             aria-labelledby="workspace-menu"
           >
             {/* Header */}
-            <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
+            {/* <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
                   <Building2 className="h-4 w-4 text-white" />
@@ -234,7 +239,7 @@ const CustomOrganizationSwitcher: React.FC = () => {
                   </p>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* Organizations List */}
             <div
@@ -301,7 +306,7 @@ const CustomOrganizationSwitcher: React.FC = () => {
             </div>
 
             {/* Create New Workspace Button */}
-            <div className="border-t border-gray-100 dark:border-gray-700">
+            {/* <div className="border-t border-gray-100 dark:border-gray-700">
               <button
                 onClick={handleCreateNew}
                 onKeyDown={(e) => handleOptionKeyDown(e, handleCreateNew)}
@@ -322,7 +327,7 @@ const CustomOrganizationSwitcher: React.FC = () => {
                   </p>
                 </div>
               </button>
-            </div>
+            </div> */}
           </div>
         )}
       </div>
