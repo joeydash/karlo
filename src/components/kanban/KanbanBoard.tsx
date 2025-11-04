@@ -274,12 +274,18 @@ const KanbanBoard: React.FC = () => {
     }
   }, [prioritySort, boardId]);
 
-  // Global keyboard shortcut for universal search (Ctrl/Cmd + K)
+  // Global keyboard shortcuts
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + K for universal search
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setIsUniversalSearchOpen(true);
+      }
+      // Ctrl/Cmd + Shift + F for filter modal
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "F") {
+        e.preventDefault();
+        setShowCardsFilterModal(true);
       }
     };
 
@@ -829,6 +835,7 @@ const KanbanBoard: React.FC = () => {
                   onClick={() => setShowEditModal(true)}
                   className="p-1 text-white hover:bg-white hover:bg-opacity-20 focus:bg-white focus:bg-opacity-20 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 flex-shrink-0"
                   aria-label="Edit board settings"
+                  title="Edit board settings"
                 >
                   <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
                 </button>
@@ -856,6 +863,7 @@ const KanbanBoard: React.FC = () => {
                 onClick={() => setShowCardsFilterModal(true)}
                 className="flex items-center space-x-2 px-3 py-2 bg-white bg-opacity-20 backdrop-blur-sm border border-white border-opacity-30 rounded-lg text-white hover:bg-opacity-30 focus:bg-opacity-30 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all duration-200"
                 aria-label="Filter cards"
+                title="Filter cards by priority, tags, story points, and due date (Ctrl+Shift+F)"
               >
                 <Filter className="h-4 w-4" />
                 {(selectedPriorities.length > 0 ||
@@ -878,6 +886,7 @@ const KanbanBoard: React.FC = () => {
                 onClick={() => setShowTagsModal(true)}
                 className="flex items-center space-x-2 px-3 py-2 bg-white bg-opacity-20 backdrop-blur-sm border border-white border-opacity-30 rounded-lg text-white hover:bg-opacity-30 focus:bg-opacity-30 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all duration-200"
                 aria-label="Manage tags"
+                title="Manage tags for cards"
               >
                 <TagIcon className="h-4 w-4" />
               </button>
@@ -887,6 +896,7 @@ const KanbanBoard: React.FC = () => {
                 onClick={() => setShowListOrderModal(true)}
                 className="flex items-center space-x-2 px-3 py-2 bg-white bg-opacity-20 backdrop-blur-sm border border-white border-opacity-30 rounded-lg text-white hover:bg-opacity-30 focus:bg-opacity-30 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all duration-200"
                 aria-label="Reorder lists"
+                title="Reorder lists on the board"
               >
                 <Layout className="h-4 w-4" />
               </button>
@@ -896,6 +906,7 @@ const KanbanBoard: React.FC = () => {
                 onClick={() => setShowAttendanceModal(true)}
                 className="flex items-center space-x-2 px-3 py-2 bg-white bg-opacity-20 backdrop-blur-sm border border-white border-opacity-30 rounded-lg text-white hover:bg-opacity-30 focus:bg-opacity-30 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all duration-200"
                 aria-label="Mark attendance"
+                title="Mark attendance for today"
               >
                 <UserCheck className="h-4 w-4" />
               </button>
@@ -910,6 +921,7 @@ const KanbanBoard: React.FC = () => {
                     ? ` (${selectedMemberIds.length} selected)`
                     : ""
                 }`}
+                title="Filter cards by assignee"
               >
                 <Users className="h-4 w-4" />
                 <span className="text-sm">Assignee</span>
@@ -946,6 +958,7 @@ const KanbanBoard: React.FC = () => {
                     onClick={() => setSearchTerm("")}
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-white text-opacity-60 hover:text-opacity-100 focus:text-opacity-100 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 rounded"
                     aria-label="Clear search"
+                    title="Clear search"
                   >
                     <X className="h-4 w-4 transition-opacity duration-200" />
                   </button>
@@ -958,6 +971,7 @@ const KanbanBoard: React.FC = () => {
               onClick={() => setShowMobileMenu(!showMobileMenu)}
               className="lg:hidden p-2 text-white hover:bg-white hover:bg-opacity-20 focus:bg-white focus:bg-opacity-20 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
               aria-label="Open menu"
+              title="Open menu"
             >
               <Menu className="h-5 w-5" />
             </button>
@@ -974,6 +988,7 @@ const KanbanBoard: React.FC = () => {
                 }}
                 className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-white bg-opacity-20 backdrop-blur-sm border border-white border-opacity-30 rounded-lg text-white hover:bg-opacity-30 focus:bg-opacity-30 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all duration-200"
                 aria-label="Universal search"
+                title="Search all cards"
               >
                 <Search className="h-4 w-4" />
                 <span className="text-sm">Search All Cards</span>
@@ -1005,6 +1020,7 @@ const KanbanBoard: React.FC = () => {
                     onClick={() => setSearchTerm("")}
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-white text-opacity-60 hover:text-opacity-100 focus:text-opacity-100 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 rounded"
                     aria-label="Clear search"
+                    title="Clear search"
                   >
                     <X className="h-4 w-4 transition-opacity duration-200" />
                   </button>
@@ -1020,6 +1036,7 @@ const KanbanBoard: React.FC = () => {
                   }}
                   className="flex items-center justify-center space-x-2 px-3 py-2 bg-white bg-opacity-20 backdrop-blur-sm border border-white border-opacity-30 rounded-lg text-white hover:bg-opacity-30 focus:bg-opacity-30 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all duration-200"
                   aria-label="Manage tags"
+                  title="Manage tags"
                 >
                   <TagIcon className="h-4 w-4" />
                   <span className="text-sm">Tags</span>
@@ -1032,6 +1049,7 @@ const KanbanBoard: React.FC = () => {
                   }}
                   className="flex items-center justify-center space-x-2 px-3 py-2 bg-white bg-opacity-20 backdrop-blur-sm border border-white border-opacity-30 rounded-lg text-white hover:bg-opacity-30 focus:bg-opacity-30 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all duration-200"
                   aria-label="Reorder lists"
+                  title="Reorder lists"
                 >
                   <Layout className="h-4 w-4" />
                   <span className="text-sm">Lists</span>
@@ -1044,6 +1062,7 @@ const KanbanBoard: React.FC = () => {
                   }}
                   className="flex items-center justify-center space-x-2 px-3 py-2 bg-white bg-opacity-20 backdrop-blur-sm border border-white border-opacity-30 rounded-lg text-white hover:bg-opacity-30 focus:bg-opacity-30 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all duration-200"
                   aria-label="Mark attendance"
+                  title="Mark attendance"
                 >
                   <UserCheck className="h-4 w-4" />
                   <span className="text-sm">Attendance</span>
@@ -1064,6 +1083,7 @@ const KanbanBoard: React.FC = () => {
                       ? ` (${selectedMemberIds.length} selected)`
                       : ""
                   }`}
+                  title="Filter by assignee"
                 >
                   <Users className="h-4 w-4" />
                   <span className="text-sm">Assignee</span>
