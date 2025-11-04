@@ -1029,6 +1029,33 @@ const KanbanBoard: React.FC = () => {
 
               {/* Mobile Action Buttons */}
               <div className="grid grid-cols-2 gap-2">
+                {/* Filter Cards Button Mobile */}
+                <button
+                  onClick={() => {
+                    setShowCardsFilterModal(true);
+                    setShowMobileMenu(false);
+                  }}
+                  className="flex items-center justify-center space-x-2 px-3 py-2 bg-white bg-opacity-20 backdrop-blur-sm border border-white border-opacity-30 rounded-lg text-white hover:bg-opacity-30 focus:bg-opacity-30 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all duration-200"
+                  aria-label="Filter cards"
+                  title="Filter cards"
+                >
+                  <Filter className="h-4 w-4" />
+                  <span className="text-sm">Filters</span>
+                  {(selectedPriorities.length > 0 ||
+                    selectedTagIds.length > 0 ||
+                    selectedStoryPoints.length > 0 ||
+                    dueDateFilter ||
+                    prioritySort) && (
+                    <span className="text-xs bg-white bg-opacity-30 px-1.5 py-0.5 rounded-full">
+                      {selectedPriorities.length +
+                        selectedTagIds.length +
+                        selectedStoryPoints.length +
+                        (dueDateFilter ? 1 : 0) +
+                        (prioritySort ? 1 : 0)}
+                    </span>
+                  )}
+                </button>
+
                 <button
                   onClick={() => {
                     setShowTagsModal(true);

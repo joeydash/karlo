@@ -10,6 +10,7 @@ import {
   Moon,
   Monitor,
   GripVertical,
+  XCircle,
 } from "lucide-react";
 import { useBoard } from "../hooks/useBoard";
 import { useTheme } from "../contexts/ThemeContext";
@@ -575,6 +576,22 @@ const SideNavigation: React.FC = () => {
     setIsUpdating(false);
   };
 
+  const handleClearAllPinned = () => {
+    const storageKey = getPinnedBoardsKey();
+    setPinnedBoards([]);
+    localStorage.setItem(storageKey, JSON.stringify([]));
+
+    // Dispatch event to notify other components
+    window.dispatchEvent(
+      new CustomEvent("pinnedBoardsChanged", {
+        detail: {
+          pinnedBoards: [],
+          organizationId: currentOrganization?.id,
+        },
+      })
+    );
+  };
+
   const pinnedBoardsList = pinnedBoards
     .map((id) => boards.find((board) => board.id === id))
     .filter((board) => board !== undefined);
@@ -725,10 +742,18 @@ const SideNavigation: React.FC = () => {
             {pinnedBoardsList.length > 0 && (
               <div className="flex-1 min-h-0 flex flex-col">
                 <div className="mx-4 border-t border-gray-200 dark:border-gray-600"></div>
-                <div className="px-4 pt-4 pb-2 flex-shrink-0">
+                <div className="px-4 pt-4 pb-2 flex-shrink-0 flex items-center justify-between">
                   <h3 className="px-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Pinned Boards
                   </h3>
+                  <button
+                    onClick={handleClearAllPinned}
+                    className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors duration-200"
+                    title="Clear all pinned boards"
+                    aria-label="Clear all pinned boards"
+                  >
+                    <XCircle className="h-3.5 w-3.5" />
+                  </button>
                 </div>
                 <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 px-1 pb-4 pinned-boards-scroll">
                   {pinnedBoardsList.map((board, index) => (

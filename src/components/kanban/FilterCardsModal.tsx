@@ -168,24 +168,24 @@ const FilterCardsModal: React.FC<FilterCardsModalProps> = ({
       aria-describedby="filter-modal-description"
     >
       <div
-        className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto custom-scrollbar"
+        className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-md sm:max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-              <Filter className="h-5 w-5 text-white" />
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-100 dark:border-gray-700">
+          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Filter className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
-            <div>
+            <div className="min-w-0">
               <h2
-                className="text-xl font-bold text-gray-900 dark:text-white"
+                className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate"
                 id="filter-modal-title"
               >
                 Filter Cards
               </h2>
               <p
-                className="text-sm text-gray-600 dark:text-gray-300"
+                className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate"
                 id="filter-modal-description"
               >
                 {activeFiltersCount > 0
@@ -196,28 +196,28 @@ const FilterCardsModal: React.FC<FilterCardsModalProps> = ({
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
             {/* Clear All Button */}
             {activeFiltersCount > 0 && (
               <button
                 onClick={handleClearAll}
-                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline focus:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1"
+                className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline focus:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-1.5 sm:px-2 py-1"
               >
                 Clear all
               </button>
             )}
             <button
               onClick={handleClose}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               aria-label="Close modal"
             >
-              <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+              <X className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 dark:text-gray-400" />
             </button>
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           {/* Priority Filter */}
           <div>
             <div className="flex items-center space-x-2 mb-3">
@@ -231,7 +231,7 @@ const FilterCardsModal: React.FC<FilterCardsModalProps> = ({
                 </span>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {priorities.map((priority) => {
                 const isSelected = selectedPriorities.includes(priority.value);
                 return (
@@ -261,7 +261,7 @@ const FilterCardsModal: React.FC<FilterCardsModalProps> = ({
             </div>
 
             {/* Priority Sort */}
-            <div className="mt-3 flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/30 rounded-xl border border-gray-200 dark:border-gray-700">
+            <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 p-3 bg-gray-50 dark:bg-gray-900/30 rounded-xl border border-gray-200 dark:border-gray-700">
               <div className="flex items-center space-x-2">
                 <ArrowUpDown className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
                 <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
@@ -271,7 +271,7 @@ const FilterCardsModal: React.FC<FilterCardsModalProps> = ({
               <div className="flex gap-2">
                 <button
                   onClick={() => handlePrioritySortChange("low-to-urgent")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                  className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                     prioritySort === "low-to-urgent"
                       ? "bg-blue-500 text-white shadow-sm"
                       : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-gray-200 dark:border-gray-600"
@@ -281,7 +281,7 @@ const FilterCardsModal: React.FC<FilterCardsModalProps> = ({
                 </button>
                 <button
                   onClick={() => handlePrioritySortChange("urgent-to-low")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                  className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                     prioritySort === "urgent-to-low"
                       ? "bg-blue-500 text-white shadow-sm"
                       : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-gray-200 dark:border-gray-600"
