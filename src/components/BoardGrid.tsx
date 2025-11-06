@@ -1,16 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { Layout, Plus, MoreHorizontal, Eye, EyeOff, Users, Trash2, Edit3, Pin } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useBoard } from '../hooks/useBoard';
-import { useOrganization } from '../hooks/useOrganization';
-import { useAuth } from '../hooks/useAuth';
-import { useToast } from '../contexts/ToastContext';
-import CreateBoardModal from './CreateBoardModal';
-import EditBoardModal from './EditBoardModal';
-import ConfirmationModal from './ConfirmationModal';
-import AccessibleButton from './AccessibleButton';
-import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
-import { Board } from '../types/board';
+import React, { useState, useEffect } from "react";
+import {
+  Layout,
+  Plus,
+  MoreHorizontal,
+  Eye,
+  EyeOff,
+  Users,
+  Trash2,
+  Edit3,
+  Pin,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useBoard } from "../hooks/useBoard";
+import { useOrganization } from "../hooks/useOrganization";
+import { useAuth } from "../hooks/useAuth";
+import { useToast } from "../contexts/ToastContext";
+import CreateBoardModal from "./CreateBoardModal";
+import EditBoardModal from "./EditBoardModal";
+import ConfirmationModal from "./ConfirmationModal";
+import AccessibleButton from "./AccessibleButton";
+import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation";
+import { Board } from "../types/board";
 
 const BoardGrid: React.FC = () => {
   const navigate = useNavigate();
@@ -29,11 +39,11 @@ const BoardGrid: React.FC = () => {
   // Helper function to get storage key for current organization
   const getPinnedBoardsKey = () => {
     const orgId = currentOrganization?.id;
-    return orgId ? `pinnedBoards_${orgId}` : 'pinnedBoards';
+    return orgId ? `pinnedBoards_${orgId}` : "pinnedBoards";
   };
 
-  const visibleBoards = boards.filter(board => {
-    if (board.visibility === 'private') {
+  const visibleBoards = boards.filter((board) => {
+    if (board.visibility === "private") {
       return board.created_by === user?.id;
     }
     return true;
@@ -49,23 +59,50 @@ const BoardGrid: React.FC = () => {
     }
   }, [currentOrganization?.id]);
 
+  // Listen for pinned boards changes from other components (like SideNavigation)
+  useEffect(() => {
+    const handlePinnedBoardsChanged = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { pinnedBoards: updatedPinnedBoards, organizationId } =
+        customEvent.detail;
+
+      // Only update if the event is for the current organization
+      if (organizationId === currentOrganization?.id) {
+        setPinnedBoards(updatedPinnedBoards);
+      }
+    };
+
+    window.addEventListener("pinnedBoardsChanged", handlePinnedBoardsChanged);
+    return () => {
+      window.removeEventListener(
+        "pinnedBoardsChanged",
+        handlePinnedBoardsChanged
+      );
+    };
+  }, [currentOrganization?.id]);
+
   const togglePinBoard = (boardId: string, event: React.MouseEvent) => {
     event.stopPropagation();
     const storageKey = getPinnedBoardsKey();
     const updated = pinnedBoards.includes(boardId)
-      ? pinnedBoards.filter(id => id !== boardId)
+      ? pinnedBoards.filter((id) => id !== boardId)
       : [...pinnedBoards, boardId];
 
     setPinnedBoards(updated);
     localStorage.setItem(storageKey, JSON.stringify(updated));
 
     // Dispatch event to notify SideNavigation
-    window.dispatchEvent(new CustomEvent('pinnedBoardsChanged', {
-      detail: { pinnedBoards: updated, organizationId: currentOrganization?.id }
-    }));
+    window.dispatchEvent(
+      new CustomEvent("pinnedBoardsChanged", {
+        detail: {
+          pinnedBoards: updated,
+          organizationId: currentOrganization?.id,
+        },
+      })
+    );
 
     const isPinned = updated.includes(boardId);
-    showSuccess(isPinned ? 'Board pinned to navigation' : 'Board unpinned');
+    showSuccess(isPinned ? "Board pinned to navigation" : "Board unpinned");
   };
 
   const isPinned = (boardId: string) => pinnedBoards.includes(boardId);
@@ -77,16 +114,25 @@ const BoardGrid: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Boards</h2>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Manage your Kanban boards</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+              Boards
+            </h2>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+              Manage your Kanban boards
+            </p>
           </div>
         </div>
 
         {/* No Organization Selected */}
         <div className="text-center py-8 sm:py-12 px-4">
           <Layout className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 dark:text-gray-600 mx-auto mb-3 sm:mb-4" />
-          <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-2">No workspace selected</h3>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4 sm:mb-6">Please select a workspace from the dropdown above to view and manage your boards</p>
+          <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-2">
+            No workspace selected
+          </h3>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4 sm:mb-6">
+            Please select a workspace from the dropdown above to view and manage
+            your boards
+          </p>
         </div>
       </div>
     );
@@ -94,9 +140,9 @@ const BoardGrid: React.FC = () => {
 
   const getVisibilityIcon = (visibility: string) => {
     switch (visibility) {
-      case 'private':
+      case "private":
         return <EyeOff className="h-4 w-4" />;
-      case 'public':
+      case "public":
         return <Eye className="h-4 w-4" />;
       default:
         return <Users className="h-4 w-4" />;
@@ -105,12 +151,12 @@ const BoardGrid: React.FC = () => {
 
   const getVisibilityColor = (visibility: string) => {
     switch (visibility) {
-      case 'private':
-        return 'text-red-600 bg-red-50';
-      case 'public':
-        return 'text-green-600 bg-green-50';
+      case "private":
+        return "text-red-600 bg-red-50";
+      case "public":
+        return "text-green-600 bg-green-50";
       default:
-        return 'text-blue-600 bg-blue-50';
+        return "text-blue-600 bg-blue-50";
     }
   };
 
@@ -121,18 +167,23 @@ const BoardGrid: React.FC = () => {
     if (result) {
       if (pinnedBoards.includes(boardToDelete.id)) {
         const storageKey = getPinnedBoardsKey();
-        const updated = pinnedBoards.filter(id => id !== boardToDelete.id);
+        const updated = pinnedBoards.filter((id) => id !== boardToDelete.id);
         setPinnedBoards(updated);
         localStorage.setItem(storageKey, JSON.stringify(updated));
 
         // Dispatch event to notify SideNavigation
-        window.dispatchEvent(new CustomEvent('pinnedBoardsChanged', {
-          detail: { pinnedBoards: updated, organizationId: currentOrganization?.id }
-        }));
+        window.dispatchEvent(
+          new CustomEvent("pinnedBoardsChanged", {
+            detail: {
+              pinnedBoards: updated,
+              organizationId: currentOrganization?.id,
+            },
+          })
+        );
       }
-      showSuccess('Board deleted successfully');
+      showSuccess("Board deleted successfully");
     } else {
-      showError('Failed to delete board');
+      showError("Failed to delete board");
     }
     setShowDeleteConfirmation(false);
     setBoardToDelete(null);
@@ -150,11 +201,14 @@ const BoardGrid: React.FC = () => {
     setSelectedBoard(null);
   };
 
-  const handleBoardClick = (board: Board, event?: React.KeyboardEvent | React.MouseEvent) => {
-    if (event && 'key' in event && event.key !== 'Enter' && event.key !== ' ') {
+  const handleBoardClick = (
+    board: Board,
+    event?: React.KeyboardEvent | React.MouseEvent
+  ) => {
+    if (event && "key" in event && event.key !== "Enter" && event.key !== " ") {
       return;
     }
-    if (event && 'key' in event) {
+    if (event && "key" in event) {
       event.preventDefault();
     }
     navigate(`/board/${board.id}`);
@@ -164,7 +218,7 @@ const BoardGrid: React.FC = () => {
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 animate-pulse">
       {/* Shimmer Header */}
       <div className="h-32 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%] animate-[shimmer_1.5s_ease-in-out_infinite]"></div>
-      
+
       {/* Shimmer Content */}
       <div className="p-4 space-y-3">
         <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%] animate-[shimmer_1.5s_ease-in-out_infinite] rounded w-3/4"></div>
@@ -183,8 +237,12 @@ const BoardGrid: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Boards</h2>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Manage your Kanban boards</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+              Boards
+            </h2>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+              Manage your Kanban boards
+            </p>
           </div>
           <div className="flex items-center space-x-2 sm:space-x-3">
             <div className="h-9 sm:h-10 w-20 sm:w-24 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 bg-[length:200%_100%] animate-[shimmer_1.5s_ease-in-out_infinite] rounded-xl"></div>
@@ -207,8 +265,12 @@ const BoardGrid: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Boards</h2>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Manage your Kanban boards</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+            Boards
+          </h2>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+            Manage your Kanban boards
+          </p>
         </div>
         <div className="flex items-center space-x-2 sm:space-x-3 w-full sm:w-auto">
           <AccessibleButton
@@ -226,8 +288,12 @@ const BoardGrid: React.FC = () => {
       {visibleBoards.length === 0 ? (
         <div className="text-center py-8 sm:py-12 px-4">
           <Layout className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 dark:text-gray-600 mx-auto mb-3 sm:mb-4" />
-          <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-2">No boards yet</h3>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4 sm:mb-6">Create your first board to get started with project management</p>
+          <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-2">
+            No boards yet
+          </h3>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4 sm:mb-6">
+            Create your first board to get started with project management
+          </p>
           <AccessibleButton
             onClick={() => setShowCreateModal(true)}
             aria-label="Create your first board"
@@ -243,33 +309,44 @@ const BoardGrid: React.FC = () => {
               key={board.id}
               className="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl focus-within:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 dark:border-gray-700 cursor-pointer"
               onClick={(e) => {
-                if (!(e.target as HTMLElement).closest('[data-menu-button]')) {
+                if (!(e.target as HTMLElement).closest("[data-menu-button]")) {
                   handleBoardClick(board, e);
                 }
               }}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
-                if ((e.key === 'Enter' || e.key === ' ') && !(e.target as HTMLElement).closest('[data-menu-button]')) {
+                if (
+                  (e.key === "Enter" || e.key === " ") &&
+                  !(e.target as HTMLElement).closest("[data-menu-button]")
+                ) {
                   handleBoardClick(board, e);
                 }
               }}
-              aria-label={`Open board: ${board.name}. ${board.description || 'No description'}`}
+              aria-label={`Open board: ${board.name}. ${
+                board.description || "No description"
+              }`}
             >
               {/* Board Header */}
               <div
                 className="h-28 sm:h-32 p-3 sm:p-4 flex flex-col justify-between relative"
                 style={{
-                  backgroundColor: board.background_color || '#3B82F6',
-                  backgroundImage: board.background_image_url ? `url(${board.background_image_url})` : undefined,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center'
+                  backgroundColor: board.background_color || "#3B82F6",
+                  backgroundImage: board.background_image_url
+                    ? `url(${board.background_image_url})`
+                    : undefined,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
                 }}
               >
                 <div className="absolute inset-0 bg-black bg-opacity-20"></div>
                 <div className="relative z-10">
                   <div className="flex items-center justify-between">
-                    <div className={`flex items-center space-x-1 px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium ${getVisibilityColor(board.visibility)} dark:opacity-90`}>
+                    <div
+                      className={`flex items-center space-x-1 px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium ${getVisibilityColor(
+                        board.visibility
+                      )} dark:opacity-90`}
+                    >
                       {getVisibilityIcon(board.visibility)}
                       <span className="capitalize">{board.visibility}</span>
                     </div>
@@ -278,18 +355,26 @@ const BoardGrid: React.FC = () => {
                         data-menu-button
                         onClick={(e) => togglePinBoard(board.id, e)}
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
+                          if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault();
                             e.stopPropagation();
                             togglePinBoard(board.id, e as any);
                           }
                         }}
                         className={`p-1 text-white hover:bg-white hover:bg-opacity-20 focus:bg-white focus:bg-opacity-20 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 ${
-                          isPinned(board.id) ? 'bg-white bg-opacity-20' : ''
+                          isPinned(board.id) ? "bg-white bg-opacity-20" : ""
                         }`}
-                        aria-label={isPinned(board.id) ? `Unpin ${board.name}` : `Pin ${board.name} to navigation`}
+                        aria-label={
+                          isPinned(board.id)
+                            ? `Unpin ${board.name}`
+                            : `Pin ${board.name} to navigation`
+                        }
                       >
-                        <Pin className={`h-3 w-3 sm:h-4 sm:w-4 transition-transform ${isPinned(board.id) ? 'fill-current' : ''}`} />
+                        <Pin
+                          className={`h-3 w-3 sm:h-4 sm:w-4 transition-transform ${
+                            isPinned(board.id) ? "fill-current" : ""
+                          }`}
+                        />
                       </button>
                       <button
                         data-menu-button
@@ -298,7 +383,7 @@ const BoardGrid: React.FC = () => {
                           setSelectedBoard(board);
                         }}
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
+                          if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault();
                             e.stopPropagation();
                             setSelectedBoard(board);
@@ -313,18 +398,27 @@ const BoardGrid: React.FC = () => {
                   </div>
                 </div>
                 <div className="relative z-10">
-                  <h3 className="text-white font-bold text-base sm:text-lg truncate">{board.name}</h3>
+                  <h3 className="text-white font-bold text-base sm:text-lg truncate">
+                    {board.name}
+                  </h3>
                 </div>
               </div>
 
               {/* Board Content */}
               <div className="p-3 sm:p-4">
                 {board.description && (
-                  <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm mb-2 sm:mb-3 line-clamp-2">{board.description}</p>
+                  <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm mb-2 sm:mb-3 line-clamp-2">
+                    {board.description}
+                  </p>
                 )}
                 <div className="flex items-center justify-between text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
-                  <span>Updated {new Date(board.updated_at).toLocaleDateString()}</span>
-                  <Layout className="h-3 w-3 sm:h-4 sm:w-4" aria-hidden="true" />
+                  <span>
+                    Updated {new Date(board.updated_at).toLocaleDateString()}
+                  </span>
+                  <Layout
+                    className="h-3 w-3 sm:h-4 sm:w-4"
+                    aria-hidden="true"
+                  />
                 </div>
               </div>
 
@@ -341,7 +435,7 @@ const BoardGrid: React.FC = () => {
                       handleEditBoard(board);
                     }}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
+                      if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
                         e.stopPropagation();
                         handleEditBoard(board);
@@ -351,7 +445,10 @@ const BoardGrid: React.FC = () => {
                     role="menuitem"
                     tabIndex={0}
                   >
-                    <Edit3 className="h-3 w-3 sm:h-4 sm:w-4" aria-hidden="true" />
+                    <Edit3
+                      className="h-3 w-3 sm:h-4 sm:w-4"
+                      aria-hidden="true"
+                    />
                     <span>Edit Board</span>
                   </button>
                   <button
@@ -360,7 +457,7 @@ const BoardGrid: React.FC = () => {
                       handleDeleteClick(board);
                     }}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
+                      if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
                         e.stopPropagation();
                         handleDeleteClick(board);
@@ -370,7 +467,10 @@ const BoardGrid: React.FC = () => {
                     role="menuitem"
                     tabIndex={0}
                   >
-                    <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" aria-hidden="true" />
+                    <Trash2
+                      className="h-3 w-3 sm:h-4 sm:w-4"
+                      aria-hidden="true"
+                    />
                     <span>Delete Board</span>
                   </button>
                 </div>
@@ -386,7 +486,7 @@ const BoardGrid: React.FC = () => {
           className="fixed inset-0 z-10"
           onClick={() => setSelectedBoard(null)}
           onKeyDown={(e) => {
-            if (e.key === 'Escape') {
+            if (e.key === "Escape") {
               setSelectedBoard(null);
             }
           }}
@@ -394,9 +494,9 @@ const BoardGrid: React.FC = () => {
         />
       )}
 
-      <CreateBoardModal 
-        isOpen={showCreateModal} 
-        onClose={() => setShowCreateModal(false)} 
+      <CreateBoardModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
       />
 
       <EditBoardModal
