@@ -13,6 +13,7 @@ interface KanbanListProps {
   onCardMembersClick?: (cardId: string, cardTitle: string) => void;
   onArchiveCard?: (cardId: string) => void;
   onMoveCard?: (cardId: string, cardTitle: string) => void;
+  globalPrioritySort?: string;
 }
 
 const KanbanList: React.FC<KanbanListProps> = ({
@@ -21,12 +22,14 @@ const KanbanList: React.FC<KanbanListProps> = ({
   onCardMembersClick,
   onArchiveCard,
   onMoveCard,
+  globalPrioritySort = "",
 }) => {
   const [isAddingCard, setIsAddingCard] = useState(false);
   const [newCardTitle, setNewCardTitle] = useState("");
   const [isDragOver, setIsDragOver] = useState(false);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [draggedCard, setDraggedCard] = useState<string | null>(null);
+  const [dragSourceListId, setDragSourceListId] = useState<string | null>(null);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
@@ -75,10 +78,12 @@ const KanbanList: React.FC<KanbanListProps> = ({
     );
     e.dataTransfer.effectAllowed = "move";
     setDraggedCard(card.id);
+    setDragSourceListId(list.id);
   };
 
   const handleDragEnd = () => {
     setDraggedCard(null);
+    setDragSourceListId(null);
     setDragOverIndex(null);
     setIsDragOver(false);
   };
@@ -121,6 +126,19 @@ const KanbanList: React.FC<KanbanListProps> = ({
   };
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+
+    // Check if either local or global priority sort is active
+    const isSorted = isSortedByPriority || !!globalPrioritySort;
+
+    // Check if dragging from the same list using the state
+    const isSameList = dragSourceListId === list.id;
+
+    // Disable reordering within the same list when sorted
+    if (isSorted && isSameList) {
+      e.dataTransfer.dropEffect = "none";
+      return;
+    }
+
     e.dataTransfer.dropEffect = "move";
     setIsDragOver(true);
 
@@ -149,6 +167,15 @@ const KanbanList: React.FC<KanbanListProps> = ({
       const dragData = JSON.parse(e.dataTransfer.getData("text/plain"));
       const { cardId, sourceListId } = dragData;
 
+      // Check if either local or global priority sort is active
+      const isSorted = isSortedByPriority || !!globalPrioritySort;
+      const isSameList = sourceListId === list.id;
+
+      // Prevent reordering within the same list when sorted
+      if (isSorted && isSameList) {
+        return;
+      }
+
       // Get all card elements to calculate the drop position
       const cardElements = Array.from(
         e.currentTarget.querySelectorAll("[data-card-id]")
@@ -164,9 +191,16 @@ const KanbanList: React.FC<KanbanListProps> = ({
 
   const renderDropIndicator = (index: number) => {
     if (dragOverIndex === index && isDragOver) {
-      return (
-        <div className="h-0.5 bg-blue-500 rounded-full mx-2 my-1 transition-all duration-200" />
-      );
+      // Check if either local or global priority sort is active
+      const isSorted = isSortedByPriority || !!globalPrioritySort;
+      const isSameList = dragSourceListId === list.id;
+
+      // Show indicator if not sorted, or if sorted but dragging from a different list
+      if (!isSorted || !isSameList) {
+        return (
+          <div className="h-0.5 bg-blue-500 rounded-full mx-2 my-1 transition-all duration-200" />
+        );
+      }
     }
     return null;
   };
@@ -279,6 +313,11 @@ const KanbanList: React.FC<KanbanListProps> = ({
                     ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
                     : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                 }`}
+                title={
+                  isSortedByPriority
+                    ? "Disable priority sorting"
+                    : "Sort by priority (Urgent → Low)"
+                }
               >
                 <ArrowUpDown className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>Priority Sort</span>

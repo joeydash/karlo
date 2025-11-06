@@ -1193,6 +1193,7 @@ const KanbanBoard: React.FC = () => {
                   handleArchiveCard(cardId, card?.title || "this card");
                 }}
                 onMoveCard={handleMoveCard}
+                globalPrioritySort={prioritySort}
               />
             ))}
 
