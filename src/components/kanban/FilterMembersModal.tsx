@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { X, Users, Check, User, Search, Plus, Loader2 } from 'lucide-react';
-import { useKanban } from '../../hooks/useKanban';
-import { useMember } from '../../hooks/useMember';
-import { useAuth } from '../../hooks/useAuth';
-import { useAttendance } from '../../hooks/useAttendance';
-import { useFocusManagement } from '../../hooks/useKeyboardNavigation';
+import React, { useState, useEffect } from "react";
+import { X, Users, Check, User, Search, Plus, Loader2 } from "lucide-react";
+import { useKanban } from "../../hooks/useKanban";
+import { useMember } from "../../hooks/useMember";
+import { useAuth } from "../../hooks/useAuth";
+import { useOrganization } from "../../hooks/useOrganization";
+import { useAttendance } from "../../hooks/useAttendance";
+import { useFocusManagement } from "../../hooks/useKeyboardNavigation";
 
 interface FilterMembersModalProps {
   isOpen: boolean;
@@ -19,59 +20,64 @@ const FilterMembersModal: React.FC<FilterMembersModalProps> = ({
   onClose,
   selectedMemberIds,
   onMembersChange,
-  boardId
+  boardId,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedMemberIndex, setSelectedMemberIndex] = useState<number>(-1);
-  const [toggleLoadingMemberId, setToggleLoadingMemberId] = useState<string | null>(null);
+  const [toggleLoadingMemberId, setToggleLoadingMemberId] = useState<
+    string | null
+  >(null);
   const { members } = useMember();
+  const { currentOrganization } = useOrganization();
   const { user: currentUser } = useAuth();
-  const { isMarked, toggleAttendance, fetchAttendanceForDate } = useAttendance();
+  const { isMarked, toggleAttendance, fetchAttendanceForDate } =
+    useAttendance();
   const searchInputRef = React.useRef<HTMLInputElement>(null);
   const memberListRef = React.useRef<HTMLDivElement>(null);
 
   // Check if current user is admin - get from member store
-  const currentUserMember = members.find(member => member.user_id === currentUser?.id);
-  const isCurrentUserAdmin = currentUserMember?.role === 'admin';
-  
+  const currentUserMember = members.find(
+    (member) => member.user_id === currentUser?.id
+  );
+  const isCurrentUserAdmin = currentUserMember?.role === "admin";
+
   // Focus management for modal
   useFocusManagement(isOpen, searchInputRef);
 
   // Fetch attendance data when modal opens
   useEffect(() => {
-    if (isOpen && members.length > 0) {
-      const memberIds = members.map(member => member.id);
-      const today = new Date().toISOString().split('T')[0];
-      fetchAttendanceForDate(memberIds, today);
+    if (isOpen && currentOrganization?.id) {
+      const today = new Date().toISOString().split("T")[0];
+      fetchAttendanceForDate(currentOrganization.id, today);
     }
-  }, [isOpen, members, fetchAttendanceForDate]);
+  }, [isOpen, currentOrganization?.id, fetchAttendanceForDate]);
 
   const handleMemberToggle = (userId: string) => {
-    console.log('👤 Toggling member:', userId);
+    console.log("👤 Toggling member:", userId);
     if (selectedMemberIds.includes(userId)) {
       // Remove member
-      const newIds = selectedMemberIds.filter(id => id !== userId);
-      console.log('➖ Removing member, new selection:', newIds);
+      const newIds = selectedMemberIds.filter((id) => id !== userId);
+      console.log("➖ Removing member, new selection:", newIds);
       onMembersChange(newIds);
     } else {
       // Add member
       const newIds = [...selectedMemberIds, userId];
-      console.log('➕ Adding member, new selection:', newIds);
+      console.log("➕ Adding member, new selection:", newIds);
       onMembersChange(newIds);
     }
   };
 
   const handleUnassignedToggle = () => {
-    const unassignedId = 'unassigned';
-    console.log('📋 Toggling unassigned filter');
+    const unassignedId = "unassigned";
+    console.log("📋 Toggling unassigned filter");
     if (selectedMemberIds.includes(unassignedId)) {
-      const newIds = selectedMemberIds.filter(id => id !== unassignedId);
-      console.log('➖ Removing unassigned, new selection:', newIds);
+      const newIds = selectedMemberIds.filter((id) => id !== unassignedId);
+      console.log("➖ Removing unassigned, new selection:", newIds);
       onMembersChange(newIds);
     } else {
       const newIds = [...selectedMemberIds, unassignedId];
-      console.log('➕ Adding unassigned, new selection:', newIds);
+      console.log("➕ Adding unassigned, new selection:", newIds);
       onMembersChange(newIds);
     }
   };
@@ -80,130 +86,162 @@ const FilterMembersModal: React.FC<FilterMembersModalProps> = ({
     if (!isCurrentUserAdmin) {
       return;
     }
-    
+
     if (members.length === 0) return;
-    
-    console.log('📋 Toggling attendance for user:', userId);
-    
-    // Find the member record by user_id to get member_id
-    const member = members.find(m => m.user_id === userId);
-    if (!member?.id) {
-      console.error('Member not found for user:', userId);
+
+    if (!currentOrganization?.id) {
+      console.error("Organization ID not found");
       return;
     }
-    
+
+    console.log("📋 Toggling attendance for user:", userId);
+
+    // Find the member record by user_id to get member_id
+    const member = members.find((m) => m.user_id === userId);
+    if (!member?.id) {
+      console.error("Member not found for user:", userId);
+      return;
+    }
+
     setToggleLoadingMemberId(member.id);
     // Get today's date in YYYY-MM-DD format for attendance marking
-    const today = new Date().toISOString().split('T')[0];
-    const result = await toggleAttendance(member.id, today);
+    const today = new Date().toISOString().split("T")[0];
+    const result = await toggleAttendance(
+      member.id,
+      currentOrganization.id,
+      today
+    );
     setToggleLoadingMemberId(null);
-    
+
     if (!result.success) {
-      console.error('Failed to toggle attendance:', result.message);
+      console.error("Failed to toggle attendance:", result.message);
     }
   };
 
   const handleClearAll = () => {
-    console.log('🧹 Clearing all filters');
+    console.log("🧹 Clearing all filters");
     onMembersChange([]);
   };
 
   const getInitials = (fullname: string) => {
     return fullname
-      .split(' ')
-      .map(name => name.charAt(0))
-      .join('')
+      .split(" ")
+      .map((name) => name.charAt(0))
+      .join("")
       .toUpperCase()
       .slice(0, 2);
   };
 
-  const filteredMembers = members.filter(member =>
-    member.auth_fullname.fullname.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredMembers = members.filter((member) =>
+    member.auth_fullname.fullname
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
   );
 
   // Sort filtered members to put current user first
   const sortedFilteredMembers = filteredMembers.sort((a, b) => {
     const isACurrent = a.user_id === currentUser?.id;
     const isBCurrent = b.user_id === currentUser?.id;
-    
+
     if (isACurrent && !isBCurrent) return -1;
     if (!isACurrent && isBCurrent) return 1;
     return 0;
   });
 
   // Available items for keyboard navigation
-  const availableMembers = sortedFilteredMembers.filter(member => !selectedMemberIds.includes(member.user_id));
-  const hasUnassignedOption = !selectedMemberIds.includes('unassigned');
-  const totalNavigableItems = (hasUnassignedOption ? 1 : 0) + availableMembers.length;
+  const availableMembers = sortedFilteredMembers.filter(
+    (member) => !selectedMemberIds.includes(member.user_id)
+  );
+  const hasUnassignedOption = !selectedMemberIds.includes("unassigned");
+  const totalNavigableItems =
+    (hasUnassignedOption ? 1 : 0) + availableMembers.length;
 
   // Handle keyboard navigation
-  const handleKeyDown = React.useCallback((e: KeyboardEvent) => {
-    if (!isOpen || isLoading || totalNavigableItems === 0) return;
+  const handleKeyDown = React.useCallback(
+    (e: KeyboardEvent) => {
+      if (!isOpen || isLoading || totalNavigableItems === 0) return;
 
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        setSelectedMemberIndex(prev => {
-          const next = prev + 1;
-          return next >= totalNavigableItems ? 0 : next;
-        });
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        setSelectedMemberIndex(prev => {
-          const next = prev - 1;
-          return next < 0 ? totalNavigableItems - 1 : next;
-        });
-        break;
-      case 'Enter':
-        e.preventDefault();
-        if (selectedMemberIndex >= 0) {
-          if (hasUnassignedOption && selectedMemberIndex === 0) {
-            // Select unassigned option
-            handleUnassignedToggle();
-          } else {
-            // Select member
-            const memberIndex = hasUnassignedOption ? selectedMemberIndex - 1 : selectedMemberIndex;
-            const member = availableMembers[memberIndex];
-            if (member) {
-              handleMemberToggle(member.user_id);
-            }
-          }
-        }
-        break;
-      case 'Shift':
-        if (e.code !== 'ShiftRight') return;
-        if (!isCurrentUserAdmin) return;
-        e.preventDefault();
-        if (selectedMemberIndex >= 0) {
-          if (hasUnassignedOption && selectedMemberIndex === 0) {
-            // Skip attendance for unassigned option
-            return;
-          } else {
-            // Toggle attendance for member
-            const memberIndex = hasUnassignedOption ? selectedMemberIndex - 1 : selectedMemberIndex;
-            const member = availableMembers[memberIndex];
-            if (member) {
-              handleAttendanceToggle(member.user_id);
-            }
-          }
-        }
-        break;
-      case 'Escape':
-        if (document.activeElement !== searchInputRef.current) {
+      switch (e.key) {
+        case "ArrowDown":
           e.preventDefault();
-          searchInputRef.current?.focus();
-          setSelectedMemberIndex(-1);
-        }
-        break;
-    }
-  }, [isOpen, isLoading, selectedMemberIndex, totalNavigableItems, hasUnassignedOption, availableMembers, handleUnassignedToggle, handleMemberToggle, handleAttendanceToggle, isCurrentUserAdmin]);
+          setSelectedMemberIndex((prev) => {
+            const next = prev + 1;
+            return next >= totalNavigableItems ? 0 : next;
+          });
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setSelectedMemberIndex((prev) => {
+            const next = prev - 1;
+            return next < 0 ? totalNavigableItems - 1 : next;
+          });
+          break;
+        case "Enter":
+          e.preventDefault();
+          if (selectedMemberIndex >= 0) {
+            if (hasUnassignedOption && selectedMemberIndex === 0) {
+              // Select unassigned option
+              handleUnassignedToggle();
+            } else {
+              // Select member
+              const memberIndex = hasUnassignedOption
+                ? selectedMemberIndex - 1
+                : selectedMemberIndex;
+              const member = availableMembers[memberIndex];
+              if (member) {
+                handleMemberToggle(member.user_id);
+              }
+            }
+          }
+          break;
+        case "Shift":
+          if (e.code !== "ShiftRight") return;
+          if (!isCurrentUserAdmin) return;
+          e.preventDefault();
+          if (selectedMemberIndex >= 0) {
+            if (hasUnassignedOption && selectedMemberIndex === 0) {
+              // Skip attendance for unassigned option
+              return;
+            } else {
+              // Toggle attendance for member
+              const memberIndex = hasUnassignedOption
+                ? selectedMemberIndex - 1
+                : selectedMemberIndex;
+              const member = availableMembers[memberIndex];
+              if (member) {
+                handleAttendanceToggle(member.user_id);
+              }
+            }
+          }
+          break;
+        case "Escape":
+          if (document.activeElement !== searchInputRef.current) {
+            e.preventDefault();
+            searchInputRef.current?.focus();
+            setSelectedMemberIndex(-1);
+          }
+          break;
+      }
+    },
+    [
+      isOpen,
+      isLoading,
+      selectedMemberIndex,
+      totalNavigableItems,
+      hasUnassignedOption,
+      availableMembers,
+      handleUnassignedToggle,
+      handleMemberToggle,
+      handleAttendanceToggle,
+      isCurrentUserAdmin,
+    ]
+  );
 
   // Add keyboard event listener
   React.useEffect(() => {
     if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-      return () => document.removeEventListener('keydown', handleKeyDown);
+      document.addEventListener("keydown", handleKeyDown);
+      return () => document.removeEventListener("keydown", handleKeyDown);
     }
   }, [handleKeyDown, isOpen]);
 
@@ -215,12 +253,13 @@ const FilterMembersModal: React.FC<FilterMembersModalProps> = ({
   // Scroll selected item into view
   React.useEffect(() => {
     if (selectedMemberIndex >= 0 && memberListRef.current) {
-      const items = memberListRef.current.querySelectorAll('[data-member-item]');
+      const items =
+        memberListRef.current.querySelectorAll("[data-member-item]");
       const selectedItem = items[selectedMemberIndex] as HTMLElement;
       if (selectedItem) {
         selectedItem.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center'
+          behavior: "smooth",
+          block: "center",
         });
       }
     }
@@ -229,12 +268,12 @@ const FilterMembersModal: React.FC<FilterMembersModalProps> = ({
   if (!isOpen) return null;
 
   const handleClose = () => {
-    setSearchTerm('');
+    setSearchTerm("");
     onClose();
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
       onClick={handleClose}
       role="dialog"
@@ -242,7 +281,7 @@ const FilterMembersModal: React.FC<FilterMembersModalProps> = ({
       aria-labelledby="filter-modal-title"
       aria-describedby="filter-modal-description"
     >
-      <div 
+      <div
         className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-md w-full max-h-[100vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
@@ -253,9 +292,19 @@ const FilterMembersModal: React.FC<FilterMembersModalProps> = ({
               <Users className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white" id="filter-modal-title">Filter by Assignee</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-300" id="filter-modal-description">
-                {selectedMemberIds.length > 0 ? `${selectedMemberIds.length} selected` : 'Select members to filter cards'}
+              <h2
+                className="text-xl font-bold text-gray-900 dark:text-white"
+                id="filter-modal-title"
+              >
+                Filter by Assignee
+              </h2>
+              <p
+                className="text-sm text-gray-600 dark:text-gray-300"
+                id="filter-modal-description"
+              >
+                {selectedMemberIds.length > 0
+                  ? `${selectedMemberIds.length} selected`
+                  : "Select members to filter cards"}
               </p>
             </div>
           </div>
@@ -273,7 +322,10 @@ const FilterMembersModal: React.FC<FilterMembersModalProps> = ({
           {isLoading ? (
             <div className="space-y-4 animate-pulse">
               {Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-xl"
+                >
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%] animate-[shimmer_1.5s_ease-in-out_infinite] rounded-full"></div>
                     <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%] animate-[shimmer_1.5s_ease-in-out_infinite] rounded w-32"></div>
@@ -300,7 +352,7 @@ const FilterMembersModal: React.FC<FilterMembersModalProps> = ({
                   </div>
                   <div className="flex flex-wrap gap-2 mb-4">
                     {selectedMemberIds.map((memberId) => {
-                      if (memberId === 'unassigned') {
+                      if (memberId === "unassigned") {
                         return (
                           <div
                             key={memberId}
@@ -314,7 +366,7 @@ const FilterMembersModal: React.FC<FilterMembersModalProps> = ({
                             >
                               <User className="h-4 w-4 text-white" />
                             </button>
-                            
+
                             {/* Cross icon to remove filter */}
                             <button
                               onClick={handleUnassignedToggle}
@@ -326,10 +378,12 @@ const FilterMembersModal: React.FC<FilterMembersModalProps> = ({
                           </div>
                         );
                       }
-                      
-                      const member = members.find(m => m.user_id === memberId);
+
+                      const member = members.find(
+                        (m) => m.user_id === memberId
+                      );
                       if (!member) return null;
-                      
+
                       return (
                         <div
                           key={memberId}
@@ -345,7 +399,7 @@ const FilterMembersModal: React.FC<FilterMembersModalProps> = ({
                               {getInitials(member.auth_fullname.fullname)}
                             </span>
                           </button>
-                          
+
                           {/* Cross icon to remove member */}
                           <button
                             onClick={() => handleMemberToggle(memberId)}
@@ -363,7 +417,9 @@ const FilterMembersModal: React.FC<FilterMembersModalProps> = ({
 
               {/* Search Input */}
               <div className="relative">
-                <label htmlFor="member-search" className="sr-only">Search members</label>
+                <label htmlFor="member-search" className="sr-only">
+                  Search members
+                </label>
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Search className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                 </div>
@@ -379,62 +435,75 @@ const FilterMembersModal: React.FC<FilterMembersModalProps> = ({
                 />
               </div>
 
-              
-
               {/* Unassigned Option */}
               <div>
-                {!selectedMemberIds.includes('unassigned') && (
-                <>
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Assignment Status</h3>
+                {!selectedMemberIds.includes("unassigned") && (
+                  <>
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                      Assignment Status
+                    </h3>
                     <button
                       data-member-item
                       onClick={handleUnassignedToggle}
                       className={`w-full flex items-center justify-between p-3 rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                         hasUnassignedOption && selectedMemberIndex === 0
-                          ? 'bg-blue-100 dark:bg-blue-900/40 border-2 border-blue-500'
-                          : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 focus:bg-gray-100 dark:focus:bg-gray-600 border-2 border-transparent'
+                          ? "bg-blue-100 dark:bg-blue-900/40 border-2 border-blue-500"
+                          : "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 focus:bg-gray-100 dark:focus:bg-gray-600 border-2 border-transparent"
                       }`}
                       aria-label="Filter by unassigned cards"
                     >
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
-                        <User className="h-4 w-4 text-white" />
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
+                          <User className="h-4 w-4 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            Unassigned
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Cards with no assignees
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">Unassigned</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Cards with no assignees</p>
-                      </div>
-                    </div>
-                    
-                    <Plus className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                  </button>
-                </>
-                  )}
+
+                      <Plus className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    </button>
+                  </>
+                )}
               </div>
 
               {/* Members List */}
               <div>
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Team Members</h3>
-                <div ref={memberListRef} className="space-y-2 max-h-60 overflow-y-auto filter-members-scroll pr-2">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                  Team Members
+                </h3>
+                <div
+                  ref={memberListRef}
+                  className="space-y-2 max-h-60 overflow-y-auto filter-members-scroll pr-2"
+                >
                   {sortedFilteredMembers
-                    .filter(member => !selectedMemberIds.includes(member.user_id))
+                    .filter(
+                      (member) => !selectedMemberIds.includes(member.user_id)
+                    )
                     .map((member, index) => {
                       const isCurrentUser = member.user_id === currentUser?.id;
-                      const displayName = isCurrentUser 
-                        ? `${member.auth_fullname.fullname} (Me)` 
+                      const displayName = isCurrentUser
+                        ? `${member.auth_fullname.fullname} (Me)`
                         : member.auth_fullname.fullname;
-                      const memberIndex = hasUnassignedOption ? index + 1 : index;
+                      const memberIndex = hasUnassignedOption
+                        ? index + 1
+                        : index;
                       const isSelected = selectedMemberIndex === memberIndex;
                       const isMarkedForAttendance = isMarked(member.id);
-                      
+
                       return (
                         <div
                           key={member.user_id}
                           data-member-item
                           className={`w-full flex items-center justify-between p-3 rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                             isSelected
-                              ? 'bg-blue-100 dark:bg-blue-900/40 border-2 border-blue-500'
-                              : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 focus:bg-gray-100 dark:focus:bg-gray-600 border-2 border-transparent'
+                              ? "bg-blue-100 dark:bg-blue-900/40 border-2 border-blue-500"
+                              : "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 focus:bg-gray-100 dark:focus:bg-gray-600 border-2 border-transparent"
                           }`}
                         >
                           <button
@@ -453,46 +522,67 @@ const FilterMembersModal: React.FC<FilterMembersModalProps> = ({
                               </p>
                             </div>
                           </button>
-                          
+
                           <div className="flex items-center space-x-2">
                             {/* Attendance Button */}
                             {isCurrentUserAdmin && (
-                            <button
-                              onClick={() => handleAttendanceToggle(member.user_id)}
-                              disabled={!isCurrentUserAdmin || toggleLoadingMemberId === member.id}
-                              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
-                                !isCurrentUserAdmin
-                                  ? 'cursor-default opacity-75'
-                                  : toggleLoadingMemberId === member.id
-                                    ? 'cursor-not-allowed opacity-50'
-                                  : isMarkedForAttendance 
-                                    ? 'bg-green-500 text-white' 
-                                    : 'bg-gray-200 dark:bg-gray-600 text-gray-400 dark:text-gray-500 hover:bg-gray-300 dark:hover:bg-gray-500'
-                              } ${
-                                isMarkedForAttendance 
-                                  ? 'bg-green-500 text-white' 
-                                  : isCurrentUserAdmin
-                                    ? 'bg-gray-200 dark:bg-gray-600 text-gray-400 dark:text-gray-500 hover:bg-gray-300 dark:hover:bg-gray-500'
-                                    : 'bg-gray-200 dark:bg-gray-600 text-gray-400 dark:text-gray-500'
-                              }`}
-                              title={isCurrentUserAdmin 
-                                ? (isMarkedForAttendance ? `${displayName} is present` : `Mark ${displayName} as present`)
-                                : `${displayName} is ${isMarkedForAttendance ? 'present' : 'absent'} (Admin required to change)`
-                              }
-                              aria-label={isCurrentUserAdmin
-                                ? `${isMarkedForAttendance ? 'Unmark' : 'Mark'} ${displayName} as present`
-                                : `${displayName} is ${isMarkedForAttendance ? 'present' : 'absent'} (View only)`
-                              }
-                            >
-                              {toggleLoadingMemberId === member.id ? (
-                                <Loader2 className="h-4 w-4 animate-spin text-white" />
-                              ) : isMarkedForAttendance ? (
-                                <Check className="h-4 w-4" />
-                              ) : (
-                                <div className="w-2 h-2 bg-current rounded-full opacity-50" />
-                              )}
-                            </button>
-                          )}
+                              <button
+                                onClick={() =>
+                                  handleAttendanceToggle(member.user_id)
+                                }
+                                disabled={
+                                  !isCurrentUserAdmin ||
+                                  toggleLoadingMemberId === member.id
+                                }
+                                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
+                                  !isCurrentUserAdmin
+                                    ? "cursor-default opacity-75"
+                                    : toggleLoadingMemberId === member.id
+                                    ? "cursor-not-allowed opacity-50"
+                                    : isMarkedForAttendance
+                                    ? "bg-green-500 text-white"
+                                    : "bg-gray-200 dark:bg-gray-600 text-gray-400 dark:text-gray-500 hover:bg-gray-300 dark:hover:bg-gray-500"
+                                } ${
+                                  isMarkedForAttendance
+                                    ? "bg-green-500 text-white"
+                                    : isCurrentUserAdmin
+                                    ? "bg-gray-200 dark:bg-gray-600 text-gray-400 dark:text-gray-500 hover:bg-gray-300 dark:hover:bg-gray-500"
+                                    : "bg-gray-200 dark:bg-gray-600 text-gray-400 dark:text-gray-500"
+                                }`}
+                                title={
+                                  isCurrentUserAdmin
+                                    ? isMarkedForAttendance
+                                      ? `${displayName} is present`
+                                      : `Mark ${displayName} as present`
+                                    : `${displayName} is ${
+                                        isMarkedForAttendance
+                                          ? "present"
+                                          : "absent"
+                                      } (Admin required to change)`
+                                }
+                                aria-label={
+                                  isCurrentUserAdmin
+                                    ? `${
+                                        isMarkedForAttendance
+                                          ? "Unmark"
+                                          : "Mark"
+                                      } ${displayName} as present`
+                                    : `${displayName} is ${
+                                        isMarkedForAttendance
+                                          ? "present"
+                                          : "absent"
+                                      } (View only)`
+                                }
+                              >
+                                {toggleLoadingMemberId === member.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin text-white" />
+                                ) : isMarkedForAttendance ? (
+                                  <Check className="h-4 w-4" />
+                                ) : (
+                                  <div className="w-2 h-2 bg-current rounded-full opacity-50" />
+                                )}
+                              </button>
+                            )}
                             {/* Filter Button */}
                             <button
                               onClick={() => handleMemberToggle(member.user_id)}
@@ -510,45 +600,65 @@ const FilterMembersModal: React.FC<FilterMembersModalProps> = ({
               </div>
 
               {/* Empty States */}
-              {searchTerm && filteredMembers.filter(member => !selectedMemberIds.includes(member.user_id)).length === 0 && !isLoading && (
-                <div className="text-center py-8">
-                  <Search className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 dark:text-gray-400">
-                    {filteredMembers.length === 0 
-                      ? `No members found for "${searchTerm}"` 
-                      : 'All matching members are already selected'
-                    }
-                  </p>
-                  <button
-                    onClick={() => setSearchTerm('')}
-                    className="mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline focus:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
-                  >
-                    Clear search
-                  </button>
-                </div>
-              )}
-              
-              {!searchTerm && members.filter(member => !selectedMemberIds.includes(member.user_id)).length === 0 && selectedMemberIds.length === 0 && !isLoading && (
-                <div className="text-center py-8">
-                  <User className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 dark:text-gray-400">No members found in this workspace</p>
-                </div>
-              )}
+              {searchTerm &&
+                filteredMembers.filter(
+                  (member) => !selectedMemberIds.includes(member.user_id)
+                ).length === 0 &&
+                !isLoading && (
+                  <div className="text-center py-8">
+                    <Search className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500 dark:text-gray-400">
+                      {filteredMembers.length === 0
+                        ? `No members found for "${searchTerm}"`
+                        : "All matching members are already selected"}
+                    </p>
+                    <button
+                      onClick={() => setSearchTerm("")}
+                      className="mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline focus:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
+                    >
+                      Clear search
+                    </button>
+                  </div>
+                )}
+
+              {!searchTerm &&
+                members.filter(
+                  (member) => !selectedMemberIds.includes(member.user_id)
+                ).length === 0 &&
+                selectedMemberIds.length === 0 &&
+                !isLoading && (
+                  <div className="text-center py-8">
+                    <User className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500 dark:text-gray-400">
+                      No members found in this workspace
+                    </p>
+                  </div>
+                )}
             </div>
           )}
-        {/* Keyboard Navigation Info */}
-                  {isCurrentUserAdmin && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 mt-5 border border-blue-200 dark:border-blue-800">
-                <p className="text-xs text-blue-700 dark:text-blue-300 text-center">
-                  <span className="font-medium">Navigation:</span> Use arrow keys to navigate <br/>• Press <kbd className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-800 rounded text-blue-800 dark:text-blue-200 font-mono text-xs">Enter</kbd> to filter
-                    <span> • Press <kbd className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-800 rounded text-blue-800 dark:text-blue-200 font-mono text-xs">Right Shift</kbd> to mark attendance</span>
-                </p>
-              </div>
-              )}
+          {/* Keyboard Navigation Info */}
+          {isCurrentUserAdmin && (
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 mt-5 border border-blue-200 dark:border-blue-800">
+              <p className="text-xs text-blue-700 dark:text-blue-300 text-center">
+                <span className="font-medium">Navigation:</span> Use arrow keys
+                to navigate <br />• Press{" "}
+                <kbd className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-800 rounded text-blue-800 dark:text-blue-200 font-mono text-xs">
+                  Enter
+                </kbd>{" "}
+                to filter
+                <span>
+                  {" "}
+                  • Press{" "}
+                  <kbd className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-800 rounded text-blue-800 dark:text-blue-200 font-mono text-xs">
+                    Right Shift
+                  </kbd>{" "}
+                  to mark attendance
+                </span>
+              </p>
+            </div>
+          )}
         </div>
       </div>
-      
-      
     </div>
   );
 };
