@@ -168,7 +168,7 @@ const FilterCardsModal: React.FC<FilterCardsModalProps> = ({
       aria-describedby="filter-modal-description"
     >
       <div
-        className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-md sm:max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar"
+        className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto custom-scrollbar"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -231,7 +231,7 @@ const FilterCardsModal: React.FC<FilterCardsModalProps> = ({
                 </span>
               )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {priorities.map((priority) => {
                 const isSelected = selectedPriorities.includes(priority.value);
                 return (
@@ -390,7 +390,7 @@ const FilterCardsModal: React.FC<FilterCardsModalProps> = ({
                   <button
                     key={points}
                     onClick={() => handleStoryPointToggle(points)}
-                    className={`px-3 py-1.5 rounded-xl transition-all duration-200 border-2 ${
+                    className={`px-2.5 py-1 sm:px-3 sm:py-1.5  rounded-xl transition-all duration-200 border-2 ${
                       isSelected
                         ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
                         : "border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"

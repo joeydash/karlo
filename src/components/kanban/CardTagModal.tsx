@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { X, Tag, Search, Plus } from "lucide-react";
 import { useTag } from "../../hooks/useTag";
 import { useFocusManagement } from "../../hooks/useKeyboardNavigation";
+import CreateTagModal from "../CreateTagModal";
 
 interface CardTagModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ const CardTagModal: React.FC<CardTagModalProps> = ({
   const { tags } = useTag();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTagIndex, setSelectedTagIndex] = useState<number>(-1);
+  const [isCreateTagModalOpen, setIsCreateTagModalOpen] = useState(false);
   const searchInputRef = React.useRef<HTMLInputElement>(null);
   const tagListRef = React.useRef<HTMLDivElement>(null);
 
@@ -131,7 +133,7 @@ const CardTagModal: React.FC<CardTagModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700">
+        <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
               <Tag className="h-5 w-5 text-white" />
@@ -161,7 +163,7 @@ const CardTagModal: React.FC<CardTagModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-5">
           <div className="space-y-4">
             {/* Selected Tags */}
             {selectedTags.length > 0 && (
@@ -202,9 +204,19 @@ const CardTagModal: React.FC<CardTagModalProps> = ({
 
             {/* Available Tags */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                Available Tags ({availableTags.length})
-              </h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                  Available Tags ({availableTags.length})
+                </h3>
+                <button
+                  onClick={() => setIsCreateTagModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-lg text-white text-xs font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  title="Create new tag"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Create Tag
+                </button>
+              </div>
 
               {/* Search Input */}
               <div className="relative mb-4">
@@ -334,6 +346,12 @@ const CardTagModal: React.FC<CardTagModalProps> = ({
           )}
         </div>
       )}
+
+      {/* Create Tag Modal */}
+      <CreateTagModal
+        isOpen={isCreateTagModalOpen}
+        onClose={() => setIsCreateTagModalOpen(false)}
+      />
     </div>
   );
 };
