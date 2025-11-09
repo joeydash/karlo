@@ -129,7 +129,7 @@ const Expenses: React.FC = () => {
     const result = await deleteExpense(expenseToDelete);
     if (result.success) {
       showSuccess("Expense deleted successfully");
-      loadExpenses(currentPage);
+      loadExpenses(currentPage); // Reload to update the list
     } else {
       showError(result.message || "Failed to delete expense");
     }
@@ -141,7 +141,7 @@ const Expenses: React.FC = () => {
     const result = await approveExpense(expenseId);
     if (result.success) {
       showSuccess("Expense approved successfully");
-      loadExpenses(currentPage);
+      loadExpenses(currentPage); // Reload to update status
     } else {
       showError(result.message || "Failed to approve expense");
     }
@@ -151,7 +151,7 @@ const Expenses: React.FC = () => {
     const result = await rejectExpense(expenseId);
     if (result.success) {
       showSuccess("Expense rejected");
-      loadExpenses(currentPage);
+      loadExpenses(currentPage); // Reload to update status
     } else {
       showError(result.message || "Failed to reject expense");
     }
@@ -753,7 +753,7 @@ const Expenses: React.FC = () => {
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {isLoading && expenses.length === 0 ? (
+            {isLoading ? (
               <div className="flex items-center justify-center py-16">
                 <div className="text-center">
                   <Loader2 className="h-12 w-12 animate-spin text-blue-600 dark:text-blue-400 mx-auto mb-4" />
@@ -976,7 +976,7 @@ const Expenses: React.FC = () => {
         onClose={() => setIsAddModalOpen(false)}
         onSuccess={() => {
           setCurrentPage(1);
-          loadExpenses(1);
+          loadExpenses(1); // Reload to show the new expense
         }}
         selectedMemberId={selectedMemberId}
       />
@@ -988,7 +988,7 @@ const Expenses: React.FC = () => {
           setSelectedExpense(null);
         }}
         onSuccess={() => {
-          loadExpenses(currentPage);
+          loadExpenses(currentPage); // Reload to show the updated expense
         }}
         expense={selectedExpense}
       />

@@ -8,17 +8,18 @@ export const validateImageFile = (
     "image/png",
     "image/gif",
     "image/webp",
+    "application/pdf",
   ];
 
   if (!allowedTypes.includes(file.type)) {
     return {
       valid: false,
-      error: "Please select a valid image file (JPEG, PNG, GIF, or WebP)",
+      error: "Please select a valid file (JPEG, PNG, GIF, WebP, or PDF)",
     };
   }
 
   if (file.size > maxSize) {
-    return { valid: false, error: "Image size must be less than 10MB" };
+    return { valid: false, error: "File size must be less than 10MB" };
   }
 
   return { valid: true };

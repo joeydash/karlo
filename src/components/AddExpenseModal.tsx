@@ -1,14 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   IndianRupee,
   Loader2,
   AlertCircle,
-  User,
   Info,
-  Upload,
   File,
   Trash2,
+  FileText,
+  Image as ImageIcon,
 } from "lucide-react";
 import { useExpense } from "../hooks/useExpense";
 import { useAuth } from "../hooks/useAuth";
@@ -35,7 +35,9 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     details: "",
     amount: "",
   });
-  const [attachments, setAttachments] = useState<File[]>([]);
+  const [attachments, setAttachments] = useState<
+    Array<{ file: File; url?: string; uploading: boolean }>
+  >([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { createExpense, isLoading } = useExpense();
   const { user: currentUser } = useAuth();
@@ -47,6 +49,18 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   const targetMember = members.find((m) => m.user_id === targetUserId);
   const isCreatingForOther =
     selectedMemberId && selectedMemberId !== currentUser?.id;
+
+  // Cleanup object URLs when component unmounts or attachments change
+  useEffect(() => {
+    return () => {
+      attachments.forEach((attachment) => {
+        if (attachment.file.type.startsWith("image/") && !attachment.url) {
+          const objectUrl = URL.createObjectURL(attachment.file);
+          URL.revokeObjectURL(objectUrl);
+        }
+      });
+    };
+  }, [attachments]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -63,7 +77,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const validFiles: File[] = [];
 
@@ -76,7 +90,39 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       }
     }
 
-    setAttachments((prev) => [...prev, ...validFiles]);
+    // Add files with uploading state
+    const newAttachments = validFiles.map((file) => ({
+      file,
+      uploading: true,
+    }));
+    setAttachments((prev) => [...prev, ...newAttachments]);
+
+    // Upload each file immediately
+    for (let i = 0; i < validFiles.length; i++) {
+      const file = validFiles[i];
+      try {
+        const result = await hostMediaGoService(file, "expenses", token || "");
+
+        if (result.success && result.url) {
+          // Update the specific attachment with the URL
+          setAttachments((prev) =>
+            prev.map((att) =>
+              att.file === file
+                ? { ...att, url: result.url, uploading: false }
+                : att
+            )
+          );
+        } else {
+          showError(`Failed to upload ${file.name}: ${result.error}`);
+          // Remove failed upload
+          setAttachments((prev) => prev.filter((att) => att.file !== file));
+        }
+      } catch {
+        showError(`Failed to upload ${file.name}`);
+        // Remove failed upload
+        setAttachments((prev) => prev.filter((att) => att.file !== file));
+      }
+    }
   };
 
   const removeAttachment = (index: number) => {
@@ -84,27 +130,10 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   };
 
   const uploadAttachments = async (): Promise<string[]> => {
-    const uploadedUrls: string[] = [];
-
-    for (const file of attachments) {
-      try {
-        const result = await hostMediaGoService(
-          file,
-          "expenses",
-          token || ""
-        );
-
-        if (result.success && result.url) {
-          uploadedUrls.push(result.url);
-        } else {
-          showError(`Failed to upload ${file.name}: ${result.error}`);
-        }
-      } catch (error) {
-        showError(`Failed to upload ${file.name}`);
-      }
-    }
-
-    return uploadedUrls;
+    // Return already uploaded URLs
+    return attachments
+      .filter((att) => att.url && !att.uploading)
+      .map((att) => att.url!);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -119,9 +148,15 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       return;
     }
 
-    // Upload attachments first
-    const attachmentUrls =
-      attachments.length > 0 ? await uploadAttachments() : [];
+    // Check if any attachments are still uploading
+    const stillUploading = attachments.some((att) => att.uploading);
+    if (stillUploading) {
+      showError("Please wait for all attachments to finish uploading");
+      return;
+    }
+
+    // Get already uploaded attachment URLs
+    const attachmentUrls = await uploadAttachments();
 
     const result = await createExpense({
       user_id: targetUserId,
@@ -174,6 +209,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
           </div>
           <button
             onClick={handleClose}
+            title="Close"
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors duration-200"
           >
             <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
@@ -289,35 +325,100 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 <input
                   type="file"
                   multiple
-                  accept="image/*"
+                  accept="image/*,.pdf,application/pdf"
                   onChange={handleFileSelect}
+                  title="Upload attachments"
                   className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                 />
                 {attachments.length > 0 && (
-                  <div className="space-y-2">
-                    {attachments.map((file, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <File className="h-5 w-5 text-gray-500" />
-                          <span className="text-sm text-gray-900 dark:text-white">
-                            {file.name}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeAttachment(index)}
-                          className="p-1 hover:bg-red-100 dark:hover:bg-red-900 rounded"
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {attachments.map((attachment, index) => {
+                      const isPdf =
+                        attachment.file.type === "application/pdf" ||
+                        attachment.file.name.toLowerCase().endsWith(".pdf");
+                      const isImage = attachment.file.type.startsWith("image/");
+                      const previewUrl =
+                        attachment.url ||
+                        (isImage ? URL.createObjectURL(attachment.file) : null);
+
+                      return (
+                        <div
+                          key={index}
+                          className="relative group bg-white dark:bg-gray-700 rounded-lg border-2 border-gray-200 dark:border-gray-600 overflow-hidden hover:border-blue-500 dark:hover:border-blue-400 transition-all duration-200"
                         >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </button>
-                      </div>
-                    ))}
+                          {/* Preview Area */}
+                          <div className="relative w-full h-24 bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                            {attachment.uploading ? (
+                              <div className="flex flex-col items-center justify-center space-y-1">
+                                <Loader2 className="h-6 w-6 text-blue-500 animate-spin" />
+                                <span className="text-[10px] text-blue-500 font-medium">
+                                  Uploading...
+                                </span>
+                              </div>
+                            ) : isImage && previewUrl ? (
+                              <img
+                                src={previewUrl}
+                                alt={attachment.file.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = "none";
+                                }}
+                              />
+                            ) : isPdf ? (
+                              <div className="flex flex-col items-center justify-center space-y-1">
+                                <FileText className="h-8 w-8 text-red-500" />
+                                <span className="text-[10px] text-gray-600 dark:text-gray-300 font-medium">
+                                  PDF
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center justify-center space-y-1">
+                                <File className="h-8 w-8 text-gray-400" />
+                                <span className="text-[10px] text-gray-600 dark:text-gray-300 font-medium">
+                                  File
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Delete Button Overlay */}
+                            <button
+                              type="button"
+                              onClick={() => removeAttachment(index)}
+                              disabled={attachment.uploading}
+                              className="absolute top-1 right-1 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                              title="Remove attachment"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+
+                          {/* File Info */}
+                          <div className="p-2 border-t border-gray-200 dark:border-gray-600">
+                            <div className="flex items-center space-x-1.5">
+                              {isImage ? (
+                                <ImageIcon className="h-3 w-3 text-blue-500 flex-shrink-0" />
+                              ) : isPdf ? (
+                                <FileText className="h-3 w-3 text-red-500 flex-shrink-0" />
+                              ) : (
+                                <File className="h-3 w-3 text-gray-500 flex-shrink-0" />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs text-gray-900 dark:text-white truncate font-medium">
+                                  {attachment.file.name}
+                                </p>
+                                <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                                  {(attachment.file.size / 1024 / 1024).toFixed(
+                                    2
+                                  )}{" "}
+                                  MB
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -329,19 +430,26 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
             <button
               type="button"
               onClick={handleClose}
+              title="Cancel"
               className="flex-1 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-all duration-200"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || attachments.some((att) => att.uploading)}
+              title="Add expense"
               className="flex-1 flex items-center justify-center px-4 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   Adding...
+                </>
+              ) : attachments.some((att) => att.uploading) ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Uploading...
                 </>
               ) : (
                 "Add Expense"

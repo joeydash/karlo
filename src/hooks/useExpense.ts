@@ -1,15 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { graphqlRequest } from "../utils/graphql";
 import {
   Expense,
   CreateExpenseInput,
   UpdateExpenseInput,
 } from "../types/expense";
-import useAuthStore from "../stores/authStore";
 
 export const useExpense = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start with true for initial load
   const [total, setTotal] = useState(0);
 
   const fetchExpenses = async (
@@ -73,7 +72,6 @@ export const useExpense = () => {
   };
 
   const createExpense = async (input: CreateExpenseInput) => {
-    setIsLoading(true);
     try {
       const query = `
         mutation CreateExpense($input: karlo_expenses_insert_input!) {
@@ -95,7 +93,11 @@ export const useExpense = () => {
       const result = await graphqlRequest(query, { input });
 
       if (result.data?.insert_karlo_expenses_one) {
-        return { success: true, data: result.data.insert_karlo_expenses_one };
+        const newExpense = result.data.insert_karlo_expenses_one;
+        // Add the new expense to the beginning of the list for immediate display
+        setExpenses((prev) => [newExpense, ...prev]);
+        setTotal((prev) => prev + 1);
+        return { success: true, data: newExpense };
       }
 
       return { success: false, message: "Failed to create expense" };
@@ -105,13 +107,10 @@ export const useExpense = () => {
         success: false,
         message: "An error occurred while creating expense",
       };
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const updateExpense = async (id: string, input: UpdateExpenseInput) => {
-    setIsLoading(true);
     try {
       const query = `
         mutation UpdateExpense($id: uuid!, $input: karlo_expenses_set_input!) {
@@ -136,7 +135,12 @@ export const useExpense = () => {
       const result = await graphqlRequest(query, { id, input });
 
       if (result.data?.update_karlo_expenses_by_pk) {
-        return { success: true, data: result.data.update_karlo_expenses_by_pk };
+        const updatedExpense = result.data.update_karlo_expenses_by_pk;
+        // Update the expense in the local state immediately
+        setExpenses((prev) =>
+          prev.map((exp) => (exp.id === id ? updatedExpense : exp))
+        );
+        return { success: true, data: updatedExpense };
       }
 
       return { success: false, message: "Failed to update expense" };
@@ -146,13 +150,10 @@ export const useExpense = () => {
         success: false,
         message: "An error occurred while updating expense",
       };
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const deleteExpense = async (id: string) => {
-    setIsLoading(true);
     try {
       const query = `
         mutation DeleteExpense($id: uuid!) {
@@ -165,6 +166,9 @@ export const useExpense = () => {
       const result = await graphqlRequest(query, { id });
 
       if (result.data?.delete_karlo_expenses_by_pk) {
+        // Remove the expense from local state immediately
+        setExpenses((prev) => prev.filter((exp) => exp.id !== id));
+        setTotal((prev) => prev - 1);
         return { success: true };
       }
 
@@ -175,13 +179,10 @@ export const useExpense = () => {
         success: false,
         message: "An error occurred while deleting expense",
       };
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const approveExpense = async (id: string) => {
-    setIsLoading(true);
     try {
       const query = `
         mutation ApproveExpense($id: uuid!) {
@@ -198,6 +199,12 @@ export const useExpense = () => {
       const result = await graphqlRequest(query, { id });
 
       if (result.data?.update_karlo_expenses_by_pk) {
+        // Update the expense status in local state immediately
+        setExpenses((prev) =>
+          prev.map((exp) =>
+            exp.id === id ? { ...exp, status: "approved" } : exp
+          )
+        );
         return { success: true };
       }
 
@@ -208,13 +215,10 @@ export const useExpense = () => {
         success: false,
         message: "An error occurred while approving expense",
       };
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const rejectExpense = async (id: string) => {
-    setIsLoading(true);
     try {
       const query = `
         mutation RejectExpense($id: uuid!) {
@@ -231,6 +235,12 @@ export const useExpense = () => {
       const result = await graphqlRequest(query, { id });
 
       if (result.data?.update_karlo_expenses_by_pk) {
+        // Update the expense status in local state immediately
+        setExpenses((prev) =>
+          prev.map((exp) =>
+            exp.id === id ? { ...exp, status: "rejected" } : exp
+          )
+        );
         return { success: true };
       }
 
@@ -241,8 +251,6 @@ export const useExpense = () => {
         success: false,
         message: "An error occurred while rejecting expense",
       };
-    } finally {
-      setIsLoading(false);
     }
   };
 

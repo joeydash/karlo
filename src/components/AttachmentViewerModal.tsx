@@ -1,5 +1,5 @@
 import React from "react";
-import { X, Download, ExternalLink } from "lucide-react";
+import { X, Download, ExternalLink, Loader2 } from "lucide-react";
 
 interface AttachmentViewerModalProps {
   isOpen: boolean;
@@ -92,133 +92,114 @@ const AttachmentViewerModal: React.FC<AttachmentViewerModalProps> = ({
     const isImage = /png|jpe?g|gif|webp|avif|svg/.test(ext);
     const isVideo = /mp4|webm|ogg/.test(ext);
     const isAudio = /mp3|wav|m4a|aac|oga/.test(ext);
-    const isPdf = ext === "pdf";
+    const isPdf = /pdf/.test(ext) || url.toLowerCase().includes(".pdf");
 
     if (isImage) {
-      return (
-        <img
-          src={url}
-          alt={getFileName(url)}
-          className="w-auto h-auto max-w-[900px] max-h-[70vh] object-contain rounded-lg shadow-lg"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.style.display = "none";
-          }}
-        />
-      );
+      const ImageWithLoader: React.FC<{ url: string }> = ({ url }) => {
+        const [isLoading, setIsLoading] = React.useState(true);
+        const [hasError, setHasError] = React.useState(false);
+
+        return (
+          <div className="relative flex items-center justify-center min-h-[400px] w-full">
+            {isLoading && !hasError && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                {/* Skeleton loader */}
+                <div className="w-full max-w-[800px] h-[500px] bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse flex items-center justify-center">
+                  <Loader2 className="h-12 w-12 text-blue-500 animate-spin" />
+                </div>
+              </div>
+            )}
+            <img
+              src={url}
+              alt={getFileName(url)}
+              className={`w-auto h-auto max-w-[900px] max-h-[70vh] object-contain rounded-lg shadow-lg ${
+                isLoading ? "opacity-0 absolute" : "opacity-100"
+              }`}
+              onLoad={() => setIsLoading(false)}
+              onError={(e) => {
+                setIsLoading(false);
+                setHasError(true);
+                const target = e.target as HTMLImageElement;
+                target.style.display = "none";
+              }}
+            />
+            {hasError && (
+              <div className="text-center text-sm text-red-500">
+                Failed to load image
+              </div>
+            )}
+          </div>
+        );
+      };
+      return <ImageWithLoader url={url} />;
     }
 
     if (isPdf) {
-      // Render PDFs page-by-page using pdfjs (dynamically loaded). This component
-      // will create canvases for pages and lazily render them when scrolled into view.
+      // Use iframe/embed for PDF display to avoid CORS issues
+      // Unlike fetch-based approaches, browsers allow cross-origin PDF embedding
       const PdfViewer: React.FC<{ url: string }> = ({ url }) => {
-        const containerRef = React.useRef<HTMLDivElement | null>(null);
-        const [numPages, setNumPages] = React.useState<number>(0);
-        const pdfRef = React.useRef<any>(null);
-
-        React.useEffect(() => {
-          let cancelled = false;
-          (async () => {
-            try {
-              const pdfjs = await import("pdfjs-dist/legacy/build/pdf");
-              // Use a CDN worker; if your build provides a worker, replace this.
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (pdfjs as any).GlobalWorkerOptions.workerSrc =
-                "https://unpkg.com/pdfjs-dist@3.10.111/build/pdf.worker.min.js";
-              const loadingTask = (pdfjs as any).getDocument(url);
-              const pdf = await loadingTask.promise;
-              if (cancelled) return;
-              pdfRef.current = pdf;
-              setNumPages(pdf.numPages || 0);
-            } catch (err) {
-              console.error("Failed to load PDF:", err);
-            }
-          })();
-
-          return () => {
-            cancelled = true;
-            if (pdfRef.current && pdfRef.current.destroy) {
-              try {
-                pdfRef.current.destroy();
-              } catch {
-                /* ignore */
-              }
-            }
-          };
-        }, [url]);
-
-        React.useEffect(() => {
-          const container = containerRef.current;
-          if (!container) return;
-
-          const canvases = Array.from(
-            container.querySelectorAll("canvas[data-page]")
-          ) as HTMLCanvasElement[];
-          const observer = new IntersectionObserver(
-            (entries) => {
-              entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                  const canvas = entry.target as HTMLCanvasElement;
-                  const pageNum = Number(canvas.getAttribute("data-page"));
-                  renderPage(pageNum, canvas).catch((e) => {
-                    /* ignore */
-                  });
-                }
-              });
-            },
-            { root: container, rootMargin: "200px 0px" }
-          );
-
-          canvases.forEach((c) => observer.observe(c));
-
-          return () => observer.disconnect();
-        }, [numPages]);
-
-        const renderPage = async (
-          pageNum: number,
-          canvas: HTMLCanvasElement
-        ) => {
-          const pdf = pdfRef.current;
-          if (!pdf) return;
-          // if already rendered, skip
-          if (canvas.getAttribute("data-rendered") === "1") return;
-          try {
-            const page = await pdf.getPage(pageNum);
-            const viewport = page.getViewport({ scale: 1 });
-            const container = containerRef.current;
-            const maxWidth = Math.min(container?.clientWidth || 900, 900);
-            const scale = Math.min(1.5, maxWidth / viewport.width);
-            const vp = page.getViewport({ scale });
-            canvas.width = Math.round(vp.width);
-            canvas.height = Math.round(vp.height);
-            const ctx = canvas.getContext("2d");
-            if (!ctx) return;
-            const renderContext = { canvasContext: ctx, viewport: vp } as any;
-            await page.render(renderContext).promise;
-            canvas.setAttribute("data-rendered", "1");
-          } catch (err) {
-            console.error("Error rendering PDF page:", err);
-          }
-        };
+        const [isLoading, setIsLoading] = React.useState(true);
+        const [error, setError] = React.useState<string>("");
 
         return (
-          <div
-            ref={containerRef}
-            className="w-full max-w-[900px] h-[70vh] overflow-y-auto rounded-lg border bg-white dark:bg-gray-800 p-4"
-          >
-            {numPages === 0 && (
-              <div className="text-center text-sm text-gray-500">
-                Loading PDF...
+          <div className="relative w-full max-w-[900px] h-[600px] sm:h-[650px] rounded-lg overflow-hidden border bg-white dark:bg-gray-800">
+            {isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white dark:bg-gray-800 z-10">
+                <div className="text-center">
+                  <Loader2 className="h-12 w-12 text-blue-500 animate-spin mx-auto mb-3" />
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Loading PDF...
+                  </p>
+                </div>
               </div>
             )}
-            {Array.from({ length: numPages }).map((_, i) => (
-              <div key={i} className="mb-6 flex justify-center">
-                <canvas
-                  data-page={i + 1}
-                  style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.08)" }}
-                />
+            {error && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white dark:bg-gray-800 z-10">
+                <div className="text-center p-6 max-w-md">
+                  <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4 mx-auto">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-8 w-8 text-red-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    Failed to Load PDF
+                  </h3>
+                  <p className="text-sm text-red-600 dark:text-red-400 mb-4">
+                    {error}
+                  </p>
+                  <button
+                    onClick={() => handleDownload(url, getFileName(url))}
+                    className="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download File
+                  </button>
+                </div>
               </div>
-            ))}
+            )}
+            <iframe
+              src={`${url}#toolbar=1&navpanes=1&scrollbar=1`}
+              className="w-full h-full border-0"
+              title={getFileName(url)}
+              onLoad={() => setIsLoading(false)}
+              onError={() => {
+                setIsLoading(false);
+                setError(
+                  "Failed to load PDF. Your browser may not support embedded PDFs."
+                );
+              }}
+            />
           </div>
         );
       };
@@ -329,8 +310,8 @@ const AttachmentViewerModal: React.FC<AttachmentViewerModalProps> = ({
           </button>
         </div>
         {/* Content - focused viewer with prev/next controls */}
-        <div className="flex-1 overflow-hidden p-2 sm:p-4 flex flex-col items-center justify-center">
-          <div className="w-full h-full flex items-center justify-center relative">
+        <div className="flex-1 overflow-hidden p-2 sm:p-4 flex flex-col items-center justify-center min-h-[500px]">
+          <div className="w-full h-full flex items-center justify-center relative min-h-[400px]">
             {/* Prev button */}
             <button
               onClick={() => prev()}
@@ -379,7 +360,7 @@ const AttachmentViewerModal: React.FC<AttachmentViewerModalProps> = ({
               <span className="sr-only">Next</span>
             </button>
 
-            <div className="max-w-full max-h-[60vh] sm:max-h-[70vh] w-full flex items-center justify-center">
+            <div className="max-w-full w-full flex items-center justify-center overflow-auto">
               {renderAttachment(attachments[currentIndex])}
             </div>
           </div>
