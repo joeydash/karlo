@@ -91,7 +91,7 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
     is_archived: false,
     cover_color: "",
     story_points: "",
-    priority: "",
+    priority: null as string | null,
   });
   const [originalData, setOriginalData] = useState({
     title: "",
@@ -101,7 +101,7 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
     is_archived: false,
     cover_color: "",
     story_points: "",
-    priority: "",
+    priority: null as string | null,
   });
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -234,7 +234,7 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
         is_archived: card.is_archived || false,
         cover_color: card.cover_color || "",
         story_points: card.story_points?.toString() || "",
-        priority: card.priority || "",
+        priority: card.priority || null,
       };
       setFormData(initialData);
       setOriginalData(initialData);
@@ -1363,13 +1363,14 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
               </label>
               <div className="flex gap-2 overflow-x-auto scrollbar-hide p-2">
                 {[
+                  { value: null, label: "None" },
                   { value: "low", label: "Low" },
                   { value: "normal", label: "Normal" },
                   { value: "high", label: "High" },
                   { value: "urgent", label: "Urgent" },
                 ].map((option) => (
                   <button
-                    key={option.value}
+                    key={option.value || "none"}
                     type="button"
                     onClick={() => handleFormChange("priority", option.value)}
                     className={`flex-shrink-0 px-3 py-2 rounded-full text-xs font-semibold transition-all duration-200 ${
@@ -1380,14 +1381,18 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
                           ? "bg-orange-500 text-white shadow-md scale-105 ring-2 ring-orange-300 dark:ring-orange-700"
                           : option.value === "normal"
                           ? "bg-blue-500 text-white shadow-md scale-105 ring-2 ring-blue-300 dark:ring-blue-700"
-                          : "bg-gray-500 text-white shadow-md scale-105 ring-2 ring-gray-300 dark:ring-gray-700"
+                          : option.value === "low"
+                          ? "bg-gray-500 text-white shadow-md scale-105 ring-2 ring-gray-300 dark:ring-gray-700"
+                          : "bg-gray-400 text-white shadow-md scale-105 ring-2 ring-gray-300 dark:ring-gray-700"
                         : option.value === "urgent"
                         ? "bg-white dark:bg-gray-700 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 border-2 border-red-500 dark:border-red-500"
                         : option.value === "high"
                         ? "bg-white dark:bg-gray-700 text-orange-700 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 border-2 border-orange-500 dark:border-orange-500"
                         : option.value === "normal"
                         ? "bg-white dark:bg-gray-700 text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 border-2 border-blue-500 dark:border-blue-500"
-                        : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900/20 border-2 border-gray-500 dark:border-gray-500"
+                        : option.value === "low"
+                        ? "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900/20 border-2 border-gray-500 dark:border-gray-500"
+                        : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900/20 border-2 border-gray-400 dark:border-gray-500"
                     }`}
                   >
                     {option.label}

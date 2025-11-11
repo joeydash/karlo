@@ -39,7 +39,8 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     Array<{ file: File; url?: string; uploading: boolean }>
   >([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { createExpense, isLoading } = useExpense();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { createExpense } = useExpense();
   const { user: currentUser } = useAuth();
   const { members } = useMember();
   const { showSuccess, showError } = useToast();
@@ -155,6 +156,8 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       return;
     }
 
+    setIsSubmitting(true);
+
     // Get already uploaded attachment URLs
     const attachmentUrls = await uploadAttachments();
 
@@ -166,6 +169,8 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       amount: parseFloat(formData.amount),
       attachments: attachmentUrls,
     });
+
+    setIsSubmitting(false);
 
     if (result.success) {
       showSuccess("Expense added successfully");
@@ -184,6 +189,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     });
     setAttachments([]);
     setErrors({});
+    setIsSubmitting(false);
     onClose();
   };
 
@@ -437,11 +443,13 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={isLoading || attachments.some((att) => att.uploading)}
+              disabled={
+                isSubmitting || attachments.some((att) => att.uploading)
+              }
               title="Add expense"
               className="flex-1 flex items-center justify-center px-4 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   Adding...
