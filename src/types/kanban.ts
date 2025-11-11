@@ -15,6 +15,8 @@ export interface KanbanList {
   color?: string;
   confetti?: boolean;
   is_final?: boolean;
+  activate_calls?: boolean;
+  calling_time?: string;
   karlo_cards: KanbanCard[];
 }
 
@@ -140,7 +142,17 @@ export interface KanbanState {
   ) => Promise<{ success: boolean; message?: string }>;
   updateList: (
     listId: string,
-    data: Partial<Pick<KanbanList, "name" | "color" | "confetti" | "is_final">>
+    data: Partial<
+      Pick<
+        KanbanList,
+        | "name"
+        | "color"
+        | "confetti"
+        | "is_final"
+        | "activate_calls"
+        | "calling_time"
+      >
+    >
   ) => Promise<{ success: boolean; message?: string }>;
   deleteList: (
     listId: string

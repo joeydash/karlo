@@ -38,6 +38,8 @@ const QUERIES = {
         color
         confetti
         is_final
+        activate_calls
+        calling_time
         karlo_cards(
           where: {is_archived: {_eq: false}},
           order_by: {position: asc}
@@ -221,14 +223,16 @@ const QUERIES = {
     }
   `,
   UPDATE_LIST: `
-    mutation UpdateList($id: uuid!, $name: String, $color: String, $confetti: Boolean, $is_final: Boolean) {
+    mutation UpdateList($id: uuid!, $name: String, $color: String, $confetti: Boolean, $is_final: Boolean, $activate_calls: Boolean, $calling_time: timetz) {
       update_karlo_lists_by_pk(
         pk_columns: {id: $id},
         _set: {
           name: $name,
           color: $color,
           confetti: $confetti,
-          is_final: $is_final
+          is_final: $is_final,
+          activate_calls: $activate_calls,
+          calling_time: $calling_time
         }
       ) {
         id
@@ -236,6 +240,8 @@ const QUERIES = {
         color
         confetti
         is_final
+        activate_calls
+        calling_time
       }
     }
   `,
@@ -521,7 +527,17 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
 
   updateList: async (
     listId: string,
-    data: Partial<Pick<KanbanList, "name" | "color" | "confetti" | "is_final">>
+    data: Partial<
+      Pick<
+        KanbanList,
+        | "name"
+        | "color"
+        | "confetti"
+        | "is_final"
+        | "activate_calls"
+        | "calling_time"
+      >
+    >
   ) => {
     const currentState = get();
 
@@ -533,6 +549,8 @@ const useKanbanStore = create<KanbanState>((set, get) => ({
         color: data.color,
         confetti: data.confetti ?? false,
         is_final: data.is_final ?? false,
+        activate_calls: data.activate_calls ?? false,
+        calling_time: data.calling_time ?? null,
       }
     );
 

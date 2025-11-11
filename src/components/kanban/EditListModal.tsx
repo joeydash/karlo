@@ -1,7 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { X, List, Palette, Loader2, AlertCircle, Sparkles, CheckCircle, Phone, Clock } from 'lucide-react';
-import { KanbanList } from '../../types/kanban';
-import { useKanban } from '../../hooks/useKanban';
+import React, { useState, useEffect } from "react";
+import {
+  X,
+  List,
+  Palette,
+  Loader2,
+  AlertCircle,
+  Sparkles,
+  CheckCircle,
+  Phone,
+  Clock,
+} from "lucide-react";
+import { KanbanList } from "../../types/kanban";
+import { useKanban } from "../../hooks/useKanban";
 
 interface EditListModalProps {
   isOpen: boolean;
@@ -9,46 +19,60 @@ interface EditListModalProps {
   list: KanbanList | null;
 }
 
-const EditListModal: React.FC<EditListModalProps> = ({ isOpen, onClose, list }) => {
+const EditListModal: React.FC<EditListModalProps> = ({
+  isOpen,
+  onClose,
+  list,
+}) => {
   const [formData, setFormData] = useState({
-    name: '',
-    color: '',
+    name: "",
+    color: "",
     confetti: false,
     is_final: false,
     activate_calls: false,
     call_absent_members: false,
     call_leave_members: false,
-    call_time: ''
+    call_time: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const { updateList } = useKanban();
 
   const listColors = [
-    '#3B82F6', // Blue
-    '#EF4444', // Red
-    '#10B981', // Green
-    '#F59E0B', // Yellow
-    '#8B5CF6', // Purple
-    '#EC4899', // Pink
-    '#06B6D4', // Cyan
-    '#84CC16', // Lime
-    '#F97316', // Orange
-    '#6366F1', // Indigo
+    "#3B82F6", // Blue
+    "#EF4444", // Red
+    "#10B981", // Green
+    "#F59E0B", // Yellow
+    "#8B5CF6", // Purple
+    "#EC4899", // Pink
+    "#06B6D4", // Cyan
+    "#84CC16", // Lime
+    "#F97316", // Orange
+    "#6366F1", // Indigo
   ];
 
   // Initialize form data when list changes
   useEffect(() => {
     if (list && isOpen) {
+      // Convert calling_time from database format (HH:MM:SS+TZ or null) to HH:MM format
+      let timeValue = "";
+      if (list.calling_time) {
+        // Extract HH:MM from formats like "09:30:00+00" or "09:30:00"
+        const timeMatch = list.calling_time.match(/^(\d{2}:\d{2})/);
+        if (timeMatch) {
+          timeValue = timeMatch[1];
+        }
+      }
+
       setFormData({
-        name: list.name || '',
-        color: list.color || '#3B82F6',
+        name: list.name || "",
+        color: list.color || "#3B82F6",
         confetti: list.confetti || false,
         is_final: list.is_final || false,
-        activate_calls: false,
+        activate_calls: list.activate_calls || false,
         call_absent_members: false,
         call_leave_members: false,
-        call_time: ''
+        call_time: timeValue,
       });
       setErrors({});
     }
@@ -60,7 +84,7 @@ const EditListModal: React.FC<EditListModalProps> = ({ isOpen, onClose, list }) 
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'List name is required';
+      newErrors.name = "List name is required";
     }
 
     setErrors(newErrors);
@@ -69,7 +93,7 @@ const EditListModal: React.FC<EditListModalProps> = ({ isOpen, onClose, list }) 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setIsLoading(true);
@@ -78,15 +102,17 @@ const EditListModal: React.FC<EditListModalProps> = ({ isOpen, onClose, list }) 
       name: formData.name.trim(),
       color: formData.color,
       confetti: formData.confetti,
-      is_final: formData.is_final
+      is_final: formData.is_final,
+      activate_calls: formData.activate_calls,
+      calling_time: formData.activate_calls ? formData.call_time : undefined,
     });
-    
+
     setIsLoading(false);
 
     if (result.success) {
       onClose();
     } else {
-      setErrors({ name: result.message || 'Failed to update list' });
+      setErrors({ name: result.message || "Failed to update list" });
     }
   };
 
@@ -101,15 +127,19 @@ const EditListModal: React.FC<EditListModalProps> = ({ isOpen, onClose, list }) 
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
           <div className="flex items-center space-x-3">
-            <div 
+            <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
               style={{ backgroundColor: formData.color }}
             >
               <List className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Edit List</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-300">Change list name and color</p>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                Edit List
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Change list name and color
+              </p>
             </div>
           </div>
           <button
@@ -121,215 +151,284 @@ const EditListModal: React.FC<EditListModalProps> = ({ isOpen, onClose, list }) 
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
+        <form
+          onSubmit={handleSubmit}
+          className="flex-1 flex flex-col overflow-hidden"
+        >
           <div className="flex-1 overflow-y-auto p-6 space-y-6 pinned-boards-scroll">
-          {/* List Name */}
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              List Name *
-            </label>
-            <input
-              id="name"
-              type="text"
-              value={formData.name}
-              onChange={(e) => {
-                setFormData(prev => ({ ...prev, name: e.target.value }));
-                if (errors.name) setErrors(prev => ({ ...prev, name: '' }));
-              }}
-              className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 ${
-                errors.name ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 dark:border-gray-600 focus:border-blue-500 dark:focus:ring-blue-400'
-              } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
-              placeholder="Enter list name..."
-            />
-            {errors.name && (
-              <div className="mt-1 flex items-center text-sm text-red-600 dark:text-red-400">
-                <AlertCircle className="h-4 w-4 mr-1" />
-                {errors.name}
-              </div>
-            )}
+            {/* List Name */}
+            <div>
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                List Name *
+              </label>
+              <input
+                id="name"
+                type="text"
+                value={formData.name}
+                onChange={(e) => {
+                  setFormData((prev) => ({ ...prev, name: e.target.value }));
+                  if (errors.name) setErrors((prev) => ({ ...prev, name: "" }));
+                }}
+                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 ${
+                  errors.name
+                    ? "border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-500"
+                    : "border-gray-200 dark:border-gray-600 focus:border-blue-500 dark:focus:ring-blue-400"
+                } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                placeholder="Enter list name..."
+              />
+              {errors.name && (
+                <div className="mt-1 flex items-center text-sm text-red-600 dark:text-red-400">
+                  <AlertCircle className="h-4 w-4 mr-1" />
+                  {errors.name}
+                </div>
+              )}
 
-            {/* Created By Info */}
-            {list?.auth_fullname && (
-              <div className="mt-2 flex items-center text-xs text-gray-500 dark:text-gray-400">
-                <span className="mr-2">Created by:</span>
-                <div className="flex items-center space-x-2">
-                  {list.auth_fullname.dp ? (
-                    <img
-                      src={list.auth_fullname.dp}
-                      alt={list.auth_fullname.fullname}
-                      className="w-5 h-5 rounded-full object-cover border border-gray-200 dark:border-gray-600"
+              {/* Created By Info */}
+              {list?.auth_fullname && (
+                <div className="mt-2 flex items-center text-xs text-gray-500 dark:text-gray-400">
+                  <span className="mr-2">Created by:</span>
+                  <div className="flex items-center space-x-2">
+                    {list.auth_fullname.dp ? (
+                      <img
+                        src={list.auth_fullname.dp}
+                        alt={list.auth_fullname.fullname}
+                        className="w-5 h-5 rounded-full object-cover border border-gray-200 dark:border-gray-600"
+                      />
+                    ) : (
+                      <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <span className="text-[10px] font-medium text-white">
+                          {list.auth_fullname.fullname
+                            .split(" ")
+                            .map((n) => n.charAt(0))
+                            .join("")
+                            .toUpperCase()
+                            .slice(0, 2)}
+                        </span>
+                      </div>
+                    )}
+                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                      {list.auth_fullname.fullname}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* List Color */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                <Palette className="h-4 w-4 inline mr-1" />
+                List Color
+              </label>
+              <div className="flex flex-wrap gap-3">
+                {listColors.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, color }))}
+                    className={`w-10 h-10 rounded-xl border-2 transition-all duration-200 ${
+                      formData.color === color
+                        ? "border-gray-400 dark:border-gray-500 scale-110"
+                        : "border-gray-200 dark:border-gray-600 hover:scale-105"
+                    }`}
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Confetti Toggle */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                <Sparkles className="h-4 w-4 inline mr-1" />
+                Celebration Effects
+              </label>
+              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center">
+                    <Sparkles className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      Confetti Animation
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Show confetti when cards are moved to this list
+                    </p>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.confetti}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        confetti: e.target.checked,
+                      }))
+                    }
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+            </div>
+
+            {/* Final List Toggle */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                <CheckCircle className="h-4 w-4 inline mr-1" />
+                List Type
+              </label>
+              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center">
+                    <CheckCircle className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      Final List
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Mark cards as complete when moved to this list
+                    </p>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.is_final}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        is_final: e.target.checked,
+                      }))
+                    }
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"></div>
+                </label>
+              </div>
+            </div>
+
+            {/* Activate Calls Toggle */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                <Phone className="h-4 w-4 inline mr-1" />
+                Call Management
+              </label>
+              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-xl flex items-center justify-center">
+                    <Phone className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      Activate Calls
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Enable automated call management for this list
+                    </p>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.activate_calls}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        activate_calls: e.target.checked,
+                      }))
+                    }
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+            </div>
+
+            {/* Call Settings - Only shown when activate_calls is true */}
+            {formData.activate_calls && (
+              <div className="space-y-4 pl-4 border-l-2 border-blue-400">
+                {/* Call Absent Members */}
+                <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      Call Absent Members
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Call members who haven't marked attendance
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.call_absent_members}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          call_absent_members: e.target.checked,
+                        }))
+                      }
+                      className="sr-only peer"
                     />
-                  ) : (
-                    <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                      <span className="text-[10px] font-medium text-white">
-                        {list.auth_fullname.fullname.split(' ').map(n => n.charAt(0)).join('').toUpperCase().slice(0, 2)}
-                      </span>
-                    </div>
-                  )}
-                  <span className="font-medium text-gray-700 dark:text-gray-300">{list.auth_fullname.fullname}</span>
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+
+                {/* Call Leave Members */}
+                <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      Call Leave-Taking Members
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Call members who are on leave
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.call_leave_members}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          call_leave_members: e.target.checked,
+                        }))
+                      }
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+
+                {/* Time to Call */}
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                    <Clock className="h-4 w-4 inline mr-1" />
+                    Time to Call
+                  </label>
+                  <input
+                    type="time"
+                    value={formData.call_time}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        call_time: e.target.value,
+                      }))
+                    }
+                    className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Set the time when calls should be made
+                  </p>
                 </div>
               </div>
             )}
-          </div>
-
-          {/* List Color */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              <Palette className="h-4 w-4 inline mr-1" />
-              List Color
-            </label>
-            <div className="flex flex-wrap gap-3">
-              {listColors.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, color }))}
-                  className={`w-10 h-10 rounded-xl border-2 transition-all duration-200 ${
-                    formData.color === color ? 'border-gray-400 dark:border-gray-500 scale-110' : 'border-gray-200 dark:border-gray-600 hover:scale-105'
-                  }`}
-                  style={{ backgroundColor: color }}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Confetti Toggle */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              <Sparkles className="h-4 w-4 inline mr-1" />
-              Celebration Effects
-            </label>
-            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center">
-                  <Sparkles className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">Confetti Animation</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Show confetti when cards are moved to this list</p>
-                </div>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.confetti}
-                  onChange={(e) => setFormData(prev => ({ ...prev, confetti: e.target.checked }))}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-          </div>
-
-          {/* Final List Toggle */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              <CheckCircle className="h-4 w-4 inline mr-1" />
-              List Type
-            </label>
-            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center">
-                  <CheckCircle className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">Final List</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Mark cards as complete when moved to this list</p>
-                </div>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.is_final}
-                  onChange={(e) => setFormData(prev => ({ ...prev, is_final: e.target.checked }))}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"></div>
-              </label>
-            </div>
-          </div>
-
-          {/* Activate Calls Toggle */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              <Phone className="h-4 w-4 inline mr-1" />
-              Call Management
-            </label>
-            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-xl flex items-center justify-center">
-                  <Phone className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">Activate Calls</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Enable automated call management for this list</p>
-                </div>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.activate_calls}
-                  onChange={(e) => setFormData(prev => ({ ...prev, activate_calls: e.target.checked }))}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-          </div>
-
-          {/* Call Settings - Only shown when activate_calls is true */}
-          {formData.activate_calls && (
-            <div className="space-y-4 pl-4 border-l-2 border-blue-400">
-              {/* Call Absent Members */}
-              <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">Call Absent Members</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Call members who haven't marked attendance</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.call_absent_members}
-                    onChange={(e) => setFormData(prev => ({ ...prev, call_absent_members: e.target.checked }))}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
-
-              {/* Call Leave Members */}
-              <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">Call Leave-Taking Members</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Call members who are on leave</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.call_leave_members}
-                    onChange={(e) => setFormData(prev => ({ ...prev, call_leave_members: e.target.checked }))}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
-
-              {/* Time to Call */}
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
-                  <Clock className="h-4 w-4 inline mr-1" />
-                  Time to Call
-                </label>
-                <input
-                  type="time"
-                  value={formData.call_time}
-                  onChange={(e) => setFormData(prev => ({ ...prev, call_time: e.target.value }))}
-                  className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Set the time when calls should be made</p>
-              </div>
-            </div>
-          )}
           </div>
 
           {/* Actions */}
@@ -352,7 +451,7 @@ const EditListModal: React.FC<EditListModalProps> = ({ isOpen, onClose, list }) 
                   Saving...
                 </>
               ) : (
-                'Save Changes'
+                "Save Changes"
               )}
             </button>
           </div>

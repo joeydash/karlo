@@ -1309,8 +1309,6 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
                     key={option.value}
                     type="button"
                     onClick={() => {
-                      if (!isAdmin) return;
-
                       handleFormChange("story_points", option.value);
 
                       // Auto-update due date based on story points
@@ -1330,10 +1328,7 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
                         handleFormChange("due_date", "");
                       }
                     }}
-                    disabled={!isAdmin}
                     className={`flex-shrink-0 px-4 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 ${
-                      !isAdmin ? "cursor-not-allowed opacity-60" : ""
-                    } ${
                       formData.story_points === option.value
                         ? "bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-md scale-105 ring-2 ring-purple-300 dark:ring-purple-700"
                         : option.special
@@ -1341,9 +1336,7 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
                         : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-br hover:from-blue-50 hover:to-purple-50 dark:hover:bg-gradient-to-br dark:hover:from-blue-900/20 dark:hover:to-purple-900/20 border border-gray-200 dark:border-gray-600 hover:border-purple-300 dark:hover:border-purple-700"
                     }`}
                     title={
-                      !isAdmin
-                        ? "Only admins can edit story points"
-                        : option.value && option.days > 0
+                      option.value && option.days > 0
                         ? `Due in ${option.days} day${
                             option.days > 1 ? "s" : ""
                           }`
