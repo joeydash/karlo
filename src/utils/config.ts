@@ -1,4 +1,5 @@
 export const AUTH_CONFIG = {
+  AUTH_GRAPHQL_URL: "https://arc.vocallabs.ai/v1/graphql",
   GRAPHQL_URL: "https://db.subspace.money/v1/graphql",
   DEFAULT_COUNTRY_CODE: "+91",
   // For testing only

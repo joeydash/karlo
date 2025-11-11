@@ -1,8 +1,16 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { AuthState, RegisterResponse, VerifyOTPResponse, RefreshTokenResponse, LogoutResponse, UpdateProfileResponse } from '../types/auth';
-import { graphqlRequest, MUTATIONS } from '../utils/graphql';
-import { AUTH_CONFIG } from '../utils/config';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import {
+  AuthState,
+  RegisterResponse,
+  VerifyOTPResponse,
+  RefreshTokenResponse,
+  LogoutResponse,
+  UpdateProfileResponse,
+} from "../types/auth";
+import { graphqlRequest, MUTATIONS } from "../utils/graphql";
+import { AUTH_CONFIG } from "../utils/config";
+import { getRecaptchaToken } from "../utils/recaptcha";
 
 // Role fetching query
 const ROLE_QUERY = `
@@ -62,13 +70,15 @@ const TOKEN_REFRESH_CONFIG = {
 const shouldRefreshToken = (lastRefresh: number) => {
   const now = Date.now();
   const timeSinceRefresh = now - lastRefresh;
-  return timeSinceRefresh >= (TOKEN_REFRESH_CONFIG.INTERVAL - TOKEN_REFRESH_CONFIG.TOKEN_EXPIRY_BUFFER);
+  return (
+    timeSinceRefresh >=
+    TOKEN_REFRESH_CONFIG.INTERVAL - TOKEN_REFRESH_CONFIG.TOKEN_EXPIRY_BUFFER
+  );
 };
-
 
 // Helper to detect if app is in background/foreground
 const isAppVisible = () => {
-  return !document.hidden && document.visibilityState === 'visible';
+  return !document.hidden && document.visibilityState === "visible";
 };
 const useAuthStore = create<AuthState>()(
   persist(
@@ -91,7 +101,7 @@ const useAuthStore = create<AuthState>()(
       startRefreshInterval: () => {
         // Clear any existing interval first
         if ((window as any).tokenRefreshInterval) {
-          console.log('🛑 Clearing existing token refresh interval');
+          console.log("🛑 Clearing existing token refresh interval");
           clearInterval((window as any).tokenRefreshInterval);
           delete (window as any).tokenRefreshInterval;
         }
@@ -102,83 +112,122 @@ const useAuthStore = create<AuthState>()(
           delete (window as any).visibilityCheckInterval;
         }
 
-        const CHECK_INTERVAL = 10 * 60 * 1000
+        const CHECK_INTERVAL = 10 * 60 * 1000;
 
         // Main refresh interval - more frequent checks
         const refreshInterval = setInterval(() => {
-          console.log('🔄 Token refresh interval triggered');
+          console.log("🔄 Token refresh interval triggered");
           const currentState = get();
-          
-          if (!currentState.authenticated || !currentState.user || currentState.isRefreshing) {
-            console.log('❌ Skipping refresh - not authenticated, no user, or already refreshing');
+
+          if (
+            !currentState.authenticated ||
+            !currentState.user ||
+            currentState.isRefreshing
+          ) {
+            console.log(
+              "❌ Skipping refresh - not authenticated, no user, or already refreshing"
+            );
             return;
           }
-          
+
           // Check if token needs refresh based on time
           if (shouldRefreshToken(currentState.lastTokenRefresh || 0)) {
-            console.log('✅ Token needs refresh based on time, calling refreshToken()');
+            console.log(
+              "✅ Token needs refresh based on time, calling refreshToken()"
+            );
             currentState.refreshTokenWithRetry();
           } else {
-            console.log('⏭️ Token refresh not needed yet');
+            console.log("⏭️ Token refresh not needed yet");
           }
         }, CHECK_INTERVAL); // Check twice as often as refresh interval
-        
+
         (window as any).tokenRefreshInterval = refreshInterval;
-        console.log('🚀 Token refresh interval started with ID:', refreshInterval, 'Check interval:', TOKEN_REFRESH_CONFIG.INTERVAL / 2 / 1000 / 60, 'minutes');
-        console.log(`🚀 Token refresh check running every ${CHECK_INTERVAL / 1000 / 60} minutes`)
+        console.log(
+          "🚀 Token refresh interval started with ID:",
+          refreshInterval,
+          "Check interval:",
+          TOKEN_REFRESH_CONFIG.INTERVAL / 2 / 1000 / 60,
+          "minutes"
+        );
+        console.log(
+          `🚀 Token refresh check running every ${
+            CHECK_INTERVAL / 1000 / 60
+          } minutes`
+        );
 
         // Visibility change handler - refresh when app becomes visible
         const handleVisibilityChange = () => {
-          console.log('👁️ Visibility changed, document.hidden:', document.hidden);
-          
+          console.log(
+            "👁️ Visibility changed, document.hidden:",
+            document.hidden
+          );
+
           if (isAppVisible()) {
-            console.log('🌟 App became visible - checking if token refresh needed');
+            console.log(
+              "🌟 App became visible - checking if token refresh needed"
+            );
             const currentState = get();
-            
-            if (currentState.authenticated && currentState.user && !currentState.isRefreshing) {
+
+            if (
+              currentState.authenticated &&
+              currentState.user &&
+              !currentState.isRefreshing
+            ) {
               // Check if we need to refresh based on time since last refresh
               if (shouldRefreshToken(currentState.lastTokenRefresh || 0)) {
-                console.log('🔄 App visible and token needs refresh - refreshing now');
+                console.log(
+                  "🔄 App visible and token needs refresh - refreshing now"
+                );
                 currentState.refreshTokenWithRetry();
               } else {
-                console.log('✅ App visible but token is still fresh');
+                console.log("✅ App visible but token is still fresh");
               }
             }
           }
         };
 
         // Add visibility change listener
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-        
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
         // Add focus/blur listeners for additional reliability
         const handleFocus = () => {
-          console.log('🎯 Window focused - checking token freshness');
+          console.log("🎯 Window focused - checking token freshness");
           const currentState = get();
-          if (currentState.authenticated && currentState.user && !currentState.isRefreshing) {
+          if (
+            currentState.authenticated &&
+            currentState.user &&
+            !currentState.isRefreshing
+          ) {
             if (shouldRefreshToken(currentState.lastTokenRefresh || 0)) {
-              console.log('🔄 Window focused and token needs refresh');
+              console.log("🔄 Window focused and token needs refresh");
               currentState.refreshTokenWithRetry();
             }
           }
         };
 
-        window.addEventListener('focus', handleFocus);
-        
+        window.addEventListener("focus", handleFocus);
+
         // Store cleanup function
         (window as any).cleanupTokenRefresh = () => {
-          document.removeEventListener('visibilitychange', handleVisibilityChange);
-          window.removeEventListener('focus', handleFocus);
+          document.removeEventListener(
+            "visibilitychange",
+            handleVisibilityChange
+          );
+          window.removeEventListener("focus", handleFocus);
         };
       },
 
       // Helper function to clear refresh interval
       clearRefreshInterval: () => {
         if ((window as any).tokenRefreshInterval) {
-          console.log('🛑 Clearing token refresh interval with ID:', (window as any).tokenRefreshInterval);
+          console.log(
+            "🛑 Clearing token refresh interval with ID:",
+            (window as any).tokenRefreshInterval
+          );
           clearInterval((window as any).tokenRefreshInterval);
           delete (window as any).tokenRefreshInterval;
         } else {
-          console.log('⚠️ No token refresh interval found to clear');
+          console.log("⚠️ No token refresh interval found to clear");
         }
 
         if ((window as any).visibilityCheckInterval) {
@@ -194,72 +243,90 @@ const useAuthStore = create<AuthState>()(
       },
 
       initialize: () => {
-  const state = get();
-  if (state.token && state.user) {
-    set({ authenticated: true, initialized: true });
+        const state = get();
+        if (state.token && state.user) {
+          set({ authenticated: true, initialized: true });
 
-    // Make auth store available globally for organization store
-    (window as any).__authStore = get();
+          // Make auth store available globally for organization store
+          (window as any).__authStore = get();
 
-    // Set initial refresh timestamp if not set
-    if (!state.lastTokenRefresh) {
-      set({ lastTokenRefresh: Date.now() });
-    }
+          // Set initial refresh timestamp if not set
+          if (!state.lastTokenRefresh) {
+            set({ lastTokenRefresh: Date.now() });
+          }
 
-    // 🔥 NEW: Force refresh on init if token is stale/expired
-    if (shouldRefreshToken(state.lastTokenRefresh || 0)) {
-      console.log("⏳ Token may be stale - refreshing immediately on initialize()");
-      get().refreshTokenWithRetry();
-    } else {
-      console.log("✅ Token still fresh on initialize()");
-    }
+          // 🔥 NEW: Force refresh on init if token is stale/expired
+          if (shouldRefreshToken(state.lastTokenRefresh || 0)) {
+            console.log(
+              "⏳ Token may be stale - refreshing immediately on initialize()"
+            );
+            get().refreshTokenWithRetry();
+          } else {
+            console.log("✅ Token still fresh on initialize()");
+          }
 
-    // Always fetch user role and profile data to ensure they're up to date
-    const fetchData = async () => {
-      await get().fetchUserRole();
-      await get().fetchUserProfile();
-    };
-    fetchData();
+          // Always fetch user role and profile data to ensure they're up to date
+          const fetchData = async () => {
+            await get().fetchUserRole();
+            await get().fetchUserProfile();
+          };
+          fetchData();
 
-    // Start token refresh interval using helper function
-    get().startRefreshInterval();
-  } else {
-    set({ initialized: true });
-    console.log("⚠️ No token or user found during initialization");
-  }
-},
-
+          // Start token refresh interval using helper function
+          get().startRefreshInterval();
+        } else {
+          set({ initialized: true });
+          console.log("⚠️ No token or user found during initialization");
+        }
+      },
 
       requestOTP: async (phone: string) => {
         set({ isRequestingOTP: true, error: null });
-        
-        const { data, error } = await graphqlRequest<RegisterResponse>(
-          MUTATIONS.REGISTER,
-          { phone }
-        );
 
-        set({ isRequestingOTP: false });
+        try {
+          // Get reCAPTCHA token
+          const recaptchaToken = await getRecaptchaToken("register");
 
-        if (error) {
-          set({ error });
-          return { success: false, message: error };
+          const { data, error } = await graphqlRequest<RegisterResponse>(
+            MUTATIONS.REGISTER,
+            { phone, recaptcha_token: recaptchaToken },
+            undefined,
+            true // Use auth URL
+          );
+
+          set({ isRequestingOTP: false });
+
+          if (error) {
+            set({ error });
+            return { success: false, message: error };
+          }
+
+          if (data?.registerWithoutPasswordV3?.status === "success") {
+            return { success: true };
+          }
+
+          const errorMsg = "Failed to send OTP. Please try again.";
+          set({ error: errorMsg });
+          return { success: false, message: errorMsg };
+        } catch (recaptchaError) {
+          set({ isRequestingOTP: false });
+          const errorMsg =
+            recaptchaError instanceof Error
+              ? `reCAPTCHA error: ${recaptchaError.message}`
+              : "Failed to verify reCAPTCHA. Please try again.";
+          set({ error: errorMsg });
+          return { success: false, message: errorMsg };
         }
-
-        if (data?.registerWithoutPasswordV2?.status === 'success') {
-          return { success: true };
-        }
-
-        const errorMsg = 'Failed to send OTP. Please try again.';
-        set({ error: errorMsg });
-        return { success: false, message: errorMsg };
       },
 
       verifyOTP: async (phone: string, otp: string) => {
         set({ isVerifyingOTP: true, error: null });
-        
+
         const { data, error } = await graphqlRequest<VerifyOTPResponse>(
           MUTATIONS.VERIFY_OTP,
-          { phone1: phone, otp1: otp }
+          { phone1: phone, otp1: otp },
+          undefined,
+          true // Use auth URL
         );
 
         set({ isVerifyingOTP: false });
@@ -269,14 +336,20 @@ const useAuthStore = create<AuthState>()(
           return { success: false, message: error };
         }
 
-        const verifyData = data?.verifyOTPV2;
-        if (verifyData?.auth_token && verifyData?.id) {
+        const verifyData = data?.verifyOTPV3 || data?.verifyOTPV2;
+
+        // Check if we have valid response data
+        if (
+          verifyData?.status === "success" &&
+          verifyData?.auth_token &&
+          verifyData?.id
+        ) {
           const user = {
             id: verifyData.id,
             phone,
             refresh_token: verifyData.refresh_token,
-            fullname: null,
-            email: null,
+            fullname: undefined,
+            email: undefined,
           };
 
           set({
@@ -300,32 +373,38 @@ const useAuthStore = create<AuthState>()(
           return { success: true };
         }
 
-        const errorMsg = 'Invalid OTP. Please try again.';
+        const errorMsg = "Invalid OTP. Please try again.";
         set({ error: errorMsg });
         return { success: false, message: errorMsg };
       },
 
       // Enhanced refresh token function with retry logic
       refreshTokenWithRetry: async (attempt: number = 1) => {
-        console.log(`🔄 refreshTokenWithRetry() called - attempt ${attempt}/${TOKEN_REFRESH_CONFIG.RETRY_ATTEMPTS}`);
+        console.log(
+          `🔄 refreshTokenWithRetry() called - attempt ${attempt}/${TOKEN_REFRESH_CONFIG.RETRY_ATTEMPTS}`
+        );
         const state = get();
-        
+
         // Prevent multiple simultaneous refresh requests
         if (state.isRefreshing) {
-          console.log('⏳ Token refresh already in progress, skipping');
+          console.log("⏳ Token refresh already in progress, skipping");
           return;
         }
-        
-        if (!state.user?.refresh_token || !state.user?.id || !state.authenticated) {
-          console.log('❌ Cannot refresh token - missing data:', {
+
+        if (
+          !state.user?.refresh_token ||
+          !state.user?.id ||
+          !state.authenticated
+        ) {
+          console.log("❌ Cannot refresh token - missing data:", {
             hasRefreshToken: !!state.user?.refresh_token,
             hasUserId: !!state.user?.id,
-            isAuthenticated: state.authenticated
+            isAuthenticated: state.authenticated,
           });
           return;
         }
 
-        console.log('📡 Making refresh token request to GraphQL endpoint');
+        console.log("📡 Making refresh token request to GraphQL endpoint");
         set({ isRefreshing: true });
 
         try {
@@ -335,25 +414,32 @@ const useAuthStore = create<AuthState>()(
               refresh_token: state.user.refresh_token,
               user_id: state.user.id,
             },
-            undefined // Don't use the old token for refresh
+            undefined, // Don't use the old token for refresh
+            true // Use auth URL
           );
 
           set({ isRefreshing: false });
 
           if (error) {
             console.error(`Token refresh failed on attempt ${attempt}:`, error);
-            
+
             // Retry logic
             if (attempt < TOKEN_REFRESH_CONFIG.RETRY_ATTEMPTS) {
-              console.log(`🔄 Retrying token refresh in ${TOKEN_REFRESH_CONFIG.RETRY_DELAY}ms (attempt ${attempt + 1})`);
+              console.log(
+                `🔄 Retrying token refresh in ${
+                  TOKEN_REFRESH_CONFIG.RETRY_DELAY
+                }ms (attempt ${attempt + 1})`
+              );
               setTimeout(() => {
                 get().refreshTokenWithRetry(attempt + 1);
               }, TOKEN_REFRESH_CONFIG.RETRY_DELAY * attempt); // Exponential backoff
               return;
             }
-            
+
             // If all retries failed, logout user
-            console.error('❌ All token refresh attempts failed, logging out user');
+            console.error(
+              "❌ All token refresh attempts failed, logging out user"
+            );
             const currentState = get();
             currentState.logout();
             return;
@@ -361,51 +447,67 @@ const useAuthStore = create<AuthState>()(
 
           const refreshData = data?.refreshToken;
           if (refreshData?.auth_token) {
-            console.log('✅ Token refresh successful - updating auth state');
+            console.log("✅ Token refresh successful - updating auth state");
             set({
               token: refreshData.auth_token,
               lastTokenRefresh: Date.now(),
               user: {
                 ...state.user,
-                refresh_token: refreshData.refresh_token || state.user.refresh_token,
+                refresh_token:
+                  refreshData.refresh_token || state.user.refresh_token,
               },
             });
-            
+
             // Update the global auth store reference
             (window as any).__authStore = get();
           } else {
-            console.log('❌ Token refresh failed - no auth_token in response');
-            
+            console.log("❌ Token refresh failed - no auth_token in response");
+
             // Retry logic for invalid response
             if (attempt < TOKEN_REFRESH_CONFIG.RETRY_ATTEMPTS) {
-              console.log(`🔄 Retrying token refresh due to invalid response (attempt ${attempt + 1})`);
+              console.log(
+                `🔄 Retrying token refresh due to invalid response (attempt ${
+                  attempt + 1
+                })`
+              );
               setTimeout(() => {
                 get().refreshTokenWithRetry(attempt + 1);
               }, TOKEN_REFRESH_CONFIG.RETRY_DELAY * attempt);
               return;
             }
-            
+
             // If all retries failed, logout user
-            console.error('❌ All token refresh attempts failed due to invalid response, logging out user');
+            console.error(
+              "❌ All token refresh attempts failed due to invalid response, logging out user"
+            );
             const currentState = get();
             currentState.logout();
           }
         } catch (networkError) {
-          console.error(`Network error during token refresh attempt ${attempt}:`, networkError);
+          console.error(
+            `Network error during token refresh attempt ${attempt}:`,
+            networkError
+          );
           set({ isRefreshing: false });
-          
+
           // Retry on network errors
           if (attempt < TOKEN_REFRESH_CONFIG.RETRY_ATTEMPTS) {
-            console.log(`🔄 Retrying token refresh due to network error (attempt ${attempt + 1})`);
+            console.log(
+              `🔄 Retrying token refresh due to network error (attempt ${
+                attempt + 1
+              })`
+            );
             setTimeout(() => {
               get().refreshTokenWithRetry(attempt + 1);
             }, TOKEN_REFRESH_CONFIG.RETRY_DELAY * attempt);
             return;
           }
-          
+
           // If all retries failed due to network issues, don't logout immediately
           // The user might be temporarily offline
-          console.error('❌ All token refresh attempts failed due to network issues');
+          console.error(
+            "❌ All token refresh attempts failed due to network issues"
+          );
         }
       },
       refreshToken: async () => {
@@ -416,7 +518,7 @@ const useAuthStore = create<AuthState>()(
       fetchUserRole: async () => {
         const state = get();
         if (!state.user?.id || !state.token) {
-          console.log('❌ Cannot fetch user role - missing user ID or token');
+          console.log("❌ Cannot fetch user role - missing user ID or token");
           return;
         }
 
@@ -428,14 +530,14 @@ const useAuthStore = create<AuthState>()(
           );
 
           if (error) {
-            console.error('❌ Failed to fetch user role:', error);
+            console.error("❌ Failed to fetch user role:", error);
             return;
           }
 
           const members = data?.karlo_organization_members;
           if (members && members.length > 0) {
             const memberId = members[0].id;
-            const role = members[0].role || 'member';
+            const role = members[0].role || "member";
             const organizationId = members[0].organization_id;
 
             set({
@@ -447,23 +549,27 @@ const useAuthStore = create<AuthState>()(
               },
             });
           } else {
-            console.log('ℹ️ No organization membership found, defaulting to member role');
+            console.log(
+              "ℹ️ No organization membership found, defaulting to member role"
+            );
             set({
               user: {
                 ...state.user,
-                role: 'member',
+                role: "member",
               },
             });
           }
         } catch (error) {
-          console.error('❌ Error fetching user role:', error);
+          console.error("❌ Error fetching user role:", error);
         }
       },
 
       fetchUserProfile: async () => {
         const state = get();
         if (!state.user?.id || !state.token) {
-          console.log('❌ Cannot fetch user profile - missing user ID or token');
+          console.log(
+            "❌ Cannot fetch user profile - missing user ID or token"
+          );
           return;
         }
 
@@ -481,7 +587,7 @@ const useAuthStore = create<AuthState>()(
           );
 
           if (error) {
-            console.error('❌ Failed to fetch user profile:', error);
+            console.error("❌ Failed to fetch user profile:", error);
             return;
           }
 
@@ -496,16 +602,19 @@ const useAuthStore = create<AuthState>()(
               dp: profile?.dp || null,
             },
           });
-
         } catch (error) {
-          console.error('❌ Error fetching user profile:', error);
+          console.error("❌ Error fetching user profile:", error);
         }
       },
 
-      updateProfile: async (data: { fullname?: string; email?: string; dp?: string }) => {
+      updateProfile: async (data: {
+        fullname?: string;
+        email?: string;
+        dp?: string;
+      }) => {
         const state = get();
         if (!state.user?.id || !state.token) {
-          const errorMsg = 'Cannot update profile - user not authenticated';
+          const errorMsg = "Cannot update profile - user not authenticated";
           set({ error: errorMsg });
           return { success: false, message: errorMsg };
         }
@@ -517,16 +626,18 @@ const useAuthStore = create<AuthState>()(
           // If a field is not provided in data, use the existing user value
           const variables = {
             id: state.user.id,
-            fullname: data.fullname !== undefined ? data.fullname : state.user.fullname,
+            fullname:
+              data.fullname !== undefined ? data.fullname : state.user.fullname,
             email: data.email !== undefined ? data.email : state.user.email,
-            dp: data.dp !== undefined ? data.dp : (state.user as any).dp || '',
+            dp: data.dp !== undefined ? data.dp : (state.user as any).dp || "",
           };
 
-          const { data: responseData, error } = await graphqlRequest<UpdateProfileResponse>(
-            MUTATIONS.UPDATE_PROFILE,
-            variables,
-            state.token
-          );
+          const { data: responseData, error } =
+            await graphqlRequest<UpdateProfileResponse>(
+              MUTATIONS.UPDATE_PROFILE,
+              variables,
+              state.token
+            );
 
           set({ isUpdatingProfile: false });
 
@@ -548,12 +659,12 @@ const useAuthStore = create<AuthState>()(
             return { success: true };
           }
 
-          const errorMsg = 'Failed to update profile';
+          const errorMsg = "Failed to update profile";
           set({ error: errorMsg });
           return { success: false, message: errorMsg };
         } catch (error) {
           set({ isUpdatingProfile: false });
-          const errorMsg = 'Network error occurred while updating profile';
+          const errorMsg = "Network error occurred while updating profile";
           set({ error: errorMsg });
           return { success: false, message: errorMsg };
         }
@@ -568,7 +679,7 @@ const useAuthStore = create<AuthState>()(
         // Clear global auth store reference
         delete (window as any).__authStore;
 
-        console.log('🚪 User logged out - clearing auth state');
+        console.log("🚪 User logged out - clearing auth state");
         set({
           authenticated: false,
           user: null,
@@ -583,12 +694,14 @@ const useAuthStore = create<AuthState>()(
       fetchBankDetails: async () => {
         const state = get();
         if (!state.user?.id || !state.token) {
-          console.log('❌ Cannot fetch bank details - missing user ID or token');
-          return { success: false, message: 'Not authenticated' };
+          console.log(
+            "❌ Cannot fetch bank details - missing user ID or token"
+          );
+          return { success: false, message: "Not authenticated" };
         }
 
         try {
-          console.log('📡 Fetching bank details for user:', state.user.id);
+          console.log("📡 Fetching bank details for user:", state.user.id);
           const { data, error } = await graphqlRequest(
             BANK_DETAILS_QUERY,
             { user_id: state.user.id },
@@ -596,29 +709,38 @@ const useAuthStore = create<AuthState>()(
           );
 
           if (error) {
-            console.error('❌ Failed to fetch bank details:', error);
+            console.error("❌ Failed to fetch bank details:", error);
             return { success: false, message: error };
           }
 
           const bankDetails = data?.whatsub_bank_account_details?.[0] || null;
-          console.log('✅ Bank details fetched:', bankDetails ? 'Exists' : 'Not found');
+          console.log(
+            "✅ Bank details fetched:",
+            bankDetails ? "Exists" : "Not found"
+          );
           return { success: true, data: bankDetails };
         } catch (error) {
-          console.error('❌ Error fetching bank details:', error);
-          return { success: false, message: 'Network error' };
+          console.error("❌ Error fetching bank details:", error);
+          return { success: false, message: "Network error" };
         }
       },
 
       // New: Update bank details (upsert)
-      updateBankDetails: async (details: { bank_account_number: string; ifsc: string; account_name: string }) => {
+      updateBankDetails: async (details: {
+        bank_account_number: string;
+        ifsc: string;
+        account_name: string;
+      }) => {
         const state = get();
         if (!state.user?.id || !state.token) {
-          console.log('❌ Cannot update bank details - missing user ID or token');
-          return { success: false, message: 'Not authenticated' };
+          console.log(
+            "❌ Cannot update bank details - missing user ID or token"
+          );
+          return { success: false, message: "Not authenticated" };
         }
 
         try {
-          console.log('📡 Updating bank details for user:', state.user.id);
+          console.log("📡 Updating bank details for user:", state.user.id);
           const { data, error } = await graphqlRequest(
             UPSERT_BANK_DETAILS,
             {
@@ -631,23 +753,25 @@ const useAuthStore = create<AuthState>()(
           );
 
           if (error) {
-            console.error('❌ Failed to update bank details:', error);
+            console.error("❌ Failed to update bank details:", error);
             return { success: false, message: error };
           }
 
-          console.log('✅ Bank details updated successfully');
-          return { success: true, data: data?.insert_whatsub_bank_account_details_one };
+          console.log("✅ Bank details updated successfully");
+          return {
+            success: true,
+            data: data?.insert_whatsub_bank_account_details_one,
+          };
         } catch (error) {
-          console.error('❌ Error updating bank details:', error);
-          return { success: false, message: 'Network error' };
+          console.error("❌ Error updating bank details:", error);
+          return { success: false, message: "Network error" };
         }
       },
-
 
       clearError: () => set({ error: null }),
     }),
     {
-      name: 'auth-storage',
+      name: "auth-storage",
       partialize: (state) => ({
         user: state.user,
         token: state.token,
