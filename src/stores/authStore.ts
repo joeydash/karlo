@@ -415,7 +415,7 @@ const useAuthStore = create<AuthState>()(
               user_id: state.user.id,
             },
             undefined, // Don't use the old token for refresh
-            true // Use auth URL
+            false // Use regular GraphQL URL
           );
 
           set({ isRefreshing: false });
