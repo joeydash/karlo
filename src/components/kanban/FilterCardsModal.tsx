@@ -54,7 +54,7 @@ const FilterCardsModal: React.FC<FilterCardsModalProps> = ({
     { value: "urgent", label: "Urgent", color: "bg-red-500" },
   ];
 
-  const storyPointsOptions = [1, 2, 3, 5, 8, 13, 20, 40];
+  const storyPointsOptions = [1, 2, 3, 4, 6, 8, 12, 14, 16, 20, 24, 32];
 
   const dueDateOptions = [
     { value: "", label: "All" },

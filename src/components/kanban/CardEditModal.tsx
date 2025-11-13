@@ -1293,17 +1293,32 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
                 <Hash className="h-4 w-4 inline mr-1" />
                 Story Points
               </label>
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide p-2">
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide p-2 w-full sm:w-auto">
                 {[
-                  { value: "", label: "None", special: true, days: 0 },
-                  { value: "1", label: "1", days: 0 },
-                  { value: "2", label: "2", days: 1 },
-                  { value: "3", label: "3", days: 2 },
-                  { value: "5", label: "5", days: 3 },
-                  { value: "8", label: "8", days: 4 },
-                  { value: "13", label: "13", days: 5 },
-                  { value: "20", label: "20", days: 7 },
-                  { value: "40", label: "40", days: 14 },
+                  {
+                    value: "",
+                    label: "None",
+                    special: true,
+                    days: 0,
+                    description: "",
+                  },
+                  { value: "1", label: "1", days: 0, description: "1 hour" },
+                  { value: "2", label: "2", days: 0, description: "2 hours" },
+                  { value: "3", label: "3", days: 0, description: "6 hours" },
+                  { value: "4", label: "4", days: 0, description: "8 hours" },
+                  { value: "6", label: "6", days: 1, description: "1 day" },
+                  { value: "8", label: "8", days: 2, description: "2 days" },
+                  { value: "12", label: "12", days: 3, description: "3 days" },
+                  { value: "14", label: "14", days: 4, description: "4 days" },
+                  { value: "16", label: "16", days: 4, description: "4 days" },
+                  { value: "20", label: "20", days: 5, description: "5 days" },
+                  { value: "24", label: "24", days: 7, description: "1 week" },
+                  {
+                    value: "32",
+                    label: "32",
+                    days: 14,
+                    description: "2 weeks",
+                  },
                 ].map((option) => (
                   <button
                     key={option.value}
@@ -1328,20 +1343,14 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
                         handleFormChange("due_date", "");
                       }
                     }}
-                    className={`flex-shrink-0 px-4 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 ${
+                    className={`flex-shrink-0 px-3 py-2 rounded-full text-xs font-semibold transition-all duration-200 ${
                       formData.story_points === option.value
                         ? "bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-md scale-105 ring-2 ring-purple-300 dark:ring-purple-700"
                         : option.special
                         ? "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
                         : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-br hover:from-blue-50 hover:to-purple-50 dark:hover:bg-gradient-to-br dark:hover:from-blue-900/20 dark:hover:to-purple-900/20 border border-gray-200 dark:border-gray-600 hover:border-purple-300 dark:hover:border-purple-700"
                     }`}
-                    title={
-                      option.value && option.days > 0
-                        ? `Due in ${option.days} day${
-                            option.days > 1 ? "s" : ""
-                          }`
-                        : undefined
-                    }
+                    title={option.description || undefined}
                   >
                     {option.label}
                   </button>
