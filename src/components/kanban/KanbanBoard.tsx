@@ -168,7 +168,8 @@ const KanbanBoard: React.FC = () => {
         console.error("Failed to save search term to localStorage:", error);
       }
     }
-  }, [searchTerm, boardId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm]); // Only run when searchTerm changes, not boardId
 
   // Save member filters to localStorage whenever they change
   React.useEffect(() => {
@@ -186,7 +187,8 @@ const KanbanBoard: React.FC = () => {
         console.error("Failed to save member filter to localStorage:", error);
       }
     }
-  }, [selectedMemberIds, boardId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedMemberIds]); // Only run when selectedMemberIds changes
 
   // Save card filters to localStorage
   React.useEffect(() => {
@@ -204,7 +206,8 @@ const KanbanBoard: React.FC = () => {
         console.error("Failed to save priority filter to localStorage:", error);
       }
     }
-  }, [selectedPriorities, boardId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPriorities]); // Only run when selectedPriorities changes
 
   React.useEffect(() => {
     if (boardId) {
@@ -221,7 +224,8 @@ const KanbanBoard: React.FC = () => {
         console.error("Failed to save tag filter to localStorage:", error);
       }
     }
-  }, [selectedTagIds, boardId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTagIds]); // Only run when selectedTagIds changes
 
   React.useEffect(() => {
     if (boardId) {
@@ -241,7 +245,8 @@ const KanbanBoard: React.FC = () => {
         );
       }
     }
-  }, [selectedStoryPoints, boardId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedStoryPoints]); // Only run when selectedStoryPoints changes
 
   React.useEffect(() => {
     if (boardId) {
@@ -258,7 +263,8 @@ const KanbanBoard: React.FC = () => {
         console.error("Failed to save due date filter to localStorage:", error);
       }
     }
-  }, [dueDateFilter, boardId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dueDateFilter]); // Only run when dueDateFilter changes
 
   React.useEffect(() => {
     if (boardId) {
@@ -272,7 +278,64 @@ const KanbanBoard: React.FC = () => {
         console.error("Failed to save priority sort to localStorage:", error);
       }
     }
-  }, [prioritySort, boardId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prioritySort]); // Only run when prioritySort changes
+
+  // Reset filters when board changes
+  React.useEffect(() => {
+    if (boardId) {
+      try {
+        // Load search term for new board
+        const savedSearch =
+          localStorage.getItem(`kanban-search-${boardId}`) || "";
+        setSearchTerm(savedSearch);
+
+        // Load member filters for new board
+        const savedMembers = localStorage.getItem(
+          `kanban-member-filter-${boardId}`
+        );
+        setSelectedMemberIds(savedMembers ? JSON.parse(savedMembers) : []);
+
+        // Load priority filters for new board
+        const savedPriorities = localStorage.getItem(
+          `kanban-priority-filter-${boardId}`
+        );
+        setSelectedPriorities(
+          savedPriorities ? JSON.parse(savedPriorities) : []
+        );
+
+        // Load tag filters for new board
+        const savedTags = localStorage.getItem(`kanban-tag-filter-${boardId}`);
+        setSelectedTagIds(savedTags ? JSON.parse(savedTags) : []);
+
+        // Load story points filters for new board
+        const savedPoints = localStorage.getItem(
+          `kanban-points-filter-${boardId}`
+        );
+        setSelectedStoryPoints(savedPoints ? JSON.parse(savedPoints) : []);
+
+        // Load due date filter for new board
+        const savedDueDate =
+          localStorage.getItem(`kanban-duedate-filter-${boardId}`) || "";
+        setDueDateFilter(savedDueDate);
+
+        // Load priority sort for new board
+        const savedPrioritySort =
+          localStorage.getItem(`kanban-priority-sort-${boardId}`) || "";
+        setPrioritySort(savedPrioritySort);
+      } catch (error) {
+        console.error("Failed to load filters for new board:", error);
+        // Reset to defaults on error
+        setSearchTerm("");
+        setSelectedMemberIds([]);
+        setSelectedPriorities([]);
+        setSelectedTagIds([]);
+        setSelectedStoryPoints([]);
+        setDueDateFilter("");
+        setPrioritySort("");
+      }
+    }
+  }, [boardId]);
 
   // Global keyboard shortcuts
   React.useEffect(() => {

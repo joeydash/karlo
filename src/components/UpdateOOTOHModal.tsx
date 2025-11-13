@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { X, Clock, Save, Calendar } from 'lucide-react';
-import { useOOTOH } from '../hooks/useOOTOH';
-import { useToast } from '../contexts/ToastContext';
-import { OOTOH } from '../types/ootoh';
+import React, { useState, useEffect } from "react";
+import { X, Clock, Save, Calendar } from "lucide-react";
+import { useOOTOH } from "../hooks/useOOTOH";
+import { useToast } from "../contexts/ToastContext";
+import { OOTOH } from "../types/ootoh";
 
 interface UpdateOOTOHModalProps {
   isOpen: boolean;
@@ -10,22 +10,36 @@ interface UpdateOOTOHModalProps {
   ootoh: OOTOH | null;
 }
 
-const UpdateOOTOHModal: React.FC<UpdateOOTOHModalProps> = ({ isOpen, onClose, ootoh }) => {
-  const [endDate, setEndDate] = useState('');
-  const [endTime, setEndTime] = useState('');
-  const [workDone, setWorkDone] = useState('');
+const UpdateOOTOHModal: React.FC<UpdateOOTOHModalProps> = ({
+  isOpen,
+  onClose,
+  ootoh,
+}) => {
+  const [endDate, setEndDate] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [workDone, setWorkDone] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { updateOOTOH, isLoading } = useOOTOH();
   const { showSuccess, showError } = useToast();
 
   useEffect(() => {
     if (ootoh && isOpen) {
-      const now = new Date();
-      const hours = now.getHours().toString().padStart(2, '0');
-      const minutes = now.getMinutes().toString().padStart(2, '0');
-      setEndDate('');
-      setEndTime(`${hours}:${minutes}`);
-      setWorkDone(ootoh.work_done || '');
+      if (ootoh.end_time) {
+        // Editing existing record with end time
+        const endDateTime = new Date(ootoh.end_time);
+        const hours = endDateTime.getHours().toString().padStart(2, "0");
+        const minutes = endDateTime.getMinutes().toString().padStart(2, "0");
+        setEndTime(`${hours}:${minutes}`);
+        setEndDate(ootoh.end_date || "");
+      } else {
+        // Adding end time to new record
+        const now = new Date();
+        const hours = now.getHours().toString().padStart(2, "0");
+        const minutes = now.getMinutes().toString().padStart(2, "0");
+        setEndTime(`${hours}:${minutes}`);
+        setEndDate("");
+      }
+      setWorkDone(ootoh.work_done || "");
       setErrors({});
     }
   }, [ootoh, isOpen]);
@@ -33,19 +47,19 @@ const UpdateOOTOHModal: React.FC<UpdateOOTOHModalProps> = ({ isOpen, onClose, oo
   if (!isOpen || !ootoh) return null;
 
   const formatTime = (timeString: string) => {
-    return new Date(timeString).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(timeString).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
       hour12: true,
     });
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      weekday: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -53,19 +67,19 @@ const UpdateOOTOHModal: React.FC<UpdateOOTOHModalProps> = ({ isOpen, onClose, oo
     const newErrors: Record<string, string> = {};
 
     if (!endTime) {
-      newErrors.endTime = 'Exit time is required';
+      newErrors.endTime = "Exit time is required";
       setErrors(newErrors);
       return false;
     }
 
     const effectiveEndDate = endDate || ootoh.start_date;
     const startDateTime = new Date(ootoh.start_time);
-    const [hours, minutes] = endTime.split(':').map(Number);
+    const [hours, minutes] = endTime.split(":").map(Number);
     const endDateTime = new Date(effectiveEndDate);
     endDateTime.setHours(hours, minutes, 0, 0);
 
     if (endDateTime <= startDateTime) {
-      newErrors.endTime = 'Exit date/time must be after entry date/time';
+      newErrors.endTime = "Exit date/time must be after entry date/time";
       setErrors(newErrors);
       return false;
     }
@@ -80,28 +94,37 @@ const UpdateOOTOHModal: React.FC<UpdateOOTOHModalProps> = ({ isOpen, onClose, oo
     if (!validateForm()) return;
 
     const effectiveEndDate = endDate || ootoh.start_date;
-    const [hours, minutes] = endTime.split(':').map(Number);
+    const [hours, minutes] = endTime.split(":").map(Number);
     const endDateTime = new Date(effectiveEndDate);
     endDateTime.setHours(hours, minutes, 0, 0);
     const endTimeISO = endDateTime.toISOString();
 
-    const result = await updateOOTOH(ootoh.id, endTimeISO, effectiveEndDate, workDone || null);
+    const result = await updateOOTOH(
+      ootoh.id,
+      endTimeISO,
+      effectiveEndDate,
+      workDone || null
+    );
 
     if (result.success) {
-      showSuccess('Office exit time updated successfully');
-      setEndTime('');
-      setWorkDone('');
+      showSuccess(
+        ootoh.end_time
+          ? "OOTOH record updated successfully"
+          : "Office exit time added successfully"
+      );
+      setEndTime("");
+      setWorkDone("");
       setErrors({});
       onClose();
     } else {
-      showError(result.message || 'Failed to update exit time');
-      setErrors({ endTime: result.message || 'Failed to update exit time' });
+      showError(result.message || "Failed to update OOTOH record");
+      setErrors({ endTime: result.message || "Failed to update OOTOH record" });
     }
   };
 
   const handleClose = () => {
-    setEndDate('');
-    setEndTime('');
+    setEndDate("");
+    setEndTime("");
     setErrors({});
     onClose();
   };
@@ -116,7 +139,7 @@ const UpdateOOTOHModal: React.FC<UpdateOOTOHModalProps> = ({ isOpen, onClose, oo
             </div>
             <div className="min-w-0">
               <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate">
-                Update Exit Time
+                {ootoh?.end_time ? "Edit OOTOH Record" : "Add Exit Time"}
               </h2>
               <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
                 Record when you leave the office
@@ -133,10 +156,15 @@ const UpdateOOTOHModal: React.FC<UpdateOOTOHModalProps> = ({ isOpen, onClose, oo
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6"
+        >
           <div className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-xl p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Entry Time:</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Entry Time:
+              </span>
               <span className="text-sm font-semibold text-green-600 dark:text-green-400">
                 {formatTime(ootoh.start_time)}
               </span>
@@ -144,7 +172,10 @@ const UpdateOOTOHModal: React.FC<UpdateOOTOHModalProps> = ({ isOpen, onClose, oo
           </div>
 
           <div>
-            <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              htmlFor="endDate"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               End Date
             </label>
             <div className="relative">
@@ -158,11 +189,11 @@ const UpdateOOTOHModal: React.FC<UpdateOOTOHModalProps> = ({ isOpen, onClose, oo
                 onChange={(e) => setEndDate(e.target.value)}
                 disabled={isLoading}
                 min={ootoh.start_date}
-                max={new Date().toISOString().split('T')[0]}
+                max={new Date().toISOString().split("T")[0]}
                 className={`w-full pl-10 pr-4 py-3 text-sm border rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed [color-scheme:light] dark:[color-scheme:dark] ${
                   errors.endDate
-                    ? 'border-red-300 dark:border-red-600 focus:ring-red-500 dark:focus:ring-red-400'
-                    : 'border-gray-200 dark:border-gray-600 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-orange-500'
+                    ? "border-red-300 dark:border-red-600 focus:ring-red-500 dark:focus:ring-red-400"
+                    : "border-gray-200 dark:border-gray-600 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-orange-500"
                 }`}
               />
             </div>
@@ -173,12 +204,16 @@ const UpdateOOTOHModal: React.FC<UpdateOOTOHModalProps> = ({ isOpen, onClose, oo
               </p>
             )}
             <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-              Exit date (leave empty if same as start date: {formatDate(ootoh.start_date)})
+              Exit date (leave empty if same as start date:{" "}
+              {formatDate(ootoh.start_date)})
             </p>
           </div>
 
           <div>
-            <label htmlFor="endTime" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              htmlFor="endTime"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               Exit Time <span className="text-red-500">*</span>
             </label>
             <div className="relative">
@@ -193,8 +228,8 @@ const UpdateOOTOHModal: React.FC<UpdateOOTOHModalProps> = ({ isOpen, onClose, oo
                 disabled={isLoading}
                 className={`w-full pl-10 pr-4 py-3 text-sm border rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed ${
                   errors.endTime
-                    ? 'border-red-300 dark:border-red-600 focus:ring-red-500 dark:focus:ring-red-400'
-                    : 'border-gray-200 dark:border-gray-600 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-orange-500'
+                    ? "border-red-300 dark:border-red-600 focus:ring-red-500 dark:focus:ring-red-400"
+                    : "border-gray-200 dark:border-gray-600 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-orange-500"
                 }`}
                 required
               />
@@ -211,7 +246,10 @@ const UpdateOOTOHModal: React.FC<UpdateOOTOHModalProps> = ({ isOpen, onClose, oo
           </div>
 
           <div>
-            <label htmlFor="workDone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              htmlFor="workDone"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               Work Done Today
             </label>
             <textarea
@@ -232,7 +270,8 @@ const UpdateOOTOHModal: React.FC<UpdateOOTOHModalProps> = ({ isOpen, onClose, oo
             <p className="text-xs text-blue-800 dark:text-blue-300 flex items-start">
               <span className="mr-1.5">ℹ️</span>
               <span>
-                Once you update the exit time, this record will be marked as complete and can no longer be modified.
+                Once you update the exit time, this record will be marked as
+                complete and can no longer be modified.
               </span>
             </p>
           </div>
