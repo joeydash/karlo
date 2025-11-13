@@ -845,10 +845,10 @@ const Expenses: React.FC = () => {
                 </div>
               ) : paginatedExpenses.length === 0 ? (
                 <div className="flex items-center justify-center flex-1">
-                  <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-12">
+                  <div className=" shadow-sm p-12">
                     <div className="text-center">
-                      <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <IndianRupee className="h-8 w-8 text-gray-400" />
+                      <div className="w-16 h-16 bg-gray-200 dark:bg-gray-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <IndianRupee className="h-8 w-8 text-gray-900" />
                       </div>
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                         No expenses found
