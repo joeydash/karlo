@@ -1288,12 +1288,12 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
               {renderTagBadges()}
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:gap-7 sm:items-center">
-              <label className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex-shrink-0">
+            <div className="flex flex-col sm:flex-row sm:gap-7 items-center h-full">
+              <label className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 flex-shrink-0">
                 <Hash className="h-4 w-4 inline mr-1" />
                 Story Points
               </label>
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide p-2 w-full sm:w-auto">
+              <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide p-2 w-full sm:w-auto">
                 {[
                   {
                     value: "",
@@ -1358,12 +1358,12 @@ const CardEditModal: React.FC<CardEditModalProps> = ({
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:gap-7 sm:items-center">
-              <label className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex-shrink-0">
+            <div className="flex flex-col sm:flex-row sm:gap-7 sm:items-center items-center h-full">
+              <label className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 flex-shrink-0">
                 <Flag className="h-4 w-4 inline mr-1" />
                 Priority
               </label>
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide p-2">
+              <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide p-2">
                 {[
                   { value: null, label: "None" },
                   { value: "low", label: "Low" },

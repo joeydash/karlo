@@ -12,6 +12,7 @@ import {
   Trash2,
   Move,
   Flag,
+  Tag as TagIcon,
 } from "lucide-react";
 import { KanbanCard as KanbanCardType } from "../../types/kanban";
 
@@ -266,12 +267,6 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
         {/* Card Footer */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-1 sm:space-x-2 flex-wrap gap-1">
-            {isCompleted && (
-              <div className="flex items-center space-x-0.5 sm:space-x-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
-                <Check className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                <span>Done</span>
-              </div>
-            )}
             {card.priority && (
               <div
                 className={`flex items-center space-x-0.5 sm:space-x-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium ${
@@ -297,32 +292,6 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
                 <span className="hidden sm:inline">pts</span>
               </div>
             )}
-            {(card.karlo_attachments_aggregate?.aggregate?.count || 0) > 0 && (
-              <div className="flex items-center space-x-0.5 sm:space-x-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-                <Paperclip
-                  className="h-2.5 w-2.5 sm:h-3 sm:w-3"
-                  aria-hidden="true"
-                />
-                <span>{card.karlo_attachments_aggregate.aggregate.count}</span>
-              </div>
-            )}
-            {hasDescriptionContent(card.description) && (
-              <div className="flex items-center space-x-0.5 sm:space-x-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-                <FileText
-                  className="h-2.5 w-2.5 sm:h-3 sm:w-3"
-                  aria-hidden="true"
-                />
-              </div>
-            )}
-            {(card.karlo_card_comments?.length || 0) > 0 && (
-              <div className="flex items-center space-x-0.5 sm:space-x-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
-                <MessageSquare
-                  className="h-2.5 w-2.5 sm:h-3 sm:w-3"
-                  aria-hidden="true"
-                />
-                <span>{card.karlo_card_comments.length}</span>
-              </div>
-            )}
             {card.due_date && (
               <div
                 className={`flex items-center space-x-0.5 sm:space-x-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium ${
@@ -341,6 +310,49 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
                 <span className="sm:hidden">
                   {new Date(card.due_date).getDate()}
                 </span>
+              </div>
+            )}
+            {(card.karlo_card_tags?.length ?? 0) > 0 && (
+              <div className="flex items-center space-x-0.5 sm:space-x-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400">
+                <TagIcon
+                  className="h-2.5 w-2.5 sm:h-3 sm:w-3"
+                  aria-hidden="true"
+                />
+                <span>{card.karlo_card_tags?.length ?? 0}</span>
+              </div>
+            )}
+            {(card.karlo_attachments_aggregate?.aggregate?.count || 0) > 0 && (
+              <div className="flex items-center space-x-0.5 sm:space-x-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                <Paperclip
+                  className="h-2.5 w-2.5 sm:h-3 sm:w-3"
+                  aria-hidden="true"
+                />
+                <span>
+                  {card.karlo_attachments_aggregate?.aggregate?.count || 0}
+                </span>
+              </div>
+            )}
+            {hasDescriptionContent(card.description) && (
+              <div className="flex items-center space-x-0.5 sm:space-x-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                <FileText
+                  className="h-2.5 w-2.5 sm:h-3 sm:w-3"
+                  aria-hidden="true"
+                />
+              </div>
+            )}
+            {(card.karlo_card_comments?.length || 0) > 0 && (
+              <div className="flex items-center space-x-0.5 sm:space-x-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
+                <MessageSquare
+                  className="h-2.5 w-2.5 sm:h-3 sm:w-3"
+                  aria-hidden="true"
+                />
+                <span>{card.karlo_card_comments?.length || 0}</span>
+              </div>
+            )}
+            {isCompleted && (
+              <div className="flex items-center space-x-0.5 sm:space-x-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                <Check className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                <span>Done</span>
               </div>
             )}
           </div>
