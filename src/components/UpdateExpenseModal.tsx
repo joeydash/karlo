@@ -35,7 +35,8 @@ const UpdateExpenseModal: React.FC<UpdateExpenseModalProps> = ({
   const [attachments, setAttachments] = useState<File[]>([]);
   const [existingAttachments, setExistingAttachments] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { updateExpense, isLoading } = useExpense();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { updateExpense } = useExpense();
   const { showSuccess, showError } = useToast();
   const { token } = useAuthStore();
 
@@ -95,11 +96,7 @@ const UpdateExpenseModal: React.FC<UpdateExpenseModalProps> = ({
 
     for (const file of attachments) {
       try {
-        const result = await hostMediaGoService(
-          file,
-          "expenses",
-          token || ""
-        );
+        const result = await hostMediaGoService(file, "expenses", token || "");
 
         if (result.success && result.url) {
           uploadedUrls.push(result.url);
@@ -121,26 +118,31 @@ const UpdateExpenseModal: React.FC<UpdateExpenseModalProps> = ({
       return;
     }
 
-    // Upload new attachments first
-    const newAttachmentUrls =
-      attachments.length > 0 ? await uploadAttachments() : [];
+    setIsSubmitting(true);
+    try {
+      // Upload new attachments first
+      const newAttachmentUrls =
+        attachments.length > 0 ? await uploadAttachments() : [];
 
-    // Combine existing and new attachments
-    const allAttachments = [...existingAttachments, ...newAttachmentUrls];
+      // Combine existing and new attachments
+      const allAttachments = [...existingAttachments, ...newAttachmentUrls];
 
-    const result = await updateExpense(expense.id, {
-      name: formData.name,
-      details: formData.details,
-      amount: parseFloat(formData.amount),
-      attachments: allAttachments,
-    });
+      const result = await updateExpense(expense.id, {
+        name: formData.name,
+        details: formData.details,
+        amount: parseFloat(formData.amount),
+        attachments: allAttachments,
+      });
 
-    if (result.success) {
-      showSuccess("Expense updated successfully");
-      handleClose();
-      onSuccess();
-    } else {
-      showError(result.message || "Failed to update expense");
+      if (result.success) {
+        showSuccess("Expense updated successfully");
+        handleClose();
+        onSuccess();
+      } else {
+        showError(result.message || "Failed to update expense");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -360,10 +362,10 @@ const UpdateExpenseModal: React.FC<UpdateExpenseModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isSubmitting}
               className="flex-1 flex items-center justify-center px-4 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   Updating...

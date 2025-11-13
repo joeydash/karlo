@@ -74,6 +74,7 @@ const Expenses: React.FC = () => {
   const [showMonthDropdown, setShowMonthDropdown] = useState(false);
   const [showYearDropdown, setShowYearDropdown] = useState(false);
   const [showDayDropdown, setShowDayDropdown] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const itemsPerPage = 10;
   const memberDropdownRef = useRef<HTMLDivElement>(null);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
@@ -350,32 +351,32 @@ const Expenses: React.FC = () => {
   ).length;
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
       <SideNavigation />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
         {/* Header */}
-        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 flex-shrink-0">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+            <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
-                  <IndianRupee className="h-6 w-6 text-white" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
+                  <IndianRupee className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                     Expenses
                   </h1>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
                     {total} {total === 1 ? "expense" : "expenses"} total
                   </p>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2 sm:space-x-3">
                 <button
                   onClick={handleRefresh}
                   disabled={isLoading}
-                  className="flex items-center space-x-2 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 sm:py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <RefreshCw
                     className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
@@ -384,473 +385,677 @@ const Expenses: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setIsAddModalOpen(true)}
-                  className="flex items-center space-x-2 px-4 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl transition-all duration-200 shadow-lg"
+                  className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl transition-all duration-200 shadow-lg"
                 >
                   <Plus className="h-4 w-4" />
-                  <span>Add Expense</span>
+                  <span className="hidden sm:inline">Add Expense</span>
+                  <span className="sm:hidden">Add</span>
                 </button>
               </div>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
-              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Total Expenses
-                </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                  {totalExpenses}
-                </p>
+            <div className="mt-6">
+              {/* Desktop Stats */}
+              <div className="hidden sm:grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    Total Expenses
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                    {totalExpenses}
+                  </p>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    Total Amount
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                    {formatCurrency(totalAmount)}
+                  </p>
+                </div>
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-4">
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                    Pending
+                  </p>
+                  <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-200 mt-1">
+                    {pendingExpenses}
+                  </p>
+                </div>
+                <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4">
+                  <p className="text-sm text-green-700 dark:text-green-300">
+                    Approved
+                  </p>
+                  <p className="text-2xl font-bold text-green-900 dark:text-green-200 mt-1">
+                    {approvedExpenses}
+                  </p>
+                </div>
               </div>
-              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Total Amount
-                </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                  {formatCurrency(totalAmount)}
-                </p>
-              </div>
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-4">
-                <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                  Pending
-                </p>
-                <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-200 mt-1">
-                  {pendingExpenses}
-                </p>
-              </div>
-              <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4">
-                <p className="text-sm text-green-700 dark:text-green-300">
-                  Approved
-                </p>
-                <p className="text-2xl font-bold text-green-900 dark:text-green-200 mt-1">
-                  {approvedExpenses}
-                </p>
+
+              {/* Mobile Stats - Compact Single Line */}
+              <div className="sm:hidden flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 text-xs">
+                <div className="text-center flex-1">
+                  <p className="text-gray-600 dark:text-gray-400 mb-1">Total</p>
+                  <p className="font-bold text-gray-900 dark:text-white">
+                    {totalExpenses}
+                  </p>
+                </div>
+                <div className="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
+                <div className="text-center flex-1">
+                  <p className="text-gray-600 dark:text-gray-400 mb-1">
+                    Amount
+                  </p>
+                  <p className="font-bold text-gray-900 dark:text-white">
+                    {formatCurrency(totalAmount)}
+                  </p>
+                </div>
+                <div className="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
+                <div className="text-center flex-1">
+                  <p className="text-yellow-700 dark:text-yellow-300 mb-1">
+                    Pending
+                  </p>
+                  <p className="font-bold text-yellow-900 dark:text-yellow-200">
+                    {pendingExpenses}
+                  </p>
+                </div>
+                <div className="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
+                <div className="text-center flex-1">
+                  <p className="text-green-700 dark:text-green-300 mb-1">
+                    Approved
+                  </p>
+                  <p className="font-bold text-green-900 dark:text-green-200">
+                    {approvedExpenses}
+                  </p>
+                </div>
               </div>
             </div>
 
             {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4 mt-6">
-              {/* Search */}
-              <div className="flex-1 relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search expenses..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            <div className="mt-4">
+              {/* Filter Toggle Button - Mobile Only */}
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="sm:hidden w-full flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200 mb-3"
+              >
+                <div className="flex items-center space-x-2">
+                  <Filter className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    Filters
+                  </span>
+                </div>
+                <ChevronDown
+                  className={`h-5 w-5 text-gray-400 transition-transform duration-200 ${
+                    showFilters ? "rotate-180" : ""
+                  }`}
                 />
-              </div>
+              </button>
 
-              {/* Member Filter (Admin Only) */}
-              {isCurrentUserAdmin && (
-                <div className="relative" ref={memberDropdownRef}>
-                  <button
-                    onClick={() => setShowMemberDropdown(!showMemberDropdown)}
-                    className="flex items-center justify-between w-full sm:w-64 px-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <Users className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                      <span className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                        {getSelectedMemberName()}
-                      </span>
-                    </div>
-                    <ChevronDown className="h-5 w-5 text-gray-400 flex-shrink-0" />
-                  </button>
+              {/* Filter Content */}
+              <div
+                className={`space-y-4 ${
+                  showFilters ? "block" : "hidden sm:block"
+                }`}
+              >
+                {/* Search and Status - First Row */}
+                <div className="flex flex-col sm:flex-row gap-4">
+                  {/* Search */}
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search expenses..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-12 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                  </div>
 
-                  {showMemberDropdown && (
-                    <div className="absolute top-full mt-2 w-full sm:w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 max-h-96 overflow-hidden flex flex-col">
-                      <div className="p-3 border-b border-gray-200 dark:border-gray-700">
-                        <input
-                          type="text"
-                          placeholder="Search members..."
-                          value={memberSearchTerm}
-                          onChange={(e) => setMemberSearchTerm(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-                          onClick={(e) => e.stopPropagation()}
-                        />
+                  {/* Status Filter */}
+                  <div className="relative sm:w-48" ref={statusDropdownRef}>
+                    <button
+                      onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+                      className="flex items-center justify-between w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <Filter className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          {statusFilter === "all"
+                            ? "All Status"
+                            : statusFilter.charAt(0).toUpperCase() +
+                              statusFilter.slice(1)}
+                        </span>
                       </div>
-                      <div className="overflow-y-auto flex-1">
-                        <button
-                          onClick={() => {
-                            setSelectedMemberId("");
-                            setShowMemberDropdown(false);
-                            setMemberSearchTerm("");
-                          }}
-                          className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700"
-                        >
-                          <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                              <Users className="h-5 w-5 text-white" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                All Members
-                              </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">
-                                View all expenses
-                              </p>
-                            </div>
-                          </div>
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedMemberId(currentUser?.id || "");
-                            setShowMemberDropdown(false);
-                            setMemberSearchTerm("");
-                          }}
-                          className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700"
-                        >
-                          <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
-                              <span className="text-sm font-bold text-white">
-                                Me
+                      <ChevronDown className="h-5 w-5 text-gray-400" />
+                    </button>
+
+                    {showStatusDropdown && (
+                      <div className="absolute top-full mt-2 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 overflow-hidden">
+                        {["all", "pending", "approved", "rejected"].map(
+                          (status) => (
+                            <button
+                              key={status}
+                              onClick={() => {
+                                setStatusFilter(status as typeof statusFilter);
+                                setShowStatusDropdown(false);
+                              }}
+                              className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                            >
+                              <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                {status === "all"
+                                  ? "All Status"
+                                  : status.charAt(0).toUpperCase() +
+                                    status.slice(1)}
                               </span>
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                My Expenses
-                              </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">
-                                View your expenses
-                              </p>
-                            </div>
+                            </button>
+                          )
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Member, Date Filters - Second Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Member Filter (Admin Only) */}
+                  {isCurrentUserAdmin && (
+                    <div className="relative" ref={memberDropdownRef}>
+                      <button
+                        onClick={() =>
+                          setShowMemberDropdown(!showMemberDropdown)
+                        }
+                        className="flex items-center justify-between w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <Users className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                          <span className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                            {getSelectedMemberName()}
+                          </span>
+                        </div>
+                        <ChevronDown className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                      </button>
+
+                      {showMemberDropdown && (
+                        <div className="absolute top-full mt-2 w-full sm:w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 max-h-96 overflow-hidden flex flex-col">
+                          <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+                            <input
+                              type="text"
+                              placeholder="Search members..."
+                              value={memberSearchTerm}
+                              onChange={(e) =>
+                                setMemberSearchTerm(e.target.value)
+                              }
+                              className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                              onClick={(e) => e.stopPropagation()}
+                            />
                           </div>
+                          <div className="overflow-y-auto flex-1">
+                            <button
+                              onClick={() => {
+                                setSelectedMemberId("");
+                                setShowMemberDropdown(false);
+                                setMemberSearchTerm("");
+                              }}
+                              className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700"
+                            >
+                              <div className="flex items-center space-x-3">
+                                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                  <Users className="h-5 w-5 text-white" />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                    All Members
+                                  </p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    View all expenses
+                                  </p>
+                                </div>
+                              </div>
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedMemberId(currentUser?.id || "");
+                                setShowMemberDropdown(false);
+                                setMemberSearchTerm("");
+                              }}
+                              className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700"
+                            >
+                              <div className="flex items-center space-x-3">
+                                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                  <span className="text-sm font-bold text-white">
+                                    Me
+                                  </span>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                    My Expenses
+                                  </p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    View your expenses
+                                  </p>
+                                </div>
+                              </div>
+                            </button>
+                            {filteredMembers.map((member) => (
+                              <button
+                                key={member.id}
+                                onClick={() => {
+                                  setSelectedMemberId(member.user_id);
+                                  setShowMemberDropdown(false);
+                                  setMemberSearchTerm("");
+                                }}
+                                className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                              >
+                                <div className="flex items-center space-x-3">
+                                  <img
+                                    src={
+                                      member.auth_fullname.dp ||
+                                      "https://cdn.subspace.money/whatsub_images/user-3711850-3105265+1.png"
+                                    }
+                                    alt={member.auth_fullname.fullname}
+                                    className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                                  />
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                      {member.auth_fullname.fullname}
+                                    </p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                      {member.auth_fullname.email}
+                                    </p>
+                                  </div>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Month Filter */}
+                  <div className="relative" ref={monthDropdownRef}>
+                    <button
+                      onClick={() => setShowMonthDropdown(!showMonthDropdown)}
+                      className="flex items-center justify-between w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          {selectedMonth === "all"
+                            ? "All Months"
+                            : new Date(
+                                2024,
+                                parseInt(selectedMonth),
+                                1
+                              ).toLocaleDateString("en-US", { month: "long" })}
+                        </span>
+                      </div>
+                      <ChevronDown className="h-5 w-5 text-gray-400" />
+                    </button>
+
+                    {showMonthDropdown && (
+                      <div className="absolute top-full mt-2 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 max-h-64 overflow-y-auto">
+                        <button
+                          onClick={() => {
+                            setSelectedMonth("all");
+                            setShowMonthDropdown(false);
+                          }}
+                          className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700"
+                        >
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                            All Months
+                          </span>
                         </button>
-                        {filteredMembers.map((member) => (
+                        {Array.from({ length: 12 }, (_, i) => (
                           <button
-                            key={member.id}
+                            key={i}
                             onClick={() => {
-                              setSelectedMemberId(member.user_id);
-                              setShowMemberDropdown(false);
-                              setMemberSearchTerm("");
+                              setSelectedMonth(i.toString());
+                              setShowMonthDropdown(false);
                             }}
                             className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                           >
-                            <div className="flex items-center space-x-3">
-                              <img
-                                src={
-                                  member.auth_fullname.dp ||
-                                  "https://cdn.subspace.money/whatsub_images/user-3711850-3105265+1.png"
+                            <span className="text-sm font-medium text-gray-900 dark:text-white">
+                              {new Date(2024, i, 1).toLocaleDateString(
+                                "en-US",
+                                {
+                                  month: "long",
                                 }
-                                alt={member.auth_fullname.fullname}
-                                className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                              />
-                              <div className="min-w-0">
-                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                  {member.auth_fullname.fullname}
-                                </p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                  {member.auth_fullname.email}
-                                </p>
-                              </div>
-                            </div>
+                              )}
+                            </span>
                           </button>
                         ))}
                       </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Status Filter */}
-              <div className="relative" ref={statusDropdownRef}>
-                <button
-                  onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                  className="flex items-center justify-between w-full sm:w-48 px-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
-                >
-                  <div className="flex items-center space-x-2">
-                    <Filter className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      {statusFilter === "all"
-                        ? "All Status"
-                        : statusFilter.charAt(0).toUpperCase() +
-                          statusFilter.slice(1)}
-                    </span>
-                  </div>
-                  <ChevronDown className="h-5 w-5 text-gray-400" />
-                </button>
-
-                {showStatusDropdown && (
-                  <div className="absolute top-full mt-2 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 overflow-hidden">
-                    {["all", "pending", "approved", "rejected"].map(
-                      (status) => (
-                        <button
-                          key={status}
-                          onClick={() => {
-                            setStatusFilter(status as typeof statusFilter);
-                            setShowStatusDropdown(false);
-                          }}
-                          className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                        >
-                          <span className="text-sm font-medium text-gray-900 dark:text-white">
-                            {status === "all"
-                              ? "All Status"
-                              : status.charAt(0).toUpperCase() +
-                                status.slice(1)}
-                          </span>
-                        </button>
-                      )
                     )}
                   </div>
-                )}
-              </div>
 
-              {/* Month Filter */}
-              <div className="relative" ref={monthDropdownRef}>
-                <button
-                  onClick={() => setShowMonthDropdown(!showMonthDropdown)}
-                  className="flex items-center justify-between w-full sm:w-48 px-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
-                >
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      {selectedMonth === "all"
-                        ? "All Months"
-                        : new Date(
-                            2024,
-                            parseInt(selectedMonth),
-                            1
-                          ).toLocaleDateString("en-US", { month: "long" })}
-                    </span>
-                  </div>
-                  <ChevronDown className="h-5 w-5 text-gray-400" />
-                </button>
-
-                {showMonthDropdown && (
-                  <div className="absolute top-full mt-2 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 max-h-64 overflow-y-auto">
+                  {/* Year Filter */}
+                  <div className="relative" ref={yearDropdownRef}>
                     <button
-                      onClick={() => {
-                        setSelectedMonth("all");
-                        setShowMonthDropdown(false);
-                      }}
-                      className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700"
+                      onClick={() => setShowYearDropdown(!showYearDropdown)}
+                      className="flex items-center justify-between w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
                     >
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">
-                        All Months
-                      </span>
-                    </button>
-                    {Array.from({ length: 12 }, (_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => {
-                          setSelectedMonth(i.toString());
-                          setShowMonthDropdown(false);
-                        }}
-                        className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                      >
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                         <span className="text-sm font-medium text-gray-900 dark:text-white">
-                          {new Date(2024, i, 1).toLocaleDateString("en-US", {
-                            month: "long",
-                          })}
+                          {selectedYear === "all" ? "All Years" : selectedYear}
                         </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Year Filter */}
-              <div className="relative" ref={yearDropdownRef}>
-                <button
-                  onClick={() => setShowYearDropdown(!showYearDropdown)}
-                  className="flex items-center justify-between w-full sm:w-48 px-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
-                >
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      {selectedYear === "all" ? "All Years" : selectedYear}
-                    </span>
-                  </div>
-                  <ChevronDown className="h-5 w-5 text-gray-400" />
-                </button>
-
-                {showYearDropdown && (
-                  <div className="absolute top-full mt-2 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 max-h-64 overflow-y-auto">
-                    <button
-                      onClick={() => {
-                        setSelectedYear("all");
-                        setShowYearDropdown(false);
-                      }}
-                      className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700"
-                    >
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">
-                        All Years
-                      </span>
+                      </div>
+                      <ChevronDown className="h-5 w-5 text-gray-400" />
                     </button>
-                    {Array.from({ length: 10 }, (_, i) => {
-                      const year = new Date().getFullYear() - i;
-                      return (
+
+                    {showYearDropdown && (
+                      <div className="absolute top-full mt-2 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 max-h-64 overflow-y-auto">
                         <button
-                          key={year}
                           onClick={() => {
-                            setSelectedYear(year.toString());
+                            setSelectedYear("all");
                             setShowYearDropdown(false);
                           }}
-                          className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                          className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700"
                         >
                           <span className="text-sm font-medium text-gray-900 dark:text-white">
-                            {year}
+                            All Years
                           </span>
                         </button>
-                      );
-                    })}
+                        {Array.from({ length: 10 }, (_, i) => {
+                          const year = new Date().getFullYear() - i;
+                          return (
+                            <button
+                              key={year}
+                              onClick={() => {
+                                setSelectedYear(year.toString());
+                                setShowYearDropdown(false);
+                              }}
+                              className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                            >
+                              <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                {year}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
 
-              {/* Day Filter */}
-              <div className="relative" ref={dayDropdownRef}>
-                <button
-                  onClick={() => setShowDayDropdown(!showDayDropdown)}
-                  className="flex items-center justify-between w-full sm:w-48 px-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
-                >
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      {selectedDay === "all"
-                        ? "All Days"
-                        : `Day ${selectedDay}`}
-                    </span>
-                  </div>
-                  <ChevronDown className="h-5 w-5 text-gray-400" />
-                </button>
-
-                {showDayDropdown && (
-                  <div className="absolute top-full mt-2 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 max-h-64 overflow-y-auto">
+                  {/* Day Filter */}
+                  <div className="relative" ref={dayDropdownRef}>
                     <button
-                      onClick={() => {
-                        setSelectedDay("all");
-                        setShowDayDropdown(false);
-                      }}
-                      className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700"
+                      onClick={() => setShowDayDropdown(!showDayDropdown)}
+                      className="flex items-center justify-between w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
                     >
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">
-                        All Days
-                      </span>
-                    </button>
-                    {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-                      <button
-                        key={day}
-                        onClick={() => {
-                          setSelectedDay(day.toString());
-                          setShowDayDropdown(false);
-                        }}
-                        className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                      >
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                         <span className="text-sm font-medium text-gray-900 dark:text-white">
-                          Day {day}
+                          {selectedDay === "all"
+                            ? "All Days"
+                            : `Day ${selectedDay}`}
                         </span>
-                      </button>
-                    ))}
+                      </div>
+                      <ChevronDown className="h-5 w-5 text-gray-400" />
+                    </button>
+
+                    {showDayDropdown && (
+                      <div className="absolute top-full mt-2 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 max-h-64 overflow-y-auto">
+                        <button
+                          onClick={() => {
+                            setSelectedDay("all");
+                            setShowDayDropdown(false);
+                          }}
+                          className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700"
+                        >
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                            All Days
+                          </span>
+                        </button>
+                        {Array.from({ length: 31 }, (_, i) => i + 1).map(
+                          (day) => (
+                            <button
+                              key={day}
+                              onClick={() => {
+                                setSelectedDay(day.toString());
+                                setShowDayDropdown(false);
+                              }}
+                              className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                            >
+                              <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                Day {day}
+                              </span>
+                            </button>
+                          )
+                        )}
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-16">
-                <div className="text-center">
-                  <Loader2 className="h-12 w-12 animate-spin text-blue-600 dark:text-blue-400 mx-auto mb-4" />
-                  <p className="text-gray-600 dark:text-gray-300">
-                    Loading expenses...
-                  </p>
-                </div>
-              </div>
-            ) : paginatedExpenses.length === 0 ? (
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-12">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <IndianRupee className="h-8 w-8 text-gray-400" />
+          {/* Content */}
+          <div className="flex-1 overflow-hidden bg-gray-50 dark:bg-gray-900 flex flex-col">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 w-full flex-1 flex flex-col overflow-hidden">
+              {isLoading ? (
+                <div className="flex items-center justify-center flex-1">
+                  <div className="text-center">
+                    <Loader2 className="h-12 w-12 animate-spin text-blue-600 dark:text-blue-400 mx-auto mb-4" />
+                    <p className="text-gray-600 dark:text-gray-300">
+                      Loading expenses...
+                    </p>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    No expenses found
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-300 mb-6">
-                    {searchTerm || statusFilter !== "all"
-                      ? "Try adjusting your filters"
-                      : "Get started by adding your first expense"}
-                  </p>
-                  {!searchTerm && statusFilter === "all" && (
-                    <button
-                      onClick={() => setIsAddModalOpen(true)}
-                      className="inline-flex items-center space-x-2 px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl transition-all duration-200 shadow-lg"
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>Add Your First Expense</span>
-                    </button>
-                  )}
                 </div>
-              </div>
-            ) : (
-              <>
-                {/* Table */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
-                        <tr>
-                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                            Name
-                          </th>
-                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                            Details
-                          </th>
-                          <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                            Amount
-                          </th>
-                          <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                            Status
-                          </th>
-                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                            Attachments
-                          </th>
-                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                            Date
-                          </th>
-                          <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {paginatedExpenses.map((expense: Expense) => (
-                          <tr
-                            key={expense.id}
-                            className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150"
-                          >
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center space-x-3">
-                                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                                  <FileText className="h-5 w-5 text-white" />
-                                </div>
-                                <div className="font-medium text-gray-900 dark:text-white">
+              ) : paginatedExpenses.length === 0 ? (
+                <div className="flex items-center justify-center flex-1">
+                  <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-12">
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <IndianRupee className="h-8 w-8 text-gray-400" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                        No expenses found
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-300 mb-6">
+                        {searchTerm || statusFilter !== "all"
+                          ? "Try adjusting your filters"
+                          : "Get started by adding your first expense"}
+                      </p>
+                      {!searchTerm && statusFilter === "all" && (
+                        <button
+                          onClick={() => setIsAddModalOpen(true)}
+                          className="inline-flex items-center space-x-2 px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl transition-all duration-200 shadow-lg"
+                        >
+                          <Plus className="h-4 w-4" />
+                          <span>Add Your First Expense</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Desktop Table View */}
+                  <div className="hidden lg:flex lg:flex-col bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden flex-1">
+                    <div className="overflow-x-auto overflow-y-auto flex-1">
+                      <table className="w-full">
+                        <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
+                          <tr>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                              Name
+                            </th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                              Details
+                            </th>
+                            <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                              Amount
+                            </th>
+                            <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                              Status
+                            </th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                              Attachments
+                            </th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                              Date
+                            </th>
+                            <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                              Actions
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white dark:bg-gray-800">
+                          {paginatedExpenses.map(
+                            (expense: Expense, index: number) => (
+                              <tr
+                                key={expense.id}
+                                className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150 ${
+                                  index < paginatedExpenses.length - 1
+                                    ? "border-b border-gray-200 dark:border-gray-700"
+                                    : ""
+                                }`}
+                              >
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="flex items-center space-x-3">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                                      <FileText className="h-5 w-5 text-white" />
+                                    </div>
+                                    <div className="font-medium text-gray-900 dark:text-white">
+                                      {expense.name}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div className="text-sm text-gray-600 dark:text-gray-300 max-w-xs truncate">
+                                    {expense.details || "-"}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-right">
+                                  <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                                    {formatCurrency(expense.amount)}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-center">
+                                  {getStatusBadge(expense.status)}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="flex items-center space-x-2">
+                                    {expense.attachments &&
+                                    expense.attachments.length > 0 ? (
+                                      <button
+                                        onClick={() =>
+                                          handleViewAttachments(expense)
+                                        }
+                                        className="flex items-center space-x-1 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 py-1 rounded-lg transition-colors duration-200"
+                                      >
+                                        <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                        <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                                          {expense.attachments.length}{" "}
+                                          {expense.attachments.length === 1
+                                            ? "file"
+                                            : "files"}
+                                        </span>
+                                      </button>
+                                    ) : (
+                                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                                        -
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
+                                    <Calendar className="h-4 w-4" />
+                                    <span>
+                                      {formatDate(expense.created_at)}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-right">
+                                  <div className="flex items-center justify-end space-x-2">
+                                    {isCurrentUserAdmin &&
+                                      expense.status === "pending" && (
+                                        <>
+                                          <button
+                                            onClick={() =>
+                                              handleApproveExpense(expense.id)
+                                            }
+                                            className="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-all duration-200"
+                                            title="Approve"
+                                          >
+                                            <CheckCircle className="h-5 w-5" />
+                                          </button>
+                                          <button
+                                            onClick={() =>
+                                              handleRejectExpense(expense.id)
+                                            }
+                                            className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
+                                            title="Reject"
+                                          >
+                                            <XCircle className="h-5 w-5" />
+                                          </button>
+                                        </>
+                                      )}
+                                    {expense.user_id === currentUser?.id &&
+                                      expense.status === "pending" && (
+                                        <button
+                                          onClick={() =>
+                                            handleEditExpense(expense)
+                                          }
+                                          className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200"
+                                          title="Edit"
+                                        >
+                                          <Edit className="h-5 w-5" />
+                                        </button>
+                                      )}
+                                    {(expense.user_id === currentUser?.id ||
+                                      isCurrentUserAdmin) && (
+                                      <button
+                                        onClick={() =>
+                                          handleDeleteExpense(expense.id)
+                                        }
+                                        className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
+                                        title="Delete"
+                                      >
+                                        <Trash2 className="h-5 w-5" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            )
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Mobile Card View */}
+                  <div className="lg:hidden flex-1 overflow-y-auto space-y-4 pb-4">
+                    {paginatedExpenses.map(
+                      (expense: Expense, index: number) => (
+                        <div
+                          key={expense.id}
+                          className={`bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 ${
+                            index < paginatedExpenses.length - 1 ? "mb-4" : ""
+                          }`}
+                        >
+                          {/* Header */}
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center space-x-3 flex-1">
+                              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <FileText className="h-5 w-5 text-white" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-gray-900 dark:text-white truncate">
                                   {expense.name}
                                 </div>
+                                <div className="text-lg font-semibold text-gray-900 dark:text-white mt-1">
+                                  {formatCurrency(expense.amount)}
+                                </div>
                               </div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="text-sm text-gray-600 dark:text-gray-300 max-w-xs truncate">
-                                {expense.details || "-"}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right">
-                              <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                                {formatCurrency(expense.amount)}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                            </div>
+                            <div className="flex flex-col items-end space-y-2 flex-shrink-0 ml-2">
                               {getStatusBadge(expense.status)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center space-x-2">
-                                {expense.attachments &&
-                                expense.attachments.length > 0 ? (
+                              {expense.attachments &&
+                                expense.attachments.length > 0 && (
                                   <button
                                     onClick={() =>
                                       handleViewAttachments(expense)
@@ -858,163 +1063,163 @@ const Expenses: React.FC = () => {
                                     className="flex items-center space-x-1 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 py-1 rounded-lg transition-colors duration-200"
                                   >
                                     <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                                    <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
-                                      {expense.attachments.length}{" "}
-                                      {expense.attachments.length === 1
-                                        ? "file"
-                                        : "files"}
+                                    <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                                      {expense.attachments.length}
                                     </span>
                                   </button>
-                                ) : (
-                                  <span className="text-sm text-gray-500 dark:text-gray-400">
-                                    -
-                                  </span>
                                 )}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
-                                <Calendar className="h-4 w-4" />
-                                <span>{formatDate(expense.created_at)}</span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right">
-                              <div className="flex items-center justify-end space-x-2">
-                                {isCurrentUserAdmin &&
-                                  expense.status === "pending" && (
-                                    <>
-                                      <button
-                                        onClick={() =>
-                                          handleApproveExpense(expense.id)
-                                        }
-                                        className="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-all duration-200"
-                                        title="Approve"
-                                      >
-                                        <CheckCircle className="h-5 w-5" />
-                                      </button>
-                                      <button
-                                        onClick={() =>
-                                          handleRejectExpense(expense.id)
-                                        }
-                                        className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
-                                        title="Reject"
-                                      >
-                                        <XCircle className="h-5 w-5" />
-                                      </button>
-                                    </>
-                                  )}
-                                {expense.user_id === currentUser?.id &&
-                                  expense.status === "pending" && (
+                            </div>
+                          </div>
+
+                          {/* Details */}
+                          {expense.details && (
+                            <div className="text-sm text-gray-600 dark:text-gray-300 mb-3 line-clamp-2">
+                              {expense.details}
+                            </div>
+                          )}
+
+                          {/* Date and Actions */}
+                          <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-300">
+                              <Calendar className="h-4 w-4" />
+                              <span>{formatDate(expense.created_at)}</span>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex items-center space-x-2">
+                              {isCurrentUserAdmin &&
+                                expense.status === "pending" && (
+                                  <>
                                     <button
-                                      onClick={() => handleEditExpense(expense)}
-                                      className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200"
-                                      title="Edit"
+                                      onClick={() =>
+                                        handleApproveExpense(expense.id)
+                                      }
+                                      className="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-all duration-200"
+                                      title="Approve"
                                     >
-                                      <Edit className="h-5 w-5" />
+                                      <CheckCircle className="h-5 w-5" />
                                     </button>
-                                  )}
-                                {(expense.user_id === currentUser?.id ||
-                                  isCurrentUserAdmin) && (
+                                    <button
+                                      onClick={() =>
+                                        handleRejectExpense(expense.id)
+                                      }
+                                      className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
+                                      title="Reject"
+                                    >
+                                      <XCircle className="h-5 w-5" />
+                                    </button>
+                                  </>
+                                )}
+                              {expense.user_id === currentUser?.id &&
+                                expense.status === "pending" && (
                                   <button
-                                    onClick={() =>
-                                      handleDeleteExpense(expense.id)
-                                    }
-                                    className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
-                                    title="Delete"
+                                    onClick={() => handleEditExpense(expense)}
+                                    className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200"
+                                    title="Edit"
                                   >
-                                    <Trash2 className="h-5 w-5" />
+                                    <Edit className="h-5 w-5" />
                                   </button>
                                 )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                              {(expense.user_id === currentUser?.id ||
+                                isCurrentUserAdmin) && (
+                                <button
+                                  onClick={() =>
+                                    handleDeleteExpense(expense.id)
+                                  }
+                                  className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="h-5 w-5" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    )}
                   </div>
-                </div>
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="mt-6 flex items-center justify-between">
-                    <div className="text-sm text-gray-600 dark:text-gray-300">
-                      Page {currentPage} of {totalPages}
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex-shrink-0 mt-6 flex items-center justify-between px-4 sm:px-0">
+                      <div className="text-sm text-gray-600 dark:text-gray-300">
+                        Page {currentPage} of {totalPages}
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() =>
+                            setCurrentPage((prev) => Math.max(prev - 1, 1))
+                          }
+                          disabled={currentPage === 1 || isLoading}
+                          className="p-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <ChevronLeft className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() =>
+                            setCurrentPage((prev) =>
+                              Math.min(prev + 1, totalPages)
+                            )
+                          }
+                          disabled={currentPage === totalPages || isLoading}
+                          className="p-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <ChevronRight className="h-5 w-5" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() =>
-                          setCurrentPage((prev) => Math.max(prev - 1, 1))
-                        }
-                        disabled={currentPage === 1 || isLoading}
-                        className="p-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <ChevronLeft className="h-5 w-5" />
-                      </button>
-                      <button
-                        onClick={() =>
-                          setCurrentPage((prev) =>
-                            Math.min(prev + 1, totalPages)
-                          )
-                        }
-                        disabled={currentPage === totalPages || isLoading}
-                        className="p-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <ChevronRight className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
+
+        {/* Modals */}
+        <AddExpenseModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onSuccess={() => {
+            setCurrentPage(1);
+            loadExpenses(1); // Reload to show the new expense
+          }}
+          selectedMemberId={selectedMemberId}
+        />
+
+        <UpdateExpenseModal
+          isOpen={isUpdateModalOpen}
+          onClose={() => {
+            setIsUpdateModalOpen(false);
+            setSelectedExpense(null);
+          }}
+          onSuccess={() => {
+            loadExpenses(currentPage); // Reload to show the updated expense
+          }}
+          expense={selectedExpense}
+        />
+
+        <ConfirmationModal
+          isOpen={showConfirmDeleteModal}
+          onClose={() => {
+            setShowConfirmDeleteModal(false);
+            setExpenseToDelete(null);
+          }}
+          onConfirm={confirmDeleteExpense}
+          title="Delete Expense"
+          message="Are you sure you want to delete this expense? This action cannot be undone."
+          confirmText="Delete"
+        />
+
+        <AttachmentViewerModal
+          isOpen={showAttachmentViewer}
+          onClose={() => {
+            setShowAttachmentViewer(false);
+            setAttachmentViewerExpense(null);
+          }}
+          attachments={attachmentViewerExpense?.attachments || []}
+          expenseName={attachmentViewerExpense?.name || ""}
+        />
       </div>
-
-      {/* Modals */}
-      <AddExpenseModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSuccess={() => {
-          setCurrentPage(1);
-          loadExpenses(1); // Reload to show the new expense
-        }}
-        selectedMemberId={selectedMemberId}
-      />
-
-      <UpdateExpenseModal
-        isOpen={isUpdateModalOpen}
-        onClose={() => {
-          setIsUpdateModalOpen(false);
-          setSelectedExpense(null);
-        }}
-        onSuccess={() => {
-          loadExpenses(currentPage); // Reload to show the updated expense
-        }}
-        expense={selectedExpense}
-      />
-
-      <ConfirmationModal
-        isOpen={showConfirmDeleteModal}
-        onClose={() => {
-          setShowConfirmDeleteModal(false);
-          setExpenseToDelete(null);
-        }}
-        onConfirm={confirmDeleteExpense}
-        title="Delete Expense"
-        message="Are you sure you want to delete this expense? This action cannot be undone."
-        confirmText="Delete"
-        confirmButtonClass="bg-red-600 hover:bg-red-700"
-      />
-
-      <AttachmentViewerModal
-        isOpen={showAttachmentViewer}
-        onClose={() => {
-          setShowAttachmentViewer(false);
-          setAttachmentViewerExpense(null);
-        }}
-        attachments={attachmentViewerExpense?.attachments || []}
-        expenseName={attachmentViewerExpense?.name || ""}
-      />
     </div>
   );
 };
