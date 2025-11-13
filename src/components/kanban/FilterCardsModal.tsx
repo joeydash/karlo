@@ -329,9 +329,9 @@ const FilterCardsModal: React.FC<FilterCardsModalProps> = ({
               </div>
             )}
 
-            <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+            <div className="flex flex-wrap gap-2">
               {filteredTags.length === 0 ? (
-                <div className="text-center py-4">
+                <div className="text-center py-4 w-full">
                   <Tag className="h-8 w-8 text-gray-300 mx-auto mb-2" />
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     {searchTerm ? "No tags found" : "No tags available"}
@@ -343,25 +343,19 @@ const FilterCardsModal: React.FC<FilterCardsModalProps> = ({
                   return (
                     <button
                       key={tag.id}
+                      type="button"
                       onClick={() => handleTagToggle(tag.id)}
-                      className={`w-full flex items-center justify-between p-3 rounded-xl transition-all duration-200 border-2 ${
-                        isSelected
-                          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                          : "border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 bg-white dark:bg-gray-700"
-                      }`}
+                      className={`group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 border-blue-200 dark:border-blue-800 relative
+                        ${
+                          isSelected
+                            ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-2 border-blue-400 dark:border-blue-500"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                        }
+                      `}
                     >
-                      <div className="flex-1 text-left">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          {tag.name}
-                        </p>
-                        {tag.description && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                            {tag.description}
-                          </p>
-                        )}
-                      </div>
+                      <span>{tag.name}</span>
                       {isSelected && (
-                        <Check className="h-4 w-4 text-blue-600 dark:text-blue-400 ml-2" />
+                        <Check className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                       )}
                     </button>
                   );

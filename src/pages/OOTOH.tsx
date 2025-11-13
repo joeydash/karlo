@@ -1024,7 +1024,10 @@ const OOTOH: React.FC = () => {
                             )}
                           </td>
                           <td className="px-4 sm:px-6 py-4 max-w-xs">
-                            <div className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
+                            <div
+                              className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2 cursor-pointer"
+                              title={record.work_done || undefined}
+                            >
                               {record.work_done || (
                                 <span className="text-gray-400 dark:text-gray-500">
                                   No description
