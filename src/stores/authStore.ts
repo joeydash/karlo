@@ -360,6 +360,11 @@ const useAuthStore = create<AuthState>()(
             error: null,
           });
 
+          // Store auth data in localStorage for passkey integration and other components
+          localStorage.setItem("auth_token", verifyData.auth_token);
+          localStorage.setItem("refresh_token", verifyData.refresh_token);
+          localStorage.setItem("user_id", verifyData.id);
+
           // Make auth store available globally
           (window as any).__authStore = get();
 
@@ -376,6 +381,47 @@ const useAuthStore = create<AuthState>()(
         const errorMsg = "Invalid OTP. Please try again.";
         set({ error: errorMsg });
         return { success: false, message: errorMsg };
+      },
+
+      // Complete passkey login by setting up auth state (called after successful passkey authentication)
+      completePasskeyLogin: async (
+        phone: string,
+        authToken: string,
+        refreshToken: string,
+        userId: string
+      ) => {
+        const user = {
+          id: userId,
+          phone,
+          refresh_token: refreshToken,
+          fullname: undefined,
+          email: undefined,
+        };
+
+        set({
+          authenticated: true,
+          user,
+          token: authToken,
+          lastTokenRefresh: Date.now(),
+          error: null,
+        });
+
+        // Store auth data in localStorage for passkey integration and other components
+        localStorage.setItem("auth_token", authToken);
+        localStorage.setItem("refresh_token", refreshToken);
+        localStorage.setItem("user_id", userId);
+
+        // Make auth store available globally
+        (window as any).__authStore = get();
+
+        // Start token refresh interval using helper function
+        get().startRefreshInterval();
+
+        // Fetch user role and profile after successful login
+        await get().fetchUserRole();
+        await get().fetchUserProfile();
+
+        return { success: true };
       },
 
       // Enhanced refresh token function with retry logic
@@ -602,6 +648,11 @@ const useAuthStore = create<AuthState>()(
               dp: profile?.dp || null,
             },
           });
+
+          // Save user_name to localStorage for quick login display
+          if (profile?.fullname) {
+            localStorage.setItem("user_name", profile.fullname);
+          }
         } catch (error) {
           console.error("❌ Error fetching user profile:", error);
         }

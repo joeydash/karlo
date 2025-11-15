@@ -36,6 +36,12 @@ export interface AuthState {
     phone: string,
     otp: string
   ) => Promise<{ success: boolean; message?: string }>;
+  completePasskeyLogin: (
+    phone: string,
+    authToken: string,
+    refreshToken: string,
+    userId: string
+  ) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
   refreshTokenWithRetry: (attempt?: number) => Promise<void>;

@@ -11,6 +11,7 @@ import {
   Monitor,
   GripVertical,
   XCircle,
+  Settings,
 } from "lucide-react";
 import { useBoard } from "../hooks/useBoard";
 import { useTheme } from "../contexts/ThemeContext";
@@ -596,6 +597,11 @@ const SideNavigation: React.FC = () => {
     .map((id) => boards.find((board) => board.id === id))
     .filter((board) => board !== undefined);
 
+  const handleSettingsClick = () => {
+    navigate("/settings");
+    setIsVisible(false);
+  };
+
   const navigationItems = [
     {
       id: "home",
@@ -617,6 +623,13 @@ const SideNavigation: React.FC = () => {
       icon: Calendar,
       onClick: handleLeavesClick,
       description: "Leaves and Holidays",
+    },
+    {
+      id: "settings",
+      label: "Settings",
+      icon: Settings,
+      onClick: handleSettingsClick,
+      description: "Account & preferences",
     },
   ];
 

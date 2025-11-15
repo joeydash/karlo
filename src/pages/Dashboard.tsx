@@ -1,34 +1,39 @@
-import React from 'react';
-import { useAuth } from '../hooks/useAuth';
-import { useOrganization } from '../hooks/useOrganization';
-import { useBoard } from '../hooks/useBoard';
-import ThemeToggle from '../components/ThemeToggle';
-import OrganizationSwitcher from '../components/OrganizationSwitcher';
-import BoardGrid from '../components/BoardGrid';
-import EditWorkspaceModal from '../components/EditWorkspaceModal';
-import ProfileCompletionModal from '../components/ProfileCompletionModal';
-import EditProfileModal from '../components/EditProfileModal';
-import UniversalSearchModal from '../components/UniversalSearchModal';
-import SideNavigation from '../components/SideNavigation';
-import SkipLink from '../components/SkipLink';
-import { Shield, CheckCircle, Layout, User, RefreshCw, Smartphone, Lock, Zap, Clock, Edit, Search } from 'lucide-react';
+import React from "react";
+import { useAuth } from "../hooks/useAuth";
+import { useOrganization } from "../hooks/useOrganization";
+import { useBoard } from "../hooks/useBoard";
+import ThemeToggle from "../components/ThemeToggle";
+import OrganizationSwitcher from "../components/OrganizationSwitcher";
+import BoardGrid from "../components/BoardGrid";
+import EditWorkspaceModal from "../components/EditWorkspaceModal";
+import ProfileCompletionModal from "../components/ProfileCompletionModal";
+import EditProfileModal from "../components/EditProfileModal";
+import UniversalSearchModal from "../components/UniversalSearchModal";
+import SideNavigation from "../components/SideNavigation";
+import SkipLink from "../components/SkipLink";
+import { PasskeyUpsellBanner } from "../components/PasskeyUpsellBanner";
+import { User, RefreshCw, Edit, Search } from "lucide-react";
 
 const Dashboard: React.FC = () => {
   const { user, isRefreshing } = useAuth();
-  const { organizations, currentOrganization } = useOrganization();
-  const { boards, fetchBoards } = useBoard();
-  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = React.useState(false);
-  const [isEditWorkspaceModalOpen, setIsEditWorkspaceModalOpen] = React.useState(false);
+  const { currentOrganization } = useOrganization();
+  const { fetchBoards } = useBoard();
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] =
+    React.useState(false);
+  const [isEditWorkspaceModalOpen, setIsEditWorkspaceModalOpen] =
+    React.useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = React.useState(false);
 
   // Check if user profile needs completion
   const needsProfileCompletion = user && (!user.fullname || !user.email);
 
   // Default profile picture URL
-  const DEFAULT_DP_URL = 'https://cdn.subspace.money/whatsub_images/user-3711850-3105265+1.png';
+  const DEFAULT_DP_URL =
+    "https://cdn.subspace.money/whatsub_images/user-3711850-3105265+1.png";
 
   // Check if user has a custom profile picture
-  const hasCustomProfilePic = (user as any)?.dp && (user as any).dp !== DEFAULT_DP_URL;
+  const hasCustomProfilePic =
+    (user as any)?.dp && (user as any).dp !== DEFAULT_DP_URL;
 
   // Auto-fetch boards when dashboard loads or organization changes
   React.useEffect(() => {
@@ -40,21 +45,21 @@ const Dashboard: React.FC = () => {
   // Global keyboard shortcut for search (Ctrl/Cmd + K)
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setIsSearchModalOpen(true);
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <SkipLink />
       <SideNavigation />
-      
+
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -78,19 +83,22 @@ const Dashboard: React.FC = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-1 sm:space-x-2">
                   <h1 className="text-base sm:text-xl font-bold text-gray-900 dark:text-white truncate">
-                    {currentOrganization?.display_name || 'One Board'}
+                    {currentOrganization?.display_name || "One Board"}
                   </h1>
-                  {currentOrganization && currentOrganization.user_role === 'admin' && (
-                    <button
-                      onClick={() => setIsEditWorkspaceModalOpen(true)}
-                      className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 focus:text-gray-600 focus:bg-gray-100 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex-shrink-0"
-                      aria-label="Edit workspace settings"
-                    >
-                      <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
-                    </button>
-                  )}
+                  {currentOrganization &&
+                    currentOrganization.user_role === "admin" && (
+                      <button
+                        onClick={() => setIsEditWorkspaceModalOpen(true)}
+                        className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 focus:text-gray-600 focus:bg-gray-100 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex-shrink-0"
+                        aria-label="Edit workspace settings"
+                      >
+                        <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+                      </button>
+                    )}
                 </div>
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">Learn. Perform. Grow</p>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
+                  Learn. Perform. Grow
+                </p>
               </div>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto justify-between sm:justify-end">
@@ -146,7 +154,9 @@ const Dashboard: React.FC = () => {
                     <div className="hidden md:flex items-center max-w-0 group-hover:max-w-[100px] transition-all duration-300 ease-in-out overflow-hidden whitespace-nowrap">
                       <div className="flex items-center pl-2 pr-3 py-1">
                         <User className="h-4 w-4 mr-1 text-blue-600 dark:text-blue-400" />
-                        <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">Profile</span>
+                        <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                          Profile
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -167,11 +177,18 @@ const Dashboard: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="main-content">
+      <main
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+        id="main-content"
+      >
         <h1 className="sr-only">Dashboard</h1>
+
+        {/* Passkey Upsell Banner */}
+        {user?.phone && <PasskeyUpsellBanner userPhone={user.phone} />}
+
         <BoardGrid />
       </main>
-      
+
       <EditProfileModal
         isOpen={isEditProfileModalOpen}
         onClose={() => setIsEditProfileModalOpen(false)}
@@ -188,9 +205,7 @@ const Dashboard: React.FC = () => {
         onClose={() => setIsSearchModalOpen(false)}
       />
 
-      <ProfileCompletionModal
-        isOpen={!!needsProfileCompletion}
-      />
+      <ProfileCompletionModal isOpen={!!needsProfileCompletion} />
     </div>
   );
 };

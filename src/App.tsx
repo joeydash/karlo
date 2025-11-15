@@ -1,23 +1,30 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './hooks/useAuth';
-import { AUTH_CONFIG } from './utils/config';
-import { ThemeProvider } from './contexts/ThemeContext';
-import { ToastProvider } from './contexts/ToastContext';
-import NetworkStatus from './components/NetworkStatus';
-import ProtectedRoute from './components/ProtectedRoute';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Board from './pages/Board';
-import Members from './pages/Members';
-import Teams from './pages/Teams';
-import Holidays from './pages/Holidays';
-import LeaveSettings from './pages/LeaveSettings';
-import Leaves from './pages/Leaves';
-import Certificates from './pages/Certificates';
-import OrgChart from './pages/OrgChart';
-import OOTOH from './pages/OOTOH';
-import Expenses from './pages/Expenses';
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { useAuth } from "./hooks/useAuth";
+import { AUTH_CONFIG } from "./utils/config";
+import { ThemeProvider } from "./contexts/ThemeContext";
+import { ToastProvider } from "./contexts/ToastContext";
+import { Toaster } from "react-hot-toast";
+import NetworkStatus from "./components/NetworkStatus";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import Board from "./pages/Board";
+import Members from "./pages/Members";
+import Teams from "./pages/Teams";
+import Holidays from "./pages/Holidays";
+import LeaveSettings from "./pages/LeaveSettings";
+import Leaves from "./pages/Leaves";
+import Certificates from "./pages/Certificates";
+import OrgChart from "./pages/OrgChart";
+import OOTOH from "./pages/OOTOH";
+import Expenses from "./pages/Expenses";
+import Settings from "./pages/Settings";
 
 function App() {
   const { initialized, authenticated } = useAuth();
@@ -37,32 +44,35 @@ function App() {
     <ThemeProvider>
       <ToastProvider>
         <NetworkStatus />
+        <Toaster position="top-center" />
         <Router future={{ v7_startTransition: true }}>
           <Routes>
-            <Route 
-              path={AUTH_CONFIG.ROUTES.ROOT} 
+            <Route
+              path={AUTH_CONFIG.ROUTES.ROOT}
               element={
-                authenticated ? 
-                <Navigate to={AUTH_CONFIG.ROUTES.DASHBOARD} replace /> : 
-                <Navigate to={AUTH_CONFIG.ROUTES.LOGIN} replace />
-              } 
+                authenticated ? (
+                  <Navigate to={AUTH_CONFIG.ROUTES.DASHBOARD} replace />
+                ) : (
+                  <Navigate to={AUTH_CONFIG.ROUTES.LOGIN} replace />
+                )
+              }
             />
             <Route path={AUTH_CONFIG.ROUTES.LOGIN} element={<Login />} />
-            <Route 
-              path={AUTH_CONFIG.ROUTES.DASHBOARD} 
+            <Route
+              path={AUTH_CONFIG.ROUTES.DASHBOARD}
               element={
                 <ProtectedRoute>
                   <Dashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/board/:boardId" 
+            <Route
+              path="/board/:boardId"
               element={
                 <ProtectedRoute>
                   <Board />
                 </ProtectedRoute>
-              } 
+              }
             />
             <Route
               path="/members"
@@ -81,28 +91,28 @@ function App() {
               }
             />
             <Route
-              path="/holidays" 
+              path="/holidays"
               element={
                 <ProtectedRoute>
                   <Holidays />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/leave-settings" 
+            <Route
+              path="/leave-settings"
               element={
                 <ProtectedRoute>
                   <LeaveSettings />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/leaves" 
+            <Route
+              path="/leaves"
               element={
                 <ProtectedRoute>
                   <Leaves />
                 </ProtectedRoute>
-              } 
+              }
             />
             <Route
               path="/certificates"
@@ -133,6 +143,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Expenses />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
                 </ProtectedRoute>
               }
             />

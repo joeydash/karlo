@@ -1,32 +1,50 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Square, Shield, Loader2, Check, AlertCircle, Lock } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
-import { AUTH_CONFIG } from '../utils/config';
+import React, { useState, useRef, useEffect } from "react";
+import { Loader2, Check, AlertCircle, Lock, Fingerprint } from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
+import { usePasskey } from "../hooks/usePasskey";
+import { AUTH_CONFIG } from "../utils/config";
+import { QuickLogin } from "./QuickLogin";
+import { isLoginSaved, addRecentLogin } from "../utils/recentLogins";
+import toast from "react-hot-toast";
+import useAuthStore from "../stores/authStore";
 
 interface LoginFormProps {
   onSuccess?: () => void;
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
-  const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
-  const [step, setStep] = useState<'phone' | 'otp'>('phone');
-  const [phoneError, setPhoneError] = useState('');
-  const [otpError, setOtpError] = useState('');
-  
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
+  const [step, setStep] = useState<"phone" | "otp">("phone");
+  const [phoneError, setPhoneError] = useState("");
+  const [otpError, setOtpError] = useState("");
+  const [hasPasskey, setHasPasskey] = useState(false);
+  const [checkingPasskey, setCheckingPasskey] = useState(false);
+
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const { requestOTP, verifyOTP, isRequestingOTP, isVerifyingOTP, error, clearError } = useAuth();
+  const debounceTimerRef = useRef<NodeJS.Timeout>();
+  const {
+    requestOTP,
+    verifyOTP,
+    isRequestingOTP,
+    isVerifyingOTP,
+    error,
+    clearError,
+    completePasskeyLogin,
+  } = useAuth();
+  const { loginWithPasskey, checkPasskeyAvailability } = usePasskey();
+  const authUser = useAuthStore((state) => state.user);
 
   useEffect(() => {
-    if (step === 'otp' && otpInputRefs.current[0]) {
+    if (step === "otp" && otpInputRefs.current[0]) {
       otpInputRefs.current[0].focus();
     }
   }, [step]);
 
   useEffect(() => {
     if (error) {
-      if (step === 'phone') {
+      if (step === "phone") {
         setPhoneError(error);
       } else {
         setOtpError(error);
@@ -35,8 +53,121 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     }
   }, [error, step, clearError]);
 
+  // Check passkey availability with debounce
+  useEffect(() => {
+    if (phone.length === 10) {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+
+      debounceTimerRef.current = setTimeout(async () => {
+        setCheckingPasskey(true);
+        try {
+          const fullPhone = `+91${phone}`;
+          const result = await checkPasskeyAvailability(fullPhone);
+          setHasPasskey(result.hasPasskey);
+        } catch (error) {
+          console.error("Error checking passkey:", error);
+          setHasPasskey(false);
+        } finally {
+          setCheckingPasskey(false);
+        }
+      }, 500);
+    } else {
+      setHasPasskey(false);
+    }
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [phone, checkPasskeyAvailability]);
+
+  // Auto-submit OTP when complete
+  useEffect(() => {
+    if (otp.length === 6 && step === "otp" && !isVerifyingOTP) {
+      handleOTPSubmit();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [otp, step, isVerifyingOTP]);
+
+  const promptSaveForQuickLogin = (userName?: string) => {
+    if (isLoginSaved(phone, "+91")) return;
+
+    toast.custom(
+      (t: { id: string }) => (
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-2xl border border-gray-200 dark:border-gray-700 max-w-md">
+          <div className="flex items-start gap-3 mb-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg
+                className="w-5 h-5 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
+                Save for Quick Login?
+              </h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Save this account to access it quickly next time without
+                entering your phone number
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                addRecentLogin(phone, "+91", userName);
+                toast.dismiss(t.id);
+                toast.success("✓ Account saved successfully", {
+                  style: {
+                    background: "#10b981",
+                    color: "#fff",
+                  },
+                });
+              }}
+              className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-all shadow-lg shadow-purple-500/20"
+            >
+              Save Account
+            </button>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-all"
+            >
+              Not Now
+            </button>
+          </div>
+        </div>
+      ),
+      { duration: 10000 }
+    );
+  };
+
+  const getUserName = () => {
+    // Try to get username from Zustand store first (most up-to-date)
+    if (authUser?.fullname) {
+      return authUser.fullname;
+    }
+    // Fallback to localStorage (set by auth store after profile fetch)
+    const storedUserName = localStorage.getItem("user_name");
+    if (storedUserName && storedUserName !== `+91${phone}`) {
+      return storedUserName;
+    }
+    return `+91${phone}`;
+  };
+
   const formatPhoneNumber = (value: string) => {
-    const cleaned = value.replace(/\D/g, '');
+    const cleaned = value.replace(/\D/g, "");
     if (cleaned.length <= 10) {
       return cleaned;
     }
@@ -50,26 +181,25 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
 
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPhoneError('');
+    setPhoneError("");
 
     if (!validatePhone(phone)) {
-      setPhoneError('Please enter a valid 10-digit mobile number');
+      setPhoneError("Please enter a valid 10-digit mobile number");
       return;
     }
 
     const fullPhone = `+91${phone}`;
     const result = await requestOTP(fullPhone);
-    
+
     if (result.success) {
-      setStep('otp');
+      setStep("otp");
     } else {
-      setPhoneError(result.message || 'Failed to send OTP');
+      setPhoneError(result.message || "Failed to send OTP");
     }
   };
 
-  const handleOTPSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setOtpError('');
+  const handleOTPSubmit = async () => {
+    setOtpError("");
 
     if (otp.length !== AUTH_CONFIG.OTP_LENGTH) {
       setOtpError(`Please enter a ${AUTH_CONFIG.OTP_LENGTH}-digit OTP`);
@@ -78,50 +208,127 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
 
     const fullPhone = `+91${phone}`;
     const result = await verifyOTP(fullPhone, otp);
-    
+
     if (result.success) {
+      // Wait a bit for profile to be fetched by auth store
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      const userName = getUserName();
+      localStorage.setItem("user_name", userName);
+      promptSaveForQuickLogin(userName);
       onSuccess?.();
     } else {
-      setOtpError(result.message || 'Invalid OTP');
+      setOtpError(result.message || "Invalid OTP");
     }
   };
 
+  const handlePasskeyLogin = async () => {
+    try {
+      const fullPhone = `+91${phone}`;
+      const result = await loginWithPasskey(fullPhone);
+
+      if (result) {
+        // Use auth store to complete login and fetch profile
+        await completePasskeyLogin(
+          fullPhone,
+          result.auth_token,
+          result.refresh_token,
+          result.id
+        );
+
+        const userName = getUserName();
+        localStorage.setItem("user_name", userName);
+        promptSaveForQuickLogin(userName);
+        onSuccess?.();
+      }
+    } catch (error) {
+      console.error("Passkey login failed:", error);
+      setPhoneError("Passkey authentication failed. Please try OTP.");
+    }
+  };
+
+  const handleSelectPhoneWithPasskey = async (selectedPhone: string) => {
+    setPhone(selectedPhone);
+    setTimeout(async () => {
+      try {
+        const fullPhone = `+91${selectedPhone}`;
+        const result = await loginWithPasskey(fullPhone);
+
+        if (result) {
+          // Use auth store to complete login and fetch profile
+          await completePasskeyLogin(
+            fullPhone,
+            result.auth_token,
+            result.refresh_token,
+            result.id
+          );
+
+          const userName = getUserName();
+          localStorage.setItem("user_name", userName);
+          onSuccess?.();
+        }
+      } catch (error) {
+        console.error("Passkey login failed:", error);
+        toast.error("Passkey authentication failed");
+      }
+    }, 100);
+  };
+
+  const handleForceOTP = async (selectedPhone: string) => {
+    setPhone(selectedPhone);
+
+    setTimeout(async () => {
+      const fullPhone = `+91${selectedPhone}`;
+      const result = await requestOTP(fullPhone);
+
+      if (result.success) {
+        setStep("otp");
+      } else {
+        setPhoneError(result.message || "Failed to send OTP");
+      }
+    }, 100);
+  };
+
   const handleOTPDigitChange = (index: number, digit: string) => {
-    if (!/^[0-9]?$/.test(digit)) return; // Only digits
-    
+    if (!/^[0-9]?$/.test(digit)) return;
+
     const newOtpDigits = [...otpDigits];
     newOtpDigits[index] = digit;
     setOtpDigits(newOtpDigits);
-    
-    // Update the combined OTP value
-    const newOtp = newOtpDigits.join('');
+
+    const newOtp = newOtpDigits.join("");
     setOtp(newOtp);
-    setOtpError('');
-    
-    // Auto-focus next input
+    setOtpError("");
+
     if (digit && index < 5 && otpInputRefs.current[index + 1]) {
       otpInputRefs.current[index + 1]?.focus();
     }
   };
 
   const handleOTPKeyDown = (index: number, e: React.KeyboardEvent) => {
-    // Backspace: clear current and move to previous
-    if (e.key === 'Backspace' && !otpDigits[index] && index > 0 && otpInputRefs.current[index - 1]) {
+    if (
+      e.key === "Backspace" &&
+      !otpDigits[index] &&
+      index > 0 &&
+      otpInputRefs.current[index - 1]
+    ) {
       otpInputRefs.current[index - 1]?.focus();
     }
   };
 
   const handleOTPPaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-    
+    const pastedData = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6);
+
     if (pastedData.length === 6) {
-      const newOtpDigits = pastedData.split('');
+      const newOtpDigits = pastedData.split("");
       setOtpDigits(newOtpDigits);
       setOtp(pastedData);
-      setOtpError('');
-      
-      // Focus the last input
+      setOtpError("");
+
       if (otpInputRefs.current[5]) {
         otpInputRefs.current[5]?.focus();
       }
@@ -129,10 +336,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   };
 
   const handleBackToPhone = () => {
-    setStep('phone');
-    setOtp('');
-    setOtpDigits(['', '', '', '', '', '']);
-    setOtpError('');
+    setStep("phone");
+    setOtp("");
+    setOtpDigits(["", "", "", "", "", ""]);
+    setOtpError("");
   };
 
   return (
@@ -151,74 +358,133 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
             Welcome!
           </h1>
           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 px-2">
-            {step === 'phone' 
-              ? 'Enter your phone number to receive a secure verification code'
-              : `We've sent a 6-digit verification code to +91${phone}`
-            }
+            {step === "phone"
+              ? "Enter your phone number to receive a secure verification code"
+              : `We've sent a 6-digit verification code to +91${phone}`}
           </p>
         </div>
 
         {/* Phone Step */}
-        {step === 'phone' && (
-          <form onSubmit={handlePhoneSubmit} className="space-y-5 sm:space-y-6">
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 sm:mb-3">
-                Mobile Number
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <span className="text-gray-500 dark:text-gray-400 text-sm font-medium">+91</span>
-                </div>
-                <input
-                  id="phone"
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => {
-                    setPhone(formatPhoneNumber(e.target.value));
-                    setPhoneError('');
-                  }}
-                  className={`block w-full pl-14 pr-4 py-3 sm:py-4 text-base border rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 ${
-                    phoneError 
-                      ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100' 
-                      : 'border-gray-200 dark:border-gray-600 focus:border-blue-500 hover:border-gray-300 dark:hover:border-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100'
-                  }`}
-                  placeholder="9876543210"
-                  maxLength="10"
-                />
-              </div>
-              {phoneError && (
-                <div className="mt-2 flex items-center text-sm text-red-600 dark:text-red-400">
-                  <AlertCircle className="h-4 w-4 mr-1" />
-                  {phoneError}
-                </div>
-              )}
+        {step === "phone" && (
+          <>
+            {/* Quick Login */}
+            <div className="mb-5 sm:mb-6">
+              <QuickLogin
+                onSelectPhone={(p) => setPhone(p)}
+                onSelectPhoneWithPasskey={handleSelectPhoneWithPasskey}
+                onForceOTP={handleForceOTP}
+                checkPasskeyAvailability={checkPasskeyAvailability}
+                disabled={isRequestingOTP}
+              />
             </div>
 
-            <button
-              type="submit"
-              disabled={isRequestingOTP || phone.length !== 10}
-              className="w-full flex items-center justify-center py-3 sm:py-4 px-4 sm:px-6 border border-transparent rounded-xl shadow-lg text-sm sm:text-base font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02]"
+            {/* Divider */}
+            <div className="relative mb-5 sm:mb-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200 dark:border-gray-600"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white/80 dark:bg-gray-800/80 text-gray-500 dark:text-gray-400">
+                  Or enter phone number
+                </span>
+              </div>
+            </div>
+
+            <form
+              onSubmit={handlePhoneSubmit}
+              className="space-y-5 sm:space-y-6"
             >
-              {isRequestingOTP ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Sending OTP...
-                </>
-              ) : (
-                <>
-                  <Lock className="h-4 w-4 mr-2" />
-                  Send Verification Code
-                </>
+              <div>
+                <label
+                  htmlFor="phone"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 sm:mb-3"
+                >
+                  Mobile Number
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <span className="text-gray-500 dark:text-gray-400 text-sm font-medium">
+                      +91
+                    </span>
+                  </div>
+                  <input
+                    id="phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => {
+                      setPhone(formatPhoneNumber(e.target.value));
+                      setPhoneError("");
+                    }}
+                    className={`block w-full pl-14 pr-4 py-3 sm:py-4 text-base border rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 ${
+                      phoneError
+                        ? "border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                        : "border-gray-200 dark:border-gray-600 focus:border-blue-500 hover:border-gray-300 dark:hover:border-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    }`}
+                    placeholder="9876543210"
+                    maxLength={10}
+                  />
+                  {checkingPasskey && (
+                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
+                      <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
+                    </div>
+                  )}
+                </div>
+                {phoneError && (
+                  <div className="mt-2 flex items-center text-sm text-red-600 dark:text-red-400">
+                    <AlertCircle className="h-4 w-4 mr-1" />
+                    {phoneError}
+                  </div>
+                )}
+              </div>
+
+              {/* Passkey Login Button */}
+              {hasPasskey && (
+                <button
+                  type="button"
+                  onClick={handlePasskeyLogin}
+                  disabled={isRequestingOTP}
+                  className="w-full flex items-center justify-center py-3 sm:py-4 px-4 sm:px-6 border border-transparent rounded-xl shadow-lg text-sm sm:text-base font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02]"
+                >
+                  <Fingerprint className="h-5 w-5 mr-2" />
+                  Sign in with Passkey
+                </button>
               )}
-            </button>
-          </form>
+
+              <button
+                type="submit"
+                disabled={isRequestingOTP || phone.length !== 10}
+                className="w-full flex items-center justify-center py-3 sm:py-4 px-4 sm:px-6 border border-transparent rounded-xl shadow-lg text-sm sm:text-base font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02]"
+              >
+                {isRequestingOTP ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Sending OTP...
+                  </>
+                ) : (
+                  <>
+                    <Lock className="h-4 w-4 mr-2" />
+                    Send Verification Code
+                  </>
+                )}
+              </button>
+            </form>
+          </>
         )}
 
         {/* OTP Step */}
-        {step === 'otp' && (
-          <form onSubmit={handleOTPSubmit} className="space-y-5 sm:space-y-6">
+        {step === "otp" && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleOTPSubmit();
+            }}
+            className="space-y-5 sm:space-y-6"
+          >
             <div>
-              <label htmlFor="otp" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 sm:mb-3">
+              <label
+                htmlFor="otp"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 sm:mb-3"
+              >
                 Verification Code
               </label>
               <div className="flex gap-2 sm:gap-3 justify-center mb-3 sm:mb-4">
@@ -229,13 +495,16 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
                     type="text"
                     maxLength={1}
                     value={otpDigits[index]}
-                    onChange={(e) => handleOTPDigitChange(index, e.target.value)}
+                    onChange={(e) =>
+                      handleOTPDigitChange(index, e.target.value)
+                    }
                     onKeyDown={(e) => handleOTPKeyDown(index, e)}
                     onPaste={handleOTPPaste}
+                    aria-label={`OTP digit ${index + 1}`}
                     className={`w-10 h-10 sm:w-12 sm:h-12 text-center text-lg sm:text-xl font-semibold border-2 rounded-lg focus:outline-none transition-all duration-200 ${
-                      otpError 
-                        ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-2 focus:ring-red-200 dark:focus:ring-red-800 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100' 
-                        : 'border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 hover:border-gray-400 dark:hover:border-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+                      otpError
+                        ? "border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-2 focus:ring-red-200 dark:focus:ring-red-800 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                        : "border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 hover:border-gray-400 dark:hover:border-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     }`}
                   />
                 ))}
