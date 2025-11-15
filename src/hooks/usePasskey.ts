@@ -22,37 +22,47 @@ export function usePasskey() {
     }
   }, []);
 
-  // LOGIN action - Unchanged (uses phone)
-  const loginWithPasskey = useCallback(async (phone: string) => {
-    setLoading(true);
-    try {
-      const availability = await passkeyApi.checkPasskeyAvailability(phone);
+  // LOGIN action - Accept optional cached authentication options
+  const loginWithPasskey = useCallback(
+    async (
+      phone: string,
+      cachedOptions?: import("../lib/passkey/passkeyApi").AuthenticationOptions
+    ) => {
+      setLoading(true);
+      try {
+        let options = cachedOptions;
 
-      if (!availability.hasPasskey || !availability.options) {
-        showErrorToast("No passkey found for this phone number");
+        // If no cached options provided, fetch new ones
+        if (!options) {
+          const availability = await passkeyApi.checkPasskeyAvailability(phone);
+
+          if (!availability.hasPasskey || !availability.options) {
+            showErrorToast("No passkey found for this phone number");
+            return null;
+          }
+
+          options = availability.options;
+        }
+
+        const result = await passkeyApi.loginWithPasskey(phone, options);
+        return result;
+      } catch (error) {
+        console.error("Error during passkey login:", error);
+
+        if (error instanceof Error) {
+          // More specific error messages from the API layer
+          showErrorToast(error.message || "Failed to login with passkey");
+        } else {
+          showErrorToast("An unknown error occurred during passkey login");
+        }
+
         return null;
+      } finally {
+        setLoading(false);
       }
-
-      const result = await passkeyApi.loginWithPasskey(
-        phone,
-        availability.options
-      );
-      return result;
-    } catch (error) {
-      console.error("Error during passkey login:", error);
-
-      if (error instanceof Error) {
-        // More specific error messages from the API layer
-        showErrorToast(error.message || "Failed to login with passkey");
-      } else {
-        showErrorToast("An unknown error occurred during passkey login");
-      }
-
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    []
+  );
 
   // REGISTER action - UPDATED (uses userId, authToken)
   const registerPasskey = useCallback(
